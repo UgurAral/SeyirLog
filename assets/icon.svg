@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <clipPath id="r"><rect width="1024" height="1024" rx="160"/></clipPath>
+  </defs>
+
+  <!-- Arka plan: düz koyu lacivert -->
+  <rect width="1024" height="1024" rx="160" fill="#0f1f5c"/>
+
+  <g clip-path="url(#r)">
+
+    <!-- ARAÇ GÖVDE: basit beyaz trapez -->
+    <!-- Alt gövde: geniş dikdörtgen -->
+    <rect x="112" y="490" width="800" height="270" rx="48" fill="#f0f4ff"/>
+    <!-- Üst kabini (tepe) -->
+    <rect x="262" y="260" width="500" height="258" rx="52" fill="#f0f4ff"/>
+    <!-- Birleşim çizgisi -->
+    <rect x="262" y="490" width="500" height="30" fill="#f0f4ff"/>
+
+    <!-- ÖN CAM: mavi -->
+    <rect x="286" y="278" width="452" height="228" rx="42" fill="#3b82f6"/>
+
+    <!-- CAM ÜST PARLAMA: beyaz şerit -->
+    <rect x="300" y="284" width="200" height="18" rx="9" fill="white" opacity="0.25"/>
+
+    <!-- FAR KASASI SAĞ: siyah oval yirti -->
+    <rect x="644" y="400" width="238" height="120" rx="24" fill="#0a0f28"/>
+    <!-- DRL şeridi -->
+    <rect x="658" y="412" width="210" height="16" rx="8" fill="white"/>
+    <!-- Ana far oval -->
+    <ellipse cx="763" cy="472" rx="75" ry="44" fill="#ffd700"/>
+    <ellipse cx="763" cy="472" rx="42" ry="25" fill="#fff5aa"/>
+
+    <!-- FAR KASASI SOL -->
+    <rect x="142" y="400" width="238" height="120" rx="24" fill="#0a0f28"/>
+    <rect x="156" y="412" width="210" height="16" rx="8" fill="white"/>
+    <ellipse cx="261" cy="472" rx="75" ry="44" fill="#ffd700"/>
+    <ellipse cx="261" cy="472" rx="42" ry="25" fill="#fff5aa"/>
+
+    <!-- FAR ARASI MAVI BANT -->
+    <rect x="390" y="506" width="244" height="14" rx="7" fill="#3b82f6"/>
+
+    <!-- IZGARA: sadece 2 yatay çizgi -->
+    <rect x="390" y="530" width="244" height="118" rx="16" fill="#0a0f28"/>
+    <rect x="402" y="548" width="220" height="12" rx="6" fill="#1e3a8a"/>
+    <rect x="402" y="576" width="220" height="12" rx="6" fill="#1e3a8a"/>
+    <!-- Izgara mavi rozet -->
+    <circle cx="512" cy="612" r="20" fill="#3b82f6"/>
+
+    <!-- TAMPON -->
+    <rect x="112" y="726" width="800" height="58" rx="28" fill="#c8d4f0"/>
+
+    <!-- TEKERLEKLER -->
+    <ellipse cx="230" cy="800" rx="108" ry="72" fill="#0a0f28"/>
+    <ellipse cx="230" cy="800" rx="70" ry="47" fill="#1a2d5c"/>
+    <ellipse cx="230" cy="800" rx="26" ry="26" fill="#8ab0d8"/>
+
+    <ellipse cx="794" cy="800" rx="108" ry="72" fill="#0a0f28"/>
+    <ellipse cx="794" cy="800" rx="70" ry="47" fill="#1a2d5c"/>
+    <ellipse cx="794" cy="800" rx="26" ry="26" fill="#8ab0d8"/>
+
+  </g>
+</svg>
