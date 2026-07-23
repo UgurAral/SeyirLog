@@ -1,13 +1,10 @@
 /**
  * ads.ts — AdMob reklam yönetimi
- *
- * Banner ID'leri:     üst + alt banner
- * Rewarded ID:        veri girişi kapısı (5 dk'da bir)
- *
- * ⚠️  Şu an TEST reklam ID'leri kullanılıyor.
- *     Gerçek yayın için aşağıdaki ID'leri AdMob konsolundan al ve değiştir.
+ * Platform bazlı ID seçimi: Android / iOS
+ * ID'ler .env (local) veya EAS Secrets (build) üzerinden gelir — GitHub'a gitmez.
  */
 
+import { Platform } from 'react-native';
 import {
   BannerAd,
   BannerAdSize,
@@ -17,43 +14,44 @@ import {
 } from 'react-native-google-mobile-ads';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// ── Reklam Unit ID'leri ───────────────────────────────────────────────────────
-// TODO: Yayın öncesi gerçek AdMob ID'lerinizle değiştirin
+export { BannerAd, BannerAdSize };
+
+// ── Platform bazlı Ad Unit ID seçimi ─────────────────────────────────────────
+const isAndroid = Platform.OS === 'android';
+
 export const AD_UNITS = {
   BANNER_TOP:
     __DEV__
       ? TestIds.ADAPTIVE_BANNER
-      : (process.env.EXPO_PUBLIC_ADMOB_BANNER_TOP ?? ''),
+      : isAndroid
+        ? (process.env.EXPO_PUBLIC_ADMOB_ANDROID_BANNER_TOP ?? '')
+        : (process.env.EXPO_PUBLIC_ADMOB_BANNER_TOP ?? ''),
+
   BANNER_BOTTOM:
     __DEV__
       ? TestIds.ADAPTIVE_BANNER
-      : (process.env.EXPO_PUBLIC_ADMOB_BANNER_BOTTOM ?? ''),
+      : isAndroid
+        ? (process.env.EXPO_PUBLIC_ADMOB_ANDROID_BANNER_BOTTOM ?? '')
+        : (process.env.EXPO_PUBLIC_ADMOB_BANNER_BOTTOM ?? ''),
+
   REWARDED:
     __DEV__
       ? TestIds.REWARDED
-      : (process.env.EXPO_PUBLIC_ADMOB_REWARDED ?? ''),
+      : isAndroid
+        ? (process.env.EXPO_PUBLIC_ADMOB_ANDROID_REWARDED ?? '')
+        : (process.env.EXPO_PUBLIC_ADMOB_REWARDED ?? ''),
 };
 
-export { BannerAd, BannerAdSize };
-
-// ── Rewarded reklam ───────────────────────────────────────────────────────────
+// ── 5 dakika kapısı ───────────────────────────────────────────────────────────
 const LAST_AD_KEY = '@seyirlog_last_ad_ts';
-const AD_INTERVAL_MS = 5 * 60 * 1000; // 5 dakika
+const AD_INTERVAL_MS = 5 * 60 * 1000;
 
-/**
- * Son reklam izlenme zamanına göre reklam gösterilmesi gerekip gerekmediğini döner.
- */
 export async function shouldShowAd(): Promise<boolean> {
   const raw = await AsyncStorage.getItem(LAST_AD_KEY);
   if (!raw) return true;
   return Date.now() - parseInt(raw, 10) > AD_INTERVAL_MS;
 }
 
-/**
- * Rewarded reklamı yükle ve göster.
- * Kullanıcı ödülü kazanırsa (izleme tamamlandı) resolve(true).
- * İptal ederse resolve(false).
- */
 export function showRewardedAd(): Promise<boolean> {
   return new Promise((resolve) => {
     const rewarded = RewardedAd.createForAdRequest(AD_UNITS.REWARDED, {
@@ -77,9 +75,8 @@ export function showRewardedAd(): Promise<boolean> {
       },
     );
 
-    // Reklam kapatıldı ama ödül kazanılmadı (erken çıkış)
     const unsubClose = rewarded.addAdEventListener('closed' as any, () => {
-      if (!loaded) return; // henüz yüklenmediyse load hatası gelecek
+      if (!loaded) return;
       unsubLoad();
       unsubEarned();
       unsubClose();
@@ -88,13 +85,13 @@ export function showRewardedAd(): Promise<boolean> {
 
     rewarded.load();
 
-    // 10 sn içinde yüklenemezse geç
+    // 10 sn içinde yüklenemezse geç (kullanıcıyı engelleme)
     setTimeout(() => {
       if (!loaded) {
         unsubLoad();
         unsubEarned();
         unsubClose();
-        resolve(true); // reklam yüklenemedi, kullanıcıyı engelleme
+        resolve(true);
       }
     }, 10000);
   });
