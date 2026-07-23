@@ -16,6 +16,7 @@ import { useExpenses } from '@hooks/useExpenses';
 import { useVehicles } from '@hooks/useVehicles';
 import { formatCurrency, formatKm } from '@utils/formatters';
 import { AdBanner } from '@components/AdBanner';
+import { useAuthStore } from '@stores/authStore';
 
 type Period = 'today' | 'week' | 'month' | 'all';
 
@@ -31,6 +32,7 @@ export default function DashboardScreen() {
   const [period, setPeriod] = useState<Period>('today');
   const { vehicles, activeVehicle } = useVehicles();
   const vehicleId = activeVehicle?.id;
+  const { user } = useAuthStore();
 
   const {
     trips,

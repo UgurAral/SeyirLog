@@ -10,6 +10,7 @@ import { BackupOnboardingModal } from '@components/BackupOnboardingModal';
 import { useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { initAuthListener, useAuthStore } from '@stores/authStore';
+import { startRealtimeSync, stopRealtimeSync } from '@services/realtime';
 
 export default function RootLayout() {
   const { success, error } = useMigrations(db, migrations);
@@ -23,7 +24,12 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (!initialized) return;
-    if (!user) router.replace('/auth');
+    if (!user) {
+      stopRealtimeSync();
+      router.replace('/auth');
+    } else {
+      startRealtimeSync();
+    }
   }, [user, initialized]);
 
   if (error) {
