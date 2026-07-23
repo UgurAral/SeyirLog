@@ -15,6 +15,7 @@ import { useFuel } from '@hooks/useFuel';
 import { useExpenses } from '@hooks/useExpenses';
 import { useVehicles } from '@hooks/useVehicles';
 import { formatCurrency, formatKm } from '@utils/formatters';
+import { AdBanner } from '@components/AdBanner';
 
 type Period = 'today' | 'week' | 'month' | 'all';
 
@@ -71,6 +72,7 @@ export default function DashboardScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.root}>
+        <AdBanner position="top" />
         {/* ── Header ── */}
         <View style={styles.header}>
           <View>
@@ -191,8 +193,13 @@ export default function DashboardScreen() {
           )}
 
           {/* FAB için boşluk */}
-          <View style={{ height: 80 }} />
+          <View style={{ height: 100 }} />
         </ScrollView>
+
+        {/* ── Alt Banner ── */}
+        <View style={styles.bottomBannerWrap}>
+          <AdBanner position="bottom" />
+        </View>
 
         {/* ── FAB ── */}
         <TouchableOpacity
@@ -362,6 +369,12 @@ const styles = StyleSheet.create({
   noTripsIcon: { fontSize: 40 },
   noTripsText: { color: '#64748B', fontSize: 14 },
 
+  bottomBannerWrap: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+  },
   fab: {
     position: 'absolute',
     bottom: 24,

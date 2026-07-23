@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -19,6 +19,8 @@ import { useExpenseStore } from '@stores/expenseStore';
 import { useIncomeStore } from '@stores/incomeStore';
 import { useVehicles } from '@hooks/useVehicles';
 import { formatCurrency } from '@utils/formatters';
+import { shouldShowAd, showRewardedAd } from '@utils/ads';
+import { AdBanner } from '@components/AdBanner';
 import { EXPENSE_CATEGORY_OPTIONS } from '@/types';
 import type { ExpenseCategory } from '@/types';
 
@@ -41,6 +43,22 @@ export default function QuickEntryModal() {
   const { addEntry: addIncomeEntry } = useIncomeStore();
 
   const vehicleId = activeVehicle?.id;
+  const [adBlocked, setAdBlocked] = useState(false);
+  const [adLoading, setAdLoading] = useState(false);
+
+  // Çalışırken reklam gerekip gerekmediğini kontrol et
+  useEffect(() => {
+    shouldShowAd().then(setAdBlocked);
+  }, []);
+
+  const handleAdGate = useCallback(async (): Promise<boolean> => {
+    if (!adBlocked) return true;
+    setAdLoading(true);
+    const watched = await showRewardedAd();
+    setAdLoading(false);
+    if (watched) setAdBlocked(false);
+    return watched;
+  }, [adBlocked]);
 
   // ── Sefer formu ──────────────────────────────────────────────────────────────
   const [tripForm, setTripForm] = useState({ origin: '', destination: '', startKm: '' });
@@ -48,6 +66,7 @@ export default function QuickEntryModal() {
   const [tripSaving, setTripSaving] = useState(false);
 
   const handleStartTrip = useCallback(async () => {
+    if (!(await handleAdGate())) return;
     if (!tripForm.origin.trim() || !tripForm.destination.trim()) {
       Alert.alert('Eksik', 'Kalkış ve varış zorunlu.');
       return;
@@ -83,6 +102,7 @@ export default function QuickEntryModal() {
 
   const handleEndTrip = useCallback(async () => {
     if (!activeTrip) return;
+    if (!(await handleAdGate())) return;
     const endKm = parseFloat(endForm.endKm);
     const earnings = parseFloat(endForm.earnings) || 0;
     if (isNaN(endKm) || endKm < activeTrip.startKm) {
@@ -113,6 +133,7 @@ export default function QuickEntryModal() {
   const fuelTotal = (parseFloat(fuelForm.liters) || 0) * (parseFloat(fuelForm.pricePerLiter) || 0);
 
   const handleAddFuel = useCallback(async () => {
+    if (!(await handleAdGate())) return;
     const liters = parseFloat(fuelForm.liters);
     const price = parseFloat(fuelForm.pricePerLiter);
     if (isNaN(liters) || liters <= 0 || isNaN(price) || price <= 0) {
@@ -152,6 +173,7 @@ export default function QuickEntryModal() {
   const [expenseSaving, setExpenseSaving] = useState(false);
 
   const handleAddExpense = useCallback(async () => {
+    if (!(await handleAdGate())) return;
     const amount = parseFloat(expenseForm.amount);
     if (isNaN(amount) || amount <= 0) {
       Alert.alert('Eksik', 'Tutar giriniz.');
@@ -185,6 +207,7 @@ export default function QuickEntryModal() {
   const [incomeSaving, setIncomeSaving] = useState(false);
 
   const handleAddIncome = useCallback(async () => {
+    if (!(await handleAdGate())) return;
     const amount = parseFloat(incomeForm.amount);
     if (isNaN(amount) || amount <= 0) {
       Alert.alert('Eksik', 'Tutar giriniz.');
@@ -219,6 +242,18 @@ export default function QuickEntryModal() {
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
+        {/* Üst banner */}
+        <AdBanner position="top" />
+
+        {/* Reklam kapısı uyarısı */}
+        {adBlocked && (
+          <View style={styles.adGateBanner}>
+            <Text style={styles.adGateText}>
+              {adLoading ? '⏳ Reklam yükleniyor...' : '📺 5 dakika doldu — kaydetmek için kısa bir reklam izle'}
+            </Text>
+          </View>
+        )}
+
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Hızlı Giriş</Text>
@@ -519,6 +554,19 @@ function SaveButton({
 // ── Styles ────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
+  adGateBanner: {
+    backgroundColor: '#1E293B',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F59E0B40',
+  },
+  adGateText: {
+    color: '#F59E0B',
+    fontSize: 13,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
   safe: { flex: 1, backgroundColor: '#0F172A' },
 
   header: {

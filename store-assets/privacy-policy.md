@@ -25,19 +25,25 @@ Tüm veriler **yalnızca cihazınızdaki yerel SQLite veritabanında** tutulur. 
 - Sunucularımıza hiçbir veri göndermez
 - Üçüncü taraf analitik veya reklam SDK'sı kullanmaz
 
-### 3. Veri Paylaşımı
+### 3. Reklamlar
+
+Uygulama, **Google AdMob** reklam ağını kullanır. AdMob, reklam kişiselleştirmek amacıyla reklam tanımlayıcısı (Advertising ID) toplayabilir. Kişiselleştirilmemiş reklam modu aktiftir — konum veya hassas kişisel veri paylaşılmaz.
+
+Google'ın gizlilik politikası: https://policies.google.com/privacy
+
+### 4. Veri Paylaşımı
 
 Verileriniz yalnızca sizin başlattığınız **"Yedekle"** işlemiyle JSON dosyasına aktarılır. Bu dosyayı nereye kaydettiğiniz tamamen sizin kontrolünüzdedir.
 
-### 4. Çocukların Gizliliği
+### 5. Çocukların Gizliliği
 
 Uygulama 13 yaş altı kullanıcılara yönelik değildir ve bu kullanıcılardan bilerek veri toplanmaz.
 
-### 5. Değişiklikler
+### 6. Değişiklikler
 
 Bu politika gerektiğinde güncellenebilir. Değişiklikler bu sayfada yayınlanır.
 
-### 6. İletişim
+### 7. İletişim
 
 Sorularınız için: **info.erdoral@gmail.com** 
 
@@ -63,18 +69,24 @@ All data is stored **only in a local SQLite database on your device**. The app:
 - Does not send any data to our servers
 - Does not use third-party analytics or advertising SDKs
 
-### 3. Data Sharing
+### 3. Advertising
+
+The app uses **Google AdMob** for advertising. AdMob may collect the Advertising ID to serve ads. Non-personalized ad mode is enabled — no location or sensitive personal data is shared.
+
+Google Privacy Policy: https://policies.google.com/privacy
+
+### 4. Data Sharing
 
 Your data is only exported to a JSON file when you initiate the **"Backup"** function. You have full control over where this file is saved.
 
-### 4. Children's Privacy
+### 5. Children's Privacy
 
 The app is not directed to users under 13 and we do not knowingly collect data from such users.
 
-### 5. Changes
+### 6. Changes
 
 This policy may be updated as needed. Changes will be posted on this page.
 
-### 6. Contact
+### 7. Contact
 
 For questions: **info.erdoral@gmail.com** 
