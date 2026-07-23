@@ -20,9 +20,18 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // ── Reklam Unit ID'leri ───────────────────────────────────────────────────────
 // TODO: Yayın öncesi gerçek AdMob ID'lerinizle değiştirin
 export const AD_UNITS = {
-  BANNER_TOP:    __DEV__ ? TestIds.ADAPTIVE_BANNER : 'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX',
-  BANNER_BOTTOM: __DEV__ ? TestIds.ADAPTIVE_BANNER : 'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX',
-  REWARDED:      __DEV__ ? TestIds.REWARDED        : 'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX',
+  BANNER_TOP:
+    __DEV__
+      ? TestIds.ADAPTIVE_BANNER
+      : (process.env.EXPO_PUBLIC_ADMOB_BANNER_TOP ?? ''),
+  BANNER_BOTTOM:
+    __DEV__
+      ? TestIds.ADAPTIVE_BANNER
+      : (process.env.EXPO_PUBLIC_ADMOB_BANNER_BOTTOM ?? ''),
+  REWARDED:
+    __DEV__
+      ? TestIds.REWARDED
+      : (process.env.EXPO_PUBLIC_ADMOB_REWARDED ?? ''),
 };
 
 export { BannerAd, BannerAdSize };
