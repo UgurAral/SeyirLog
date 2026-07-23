@@ -29,21 +29,15 @@ Tüm veriler **yalnızca cihazınızdaki yerel SQLite veritabanında** tutulur. 
 
 Verileriniz yalnızca sizin başlattığınız **"Yedekle"** işlemiyle JSON dosyasına aktarılır. Bu dosyayı nereye kaydettiğiniz tamamen sizin kontrolünüzdedir.
 
-### 4. İzinler
-
-Uygulama şu izinleri talep edebilir:
-
-- **Depolama (okuma/yazma):** JSON yedek dosyası oluşturmak için
-
-### 5. Çocukların Gizliliği
+### 4. Çocukların Gizliliği
 
 Uygulama 13 yaş altı kullanıcılara yönelik değildir ve bu kullanıcılardan bilerek veri toplanmaz.
 
-### 6. Değişiklikler
+### 5. Değişiklikler
 
 Bu politika gerektiğinde güncellenebilir. Değişiklikler bu sayfada yayınlanır.
 
-### 7. İletişim
+### 6. İletişim
 
 Sorularınız için: **info.erdoral@gmail.com** 
 
@@ -73,20 +67,14 @@ All data is stored **only in a local SQLite database on your device**. The app:
 
 Your data is only exported to a JSON file when you initiate the **"Backup"** function. You have full control over where this file is saved.
 
-### 4. Permissions
-
-The app may request the following permissions:
-
-- **Storage (read/write):** To create JSON backup files
-
-### 5. Children's Privacy
+### 4. Children's Privacy
 
 The app is not directed to users under 13 and we do not knowingly collect data from such users.
 
-### 6. Changes
+### 5. Changes
 
 This policy may be updated as needed. Changes will be posted on this page.
 
-### 7. Contact
+### 6. Contact
 
 For questions: **info.erdoral@gmail.com** 
