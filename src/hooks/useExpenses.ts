@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import { useExpenseStore } from '@stores/expenseStore';
 import { isInPeriod } from '@utils/dateHelpers';
-import type { ExpenseCategory } from '@types/index';
+import type { ExpenseCategory } from '@/types';
 
 export type ExpensePeriod = 'today' | 'week' | 'month' | 'all';
 

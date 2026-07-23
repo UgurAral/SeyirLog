@@ -12,7 +12,7 @@ import { Card } from '@components/ui/Card';
 import { Input } from '@components/ui/Input';
 import { Button } from '@components/ui/Button';
 import { useFuelStore } from '@stores/fuelStore';
-import type { NewFuelEntry } from '@types/index';
+import type { NewFuelEntry } from '@/types';
 import { formatCurrency } from '@utils/formatters';
 
 export default function NewFuelScreen() {

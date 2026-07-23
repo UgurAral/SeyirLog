@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Card } from './ui/Card';
 import { formatCurrency, formatLiters, formatDate, formatKm } from '@utils/formatters';
 import { useFuelStore } from '@stores/fuelStore';
-import type { FuelEntry } from '@types/index';
+import type { FuelEntry } from '@/types';
 
 interface FuelCardProps {
   entry: FuelEntry;

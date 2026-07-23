@@ -12,8 +12,8 @@ import { Card } from '@components/ui/Card';
 import { Input } from '@components/ui/Input';
 import { Button } from '@components/ui/Button';
 import { useExpenseStore } from '@stores/expenseStore';
-import type { NewExpense, ExpenseCategory } from '@types/index';
-import { EXPENSE_CATEGORY_OPTIONS } from '@types/index';
+import type { NewExpense, ExpenseCategory } from '@/types';
+import { EXPENSE_CATEGORY_OPTIONS } from '@/types';
 
 export default function NewExpenseScreen() {
   const router = useRouter();

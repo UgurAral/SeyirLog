@@ -3,11 +3,12 @@ import {
   View,
   StyleSheet,
   type ViewStyle,
+  type StyleProp,
 } from 'react-native';
 
 interface CardProps {
   children: React.ReactNode;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
   padding?: number;
 }
 

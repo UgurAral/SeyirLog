@@ -15,7 +15,7 @@ import { PeriodFilter, type Period } from '@components/ui/PeriodFilter';
 import { useFuel } from '@hooks/useFuel';
 import { useVehicles } from '@hooks/useVehicles';
 import { formatCurrency, formatLiters } from '@utils/formatters';
-import type { FuelEntry } from '@types/index';
+import type { FuelEntry } from '@/types';
 
 export default function FuelScreen() {
   const router = useRouter();

@@ -12,7 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Card } from '@components/ui/Card';
 import { Button } from '@components/ui/Button';
 import { useVehicles } from '@hooks/useVehicles';
-import type { Vehicle } from '@types/index';
+import type { Vehicle } from '@/types';
 
 const VEHICLE_TYPE_LABEL: Record<string, string> = {
   car: '🚗 Araba',

@@ -15,7 +15,7 @@ import { PeriodFilter, type Period } from '@components/ui/PeriodFilter';
 import { useExpenses } from '@hooks/useExpenses';
 import { useVehicles } from '@hooks/useVehicles';
 import { formatCurrency } from '@utils/formatters';
-import type { Expense, ExpenseCategory } from '@types/index';
+import type { Expense, ExpenseCategory } from '@/types';
 
 const CATEGORY_LABELS: Record<ExpenseCategory, string> = {
   bridge: 'Köprü/Otoyol',

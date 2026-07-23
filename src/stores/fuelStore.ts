@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { eq, desc } from 'drizzle-orm';
 import { db } from '@db/index';
 import { fuelEntries } from '@db/schema';
-import type { FuelEntry, NewFuelEntry } from '@types/index';
+import type { FuelEntry, NewFuelEntry } from '@/types';
 
 interface FuelStore {
   fuelEntries: FuelEntry[];

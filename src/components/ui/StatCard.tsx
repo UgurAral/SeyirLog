@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, type ViewStyle } from 'react-native';
+import { View, Text, StyleSheet, type ViewStyle, type StyleProp } from 'react-native';
 import { Card } from './Card';
 
 interface StatCardProps {
@@ -8,7 +8,7 @@ interface StatCardProps {
   subValue?: string;
   icon?: string;
   accentColor?: string;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
 }
 
 export function StatCard({

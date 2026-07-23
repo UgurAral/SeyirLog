@@ -12,7 +12,7 @@ import { Card } from '@components/ui/Card';
 import { Input } from '@components/ui/Input';
 import { Button } from '@components/ui/Button';
 import { useTripStore } from '@stores/tripStore';
-import type { NewTrip } from '@types/index';
+import type { NewTrip } from '@/types';
 
 export default function NewTripScreen() {
   const router = useRouter();

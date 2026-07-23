@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Card } from './ui/Card';
 import { formatCurrency, formatKm, formatDuration, formatDateTime } from '@utils/formatters';
-import type { Trip } from '@types/index';
+import type { Trip } from '@/types';
 
 interface TripCardProps {
   trip: Trip;

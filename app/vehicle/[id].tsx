@@ -13,8 +13,8 @@ import { Card } from '@components/ui/Card';
 import { Input } from '@components/ui/Input';
 import { Button } from '@components/ui/Button';
 import { useVehicleStore } from '@stores/vehicleStore';
-import type { Vehicle, VehicleType, FuelType } from '@types/index';
-import { VEHICLE_TYPE_OPTIONS, FUEL_TYPE_OPTIONS } from '@types/index';
+import type { Vehicle, VehicleType, FuelType } from '@/types';
+import { VEHICLE_TYPE_OPTIONS, FUEL_TYPE_OPTIONS } from '@/types';
 
 const VEHICLE_TYPE_LABEL: Record<string, string> = {
   car: 'Araba',

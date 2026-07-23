@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useVehicles } from '@hooks/useVehicles';
-import type { Vehicle } from '@types/index';
+import type { Vehicle } from '@/types';
 
 interface VehiclePickerProps {
   /** İsteğe bağlı ek stil */

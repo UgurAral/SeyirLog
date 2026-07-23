@@ -13,8 +13,8 @@ import { Input } from '@components/ui/Input';
 import { Button } from '@components/ui/Button';
 import { useIncomeStore } from '@stores/incomeStore';
 import { useVehicleStore } from '@stores/vehicleStore';
-import type { NewIncomeEntry, IncomeSource } from '@types/index';
-import { INCOME_SOURCE_OPTIONS } from '@types/index';
+import type { NewIncomeEntry, IncomeSource } from '@/types';
+import { INCOME_SOURCE_OPTIONS } from '@/types';
 import { formatCurrency } from '@utils/formatters';
 
 export default function NewIncomeScreen() {

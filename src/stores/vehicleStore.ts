@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { eq, desc } from 'drizzle-orm';
 import { db } from '@db/index';
 import { vehicles } from '@db/schema';
-import type { Vehicle, NewVehicle } from '@types/index';
+import type { Vehicle, NewVehicle } from '@/types';
 
 interface VehicleStore {
   vehicles: Vehicle[];

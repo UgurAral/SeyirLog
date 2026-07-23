@@ -17,7 +17,7 @@ const migrations = {
     ],
   },
   migrations: {
-    '0001_initial': `
+    m0000: `
       CREATE TABLE IF NOT EXISTS vehicles (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         brand TEXT NOT NULL,
@@ -87,6 +87,6 @@ const migrations = {
       );
     `,
   },
-} as const;
+};
 
 export default migrations;

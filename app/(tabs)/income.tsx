@@ -18,7 +18,7 @@ import { useVehicles } from '@hooks/useVehicles';
 import { useIncomeStore } from '@stores/incomeStore';
 import { isInPeriod } from '@utils/dateHelpers';
 import { formatCurrency, formatDate } from '@utils/formatters';
-import type { IncomeEntry, IncomeSource } from '@types/index';
+import type { IncomeEntry, IncomeSource } from '@/types';
 
 const SOURCE_ICONS: Record<IncomeSource, string> = {
   trip: '🚖',

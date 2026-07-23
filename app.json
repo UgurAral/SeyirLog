@@ -22,8 +22,22 @@
     },
     "plugins": [
       "expo-router",
-      ["expo-sqlite", { "useSQLiteCPP": true }]
+      [
+        "expo-sqlite",
+        {
+          "useSQLiteCPP": true
+        }
+      ]
     ],
-    "scheme": "seyirlog"
+    "scheme": "seyirlog",
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "f85f984c-c503-49a6-a139-f91e26e5c633"
+      }
+    },
+    "owner": "ugura"
   }
 }

@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { eq, desc } from 'drizzle-orm';
 import { db } from '@db/index';
 import { incomeEntries } from '@db/schema';
-import type { IncomeEntry, NewIncomeEntry } from '@types/index';
+import type { IncomeEntry, NewIncomeEntry } from '@/types';
 
 interface IncomeStore {
   entries: IncomeEntry[];

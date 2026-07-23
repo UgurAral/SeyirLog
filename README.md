@@ -1,98 +1,87 @@
 # SeyirLog 🚖
 
-**Tag anlaşmalı taksi şoförleri için kişisel ERP uygulaması.**
+**Şoförler için offline-first seyir, yakıt ve gider takip uygulaması.**
 
-Seferlerinizi, yakıt giderlerinizi, gelirlerinizi ve araç bilgilerinizi tek yerden yönetin.
+Kağıt defteri bırak. Telefonundan takip et.
+
+---
 
 ## Özellikler
 
-- 📍 **Sefer Takibi** — Başlangıç/bitiş km, süre, kazanç
-- ⛽ **Yakıt Yönetimi** — Litre, fiyat, istasyon, km takibi
-- 💸 **Gider Takibi** — Köprü, otopark, bakım, ceza ve daha fazlası
-- 📊 **Dashboard** — Net kazanç, günlük/dönemsel özet istatistikler
-- 🚗 **Araç Yönetimi** — Birden fazla araç desteği
+- 🚖 **Sefer takibi** — kalkış/varış, km, kazanç, süre
+- ⛽ **Yakıt girişi** — litre, fiyat, toplam maliyet
+- 💸 **Gider yönetimi** — köprü, otopark, bakım, ceza ve daha fazlası
+- 💰 **Gelir kaydı** — sefer dışı kazançlar
+- 📊 **Dönem filtreleri** — Bugün / Hafta / Ay / Tümü
+- ⚡ **Hızlı Giriş** — tek FAB butonuyla 4 kategori tek ekranda
+- 🔌 **Tamamen offline** — internet bağlantısı gerekmez, veriler cihazda saklanır
 
-## Teknoloji Yığını
+---
+
+## Teknoloji
 
 | Katman | Teknoloji |
 |--------|-----------|
-| Framework | Expo (SDK 52) + React Native 0.76 |
-| Routing | Expo Router (file-based) |
-| Database | SQLite via expo-sqlite |
-| ORM | Drizzle ORM |
+| Mobil | React Native (Expo SDK 54) |
+| Yönlendirme | Expo Router v6 |
+| Veritabanı | SQLite (expo-sqlite + Drizzle ORM) |
+| Stil | NativeWind (Tailwind CSS) |
 | State | Zustand |
-| Styling | NativeWind + StyleSheet |
-| Language | TypeScript (strict) |
+
+---
 
 ## Kurulum
 
 ```bash
-# Bağımlılıkları yükle
-npm install
+# Bağımlılıkları kur
+npm install --legacy-peer-deps
 
-# Uygulamayı başlat
-npm start
+# Geliştirme sunucusunu başlat
+npx expo start
 
-# iOS Simulator
-npm run ios
-
-# Android Emulator
-npm run android
+# Tunnel modu (uzak sunucu / farklı ağ)
+npx expo start --tunnel
 ```
+
+> **Not:** Expo Go (SDK 54) ile test edilmiştir.
+
+---
+
+## Build (EAS)
+
+```bash
+# Preview APK (Android)
+eas build --platform android --profile preview
+
+# Production
+eas build --platform android --profile production
+eas build --platform ios --profile production
+```
+
+---
 
 ## Proje Yapısı
 
 ```
-SeyirLog/
-├── app/                   # Expo Router sayfaları
-│   ├── (tabs)/            # Tab navigasyonu
-│   │   ├── index.tsx      # Dashboard
-│   │   ├── trips.tsx      # Seferler listesi
-│   │   ├── fuel.tsx       # Yakıt girişleri
-│   │   ├── expenses.tsx   # Giderler
-│   │   └── profile.tsx    # Araç & Profil
-│   ├── trip/
-│   │   ├── new.tsx        # Yeni sefer formu
-│   │   └── [id].tsx       # Sefer detay/tamamlama
-│   ├── fuel/new.tsx       # Yakıt ekleme formu
-│   └── expense/new.tsx    # Gider ekleme formu
-├── src/
-│   ├── db/
-│   │   ├── schema.ts      # Drizzle ORM tabloları
-│   │   └── index.ts       # DB bağlantısı
-│   ├── stores/            # Zustand state yönetimi
-│   ├── hooks/             # Veri çekme hooks'ları
-│   ├── components/        # Yeniden kullanılabilir bileşenler
-│   ├── types/             # TypeScript tipleri
-│   └── utils/             # Hesaplama ve formatlama araçları
+app/
+  (tabs)/          # Ana sekmeler (Dashboard, Seferler, Yakıt, ...)
+  quick-entry.tsx  # Hızlı giriş modal (Sefer/Yakıt/Gider/Gelir)
+  trip/            # Sefer detay ekranları
+  fuel/            # Yakıt ekranları
+  expense/         # Gider ekranları
+  income/          # Gelir ekranları
+  vehicle/         # Araç yönetimi
+src/
+  db/              # Drizzle schema, migrations, index
+  stores/          # Zustand stores
+  hooks/           # Custom React hooks
+  components/      # UI bileşenleri
+  utils/           # Hesaplama ve format yardımcıları
+  types/           # TypeScript tipleri
 ```
 
-## DB Schema Özeti
+---
 
-```
-vehicles       → Araç kayıtları
-trips          → Sefer kayıtları (origin, destination, km, earnings)
-fuel_entries   → Yakıt girişleri (liters, price, km)
-expenses       → Gider kayıtları (category, amount)
-income_entries → Sefer dışı gelirler (bonus, other)
-```
+## Lisans
 
-## Renkler
-
-| Renk | Hex | Kullanım |
-|------|-----|---------|
-| Arka Plan | `#0F172A` | Ekran zemini |
-| Kart | `#1E293B` | Card bileşeni |
-| Başlık | `#1a1a2e` | Header/Nav |
-| Mavi | `#3B82F6` | Primary aksiyonlar |
-| Yeşil | `#22C55E` | Kazanç, başarı |
-| Kırmızı | `#EF4444` | Gider, hata, iptal |
-| Sarı | `#F59E0B` | Yakıt, uyarı |
-
-## Geliştirme Notları
-
-- Tüm zaman değerleri **Unix timestamp (saniye)** olarak saklanır
-- Para birimleri **Türk Lirası (TL)** olarak işlenir
-- KM değerleri **real (float)** tipindedir
-- Boolean değerler SQLite'ta **integer (0/1)** olarak tutulur
-- Drizzle migrations için: `npx drizzle-kit generate`
+MIT

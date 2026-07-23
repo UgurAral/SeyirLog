@@ -68,6 +68,10 @@ export default function RootLayout() {
             name="vehicle/[id]"
             options={{ title: 'Araç Düzenle' }}
           />
+          <Stack.Screen
+            name="quick-entry"
+            options={{ title: 'Hızlı Giriş', presentation: 'modal', headerShown: false }}
+          />
         </Stack>
       </View>
     </SafeAreaProvider>

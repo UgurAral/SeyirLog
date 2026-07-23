@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Card } from './ui/Card';
 import { formatCurrency, formatDate } from '@utils/formatters';
 import { useExpenseStore } from '@stores/expenseStore';
-import type { Expense, ExpenseCategory } from '@types/index';
+import type { Expense, ExpenseCategory } from '@/types';
 
 interface ExpenseCardProps {
   expense: Expense;

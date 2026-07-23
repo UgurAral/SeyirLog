@@ -1,4 +1,4 @@
-import type { Trip, FuelEntry, Expense, DailyStats, PeriodStats, TripDuration } from '@types/index';
+import type { Trip, FuelEntry, Expense, DailyStats, PeriodStats, TripDuration } from '@/types';
 
 /**
  * Net kazancı hesaplar.

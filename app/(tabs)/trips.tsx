@@ -14,7 +14,7 @@ import { PeriodFilter, type Period } from '@components/ui/PeriodFilter';
 import { useTrips } from '@hooks/useTrips';
 import { useVehicles } from '@hooks/useVehicles';
 import { formatCurrency, formatKm } from '@utils/formatters';
-import type { Trip } from '@types/index';
+import type { Trip } from '@/types';
 
 export default function TripsScreen() {
   const router = useRouter();
