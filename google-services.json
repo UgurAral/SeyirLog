@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "868038587921",
+    "project_id": "seyirlog",
+    "storage_bucket": "seyirlog.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:868038587921:android:8bbd7a4f4c0203c912a3b0",
+        "android_client_info": {
+          "package_name": "com.seyirlog.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCl-tfJSv6YiqnDWeFU0mm3l72pAdmsWyE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

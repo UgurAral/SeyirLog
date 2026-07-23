@@ -5,8 +5,10 @@ build/
 *.log
 .env
 .env.local
-google-services.json
-GoogleService-Info.plist
+# Firebase config dosyaları commit ediliyor (Firebase best practice)
+# API key'ler client-side, güvenlik Firebase Security Rules'dan gelir
+# google-services.json
+# GoogleService-Info.plist
 .DS_Store
 android/
 ios/

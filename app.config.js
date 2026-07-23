@@ -22,7 +22,12 @@ module.exports = {
       package: 'com.seyirlog.app',
     },
     plugins: [
-      '@react-native-firebase/app',
+      [
+        '@react-native-firebase/app',
+        {
+          iosGoogleServicesFile: './GoogleService-Info.plist',
+        },
+      ],
       'expo-router',
       ['expo-sqlite', { useSQLiteCPP: true }],
       [
