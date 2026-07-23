@@ -45,7 +45,7 @@ Bu politika gerektiğinde güncellenebilir. Değişiklikler bu sayfada yayınlan
 
 ### 7. İletişim
 
-Sorularınız için: **seyirlog@gmail.com** *(veya geçerli iletişim adresiniz)*
+Sorularınız için: **info.erdoral@gmail.com** 
 
 ---
 
@@ -89,4 +89,4 @@ This policy may be updated as needed. Changes will be posted on this page.
 
 ### 7. Contact
 
-For questions: **seyirlog@gmail.com** *(replace with your actual contact)*
+For questions: **info.erdoral@gmail.com** 
