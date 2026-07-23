@@ -80,6 +80,11 @@ SeyirLog is a fully offline logbook app designed for professional and personal d
 ## 💰 Fiyatlandırma
 - Ücretsiz (reklam yok, uygulama içi satın alma yok)
 
+## 🔒 Privacy Policy URL
+- **https://uguraral.github.io/SeyirLog/**
+- Google Play Console → App Content → Privacy Policy alanına yapıştır
+- App Store Connect → App Information → Privacy Policy URL alanına yapıştır
+
 ---
 
 ## 📸 Ekran Görüntüsü Açıklamaları (Captions)
