@@ -7,9 +7,24 @@ import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
 import { db } from '@db/index';
 import migrations from '@db/migrations';
 import { BackupOnboardingModal } from '@components/BackupOnboardingModal';
+import { useEffect } from 'react';
+import { useRouter } from 'expo-router';
+import { initAuthListener, useAuthStore } from '@stores/authStore';
 
 export default function RootLayout() {
   const { success, error } = useMigrations(db, migrations);
+  const router = useRouter();
+  const { user, initialized } = useAuthStore();
+
+  useEffect(() => {
+    const unsub = initAuthListener();
+    return unsub;
+  }, []);
+
+  useEffect(() => {
+    if (!initialized) return;
+    if (!user) router.replace('/auth');
+  }, [user, initialized]);
 
   if (error) {
     return (
@@ -73,6 +88,10 @@ export default function RootLayout() {
           <Stack.Screen
             name="quick-entry"
             options={{ title: 'Hızlı Giriş', presentation: 'modal', headerShown: false }}
+          />
+          <Stack.Screen
+            name="auth"
+            options={{ headerShown: false }}
           />
         </Stack>
       </View>

@@ -9,7 +9,8 @@
       "@components/*": ["./src/components/*"],
       "@stores/*": ["./src/stores/*"],
       "@hooks/*": ["./src/hooks/*"],
-      "@utils/*": ["./src/utils/*"]
+      "@utils/*": ["./src/utils/*"],
+      "@services/*": ["./src/services/*"]
     }
   }
 }

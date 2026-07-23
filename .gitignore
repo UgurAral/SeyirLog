@@ -5,6 +5,8 @@ build/
 *.log
 .env
 .env.local
+google-services.json
+GoogleService-Info.plist
 .DS_Store
 android/
 ios/
