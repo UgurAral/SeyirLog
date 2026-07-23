@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   ScrollView,
   View,
@@ -6,12 +6,14 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Card } from '@components/ui/Card';
 import { Button } from '@components/ui/Button';
 import { useVehicles } from '@hooks/useVehicles';
+import { exportBackup, importBackup } from '@utils/backup';
 import type { Vehicle } from '@/types';
 
 const VEHICLE_TYPE_LABEL: Record<string, string> = {
@@ -30,8 +32,49 @@ const FUEL_TYPE_LABEL: Record<string, string> = {
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { vehicles, activeVehicle, isLoading, error, setActiveVehicle } =
+  const { vehicles, activeVehicle, isLoading, error, setActiveVehicle, fetchVehicles } =
     useVehicles();
+  const [backupLoading, setBackupLoading] = useState(false);
+  const [restoreLoading, setRestoreLoading] = useState(false);
+
+  const handleExport = async () => {
+    setBackupLoading(true);
+    const result = await exportBackup();
+    setBackupLoading(false);
+    if (!result.success) Alert.alert('Hata', result.message);
+  };
+
+  const handleImport = async () => {
+    Alert.alert(
+      'Veri Geri Yükle',
+      'Mevcut tüm veriler silinecek ve yedeğiniz yüklenecek. Devam etmek istiyor musunuz?',
+      [
+        { text: 'İptal', style: 'cancel' },
+        {
+          text: 'Geri Yükle',
+          style: 'destructive',
+          onPress: async () => {
+            setRestoreLoading(true);
+            const result = await importBackup();
+            setRestoreLoading(false);
+            if (result.success) {
+              fetchVehicles();
+              Alert.alert(
+                '✅ Tamamlandı',
+                `Araç: ${result.counts?.vehicles ?? 0}\n` +
+                `Sefer: ${result.counts?.trips ?? 0}\n` +
+                `Yakıt: ${result.counts?.fuelEntries ?? 0}\n` +
+                `Gider: ${result.counts?.expenses ?? 0}\n` +
+                `Gelir: ${result.counts?.incomeEntries ?? 0}`,
+              );
+            } else {
+              Alert.alert('Hata', result.message);
+            }
+          },
+        },
+      ],
+    );
+  };
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -93,6 +136,44 @@ export default function ProfileScreen() {
             ))}
           </View>
         )}
+
+        {/* Yedekleme */}
+        <View style={styles.backupSection}>
+          <Text style={styles.sectionTitle}>Veri Yedekleme</Text>
+          <Text style={styles.sectionDesc}>
+            Verilerinizi JSON dosyası olarak dışa aktarın. Uygulama silinse bile yedeğinizden geri yükleyebilirsiniz.
+          </Text>
+          <View style={styles.backupButtons}>
+            <TouchableOpacity
+              style={[styles.backupBtn, styles.exportBtn, backupLoading && styles.btnDisabled]}
+              onPress={handleExport}
+              disabled={backupLoading || restoreLoading}
+              activeOpacity={0.85}
+            >
+              {backupLoading
+                ? <ActivityIndicator color="#FFFFFF" size="small" />
+                : <Text style={styles.backupBtnIcon}>📤</Text>
+              }
+              <Text style={styles.backupBtnText}>
+                {backupLoading ? 'Hazırlanıyor…' : 'Yedekle'}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.backupBtn, styles.importBtn, restoreLoading && styles.btnDisabled]}
+              onPress={handleImport}
+              disabled={backupLoading || restoreLoading}
+              activeOpacity={0.85}
+            >
+              {restoreLoading
+                ? <ActivityIndicator color="#FFFFFF" size="small" />
+                : <Text style={styles.backupBtnIcon}>📥</Text>
+              }
+              <Text style={styles.backupBtnText}>
+                {restoreLoading ? 'Yükleniyor…' : 'Geri Yükle'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
 
         {/* Uygulama Bilgisi */}
         <Card style={styles.appInfoCard}>
@@ -250,6 +331,32 @@ const styles = StyleSheet.create({
   },
   setActiveBtnText: { color: '#93C5FD', fontSize: 12, fontWeight: '600' },
   chevron: { color: '#64748B', fontSize: 20 },
+
+  backupSection: {
+    backgroundColor: '#1E293B',
+    borderRadius: 14,
+    padding: 16,
+    gap: 10,
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  sectionTitle: { color: '#F1F5F9', fontSize: 16, fontWeight: '700' },
+  sectionDesc: { color: '#94A3B8', fontSize: 13, lineHeight: 19 },
+  backupButtons: { flexDirection: 'row', gap: 10, marginTop: 4 },
+  backupBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderRadius: 11,
+    paddingVertical: 13,
+  },
+  exportBtn: { backgroundColor: '#3B82F6' },
+  importBtn: { backgroundColor: '#6366F1' },
+  btnDisabled: { opacity: 0.55 },
+  backupBtnIcon: { fontSize: 16 },
+  backupBtnText: { color: '#FFFFFF', fontWeight: '700', fontSize: 14 },
 
   appInfoCard: { alignItems: 'center', gap: 4, paddingVertical: 16, marginTop: 8 },
   appInfoTitle: { color: '#F1F5F9', fontSize: 16, fontWeight: '800' },
