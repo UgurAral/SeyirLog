@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SeyirLog — Hesap Silme</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f8fafc;
+      color: #1e293b;
+      line-height: 1.7;
+    }
+    header {
+      background: #0f2060;
+      color: white;
+      padding: 40px 24px;
+      text-align: center;
+    }
+    header h1 { font-size: 2rem; font-weight: 800; }
+    header p  { opacity: 0.75; margin-top: 6px; font-size: 0.95rem; }
+    main {
+      max-width: 640px;
+      margin: 40px auto;
+      padding: 0 24px 60px;
+    }
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 32px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      margin-bottom: 24px;
+    }
+    h2 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #0f2060;
+      margin-bottom: 12px;
+    }
+    p { color: #475569; font-size: 0.97rem; margin-bottom: 12px; }
+    .warning {
+      background: #fef2f2;
+      border-left: 4px solid #ef4444;
+      border-radius: 0 8px 8px 0;
+      padding: 14px 18px;
+      margin: 16px 0;
+    }
+    .warning p { color: #991b1b; margin: 0; font-weight: 500; }
+    .steps { padding-left: 0; list-style: none; }
+    .steps li {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      margin-bottom: 16px;
+    }
+    .step-num {
+      min-width: 32px;
+      height: 32px;
+      background: #0f2060;
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 0.9rem;
+    }
+    .step-text { padding-top: 4px; }
+    .step-text strong { display: block; color: #1e293b; margin-bottom: 2px; }
+    .step-text span { color: #64748b; font-size: 0.9rem; }
+    .mail-btn {
+      display: block;
+      background: #0f2060;
+      color: white;
+      text-align: center;
+      padding: 16px;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 1rem;
+      margin-top: 8px;
+      transition: opacity 0.2s;
+    }
+    .mail-btn:hover { opacity: 0.85; }
+    .note {
+      background: #f0fdf4;
+      border-left: 4px solid #22c55e;
+      border-radius: 0 8px 8px 0;
+      padding: 14px 18px;
+      margin-top: 24px;
+    }
+    .note p { color: #166534; margin: 0; font-size: 0.9rem; }
+    footer {
+      text-align: center;
+      color: #94a3b8;
+      font-size: 0.85rem;
+      padding: 24px;
+      border-top: 1px solid #e2e8f0;
+    }
+    a { color: #0f2060; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🚖 SeyirLog</h1>
+  <p>Hesap Silme Talebi / Account Deletion Request</p>
+</header>
+
+<main>
+
+  <div class="card">
+    <h2>🇹🇷 Hesabınızı Silmek İstiyorsunuz</h2>
+
+    <div class="warning">
+      <p>⚠️ Hesap silme işlemi geri alınamaz. Tüm verileriniz (seferler, yakıt, giderler, gelirler) kalıcı olarak silinir.</p>
+    </div>
+
+    <p>Hesabınızı silmek için aşağıdaki adımları takip edin:</p>
+
+    <ul class="steps">
+      <li>
+        <div class="step-num">1</div>
+        <div class="step-text">
+          <strong>E-posta gönderin</strong>
+          <span>info.erdoral@gmail.com adresine e-posta atın</span>
+        </div>
+      </li>
+      <li>
+        <div class="step-num">2</div>
+        <div class="step-text">
+          <strong>Konu: "Hesap Silme Talebi" yazın</strong>
+          <span>Spam filtresini geçmesi için konu satırını eksiksiz yazın</span>
+        </div>
+      </li>
+      <li>
+        <div class="step-num">3</div>
+        <div class="step-text">
+          <strong>Kayıtlı e-posta adresinizi belirtin</strong>
+          <span>Uygulamaya kayıt olduğunuz e-posta adresi</span>
+        </div>
+      </li>
+      <li>
+        <div class="step-num">4</div>
+        <div class="step-text">
+          <strong>7 iş günü içinde işlem tamamlanır</strong>
+          <span>Onay e-postası gönderilir</span>
+        </div>
+      </li>
+    </ul>
+
+    <a href="mailto:info.erdoral@gmail.com?subject=Hesap%20Silme%20Talebi&body=Merhaba%2C%0A%0ASeyirLog%20hesab%C4%B1m%C4%B1%20silmek%20istiyorum.%0A%0AKay%C4%B1tl%C4%B1%20e-posta%20adresim%3A%20" class="mail-btn">
+      📧 Hesap Silme Talebi Gönder
+    </a>
+
+    <div class="note">
+      <p>💡 Verilerinizi kaybetmemek için önce <strong>Profil → Yedekle</strong> ile JSON yedeği alabilirsiniz.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>🇬🇧 You Want to Delete Your Account</h2>
+
+    <div class="warning">
+      <p>⚠️ Account deletion is permanent and cannot be undone. All your data (trips, fuel, expenses, income) will be permanently deleted.</p>
+    </div>
+
+    <p>To delete your account, follow these steps:</p>
+
+    <ul class="steps">
+      <li>
+        <div class="step-num">1</div>
+        <div class="step-text">
+          <strong>Send an email</strong>
+          <span>Email us at info.erdoral@gmail.com</span>
+        </div>
+      </li>
+      <li>
+        <div class="step-num">2</div>
+        <div class="step-text">
+          <strong>Subject: "Account Deletion Request"</strong>
+          <span>Use this exact subject to avoid spam filters</span>
+        </div>
+      </li>
+      <li>
+        <div class="step-num">3</div>
+        <div class="step-text">
+          <strong>Include your registered email address</strong>
+          <span>The email you used to sign up in SeyirLog</span>
+        </div>
+      </li>
+      <li>
+        <div class="step-num">4</div>
+        <div class="step-text">
+          <strong>Processed within 7 business days</strong>
+          <span>A confirmation email will be sent</span>
+        </div>
+      </li>
+    </ul>
+
+    <a href="mailto:info.erdoral@gmail.com?subject=Account%20Deletion%20Request&body=Hello%2C%0A%0AI%20would%20like%20to%20delete%20my%20SeyirLog%20account.%0A%0ARegistered%20email%3A%20" class="mail-btn">
+      📧 Send Account Deletion Request
+    </a>
+  </div>
+
+</main>
+
+<footer>
+  © 2026 SeyirLog &nbsp;·&nbsp;
+  <a href="/SeyirLog/">Gizlilik Politikası / Privacy Policy</a>
+</footer>
+
+</body>
+</html>
