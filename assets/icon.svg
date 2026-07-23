@@ -1,62 +1,73 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
   <defs>
-    <clipPath id="r"><rect width="1024" height="1024" rx="160"/></clipPath>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1a3a8f"/>
+      <stop offset="100%" stop-color="#0a1540"/>
+    </linearGradient>
+    <linearGradient id="ring_g" x1="0%" y1="0%" x2="60%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#1d4ed8"/>
+    </linearGradient>
+    <linearGradient id="wheel_g" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1e3a7a"/>
+      <stop offset="100%" stop-color="#0d1f52"/>
+    </linearGradient>
+    <clipPath id="rc"><rect width="1024" height="1024" rx="200"/></clipPath>
   </defs>
 
-  <!-- Arka plan: düz koyu lacivert -->
-  <rect width="1024" height="1024" rx="160" fill="#0f1f5c"/>
+  <!-- Arka plan -->
+  <rect width="1024" height="1024" rx="200" fill="url(#bg)"/>
+  <!-- Hafif glow merkez -->
+  <circle cx="512" cy="512" r="440" fill="#1e4fc2" opacity="0.10" clip-path="url(#rc)"/>
 
-  <g clip-path="url(#r)">
+  <!-- ── DIŞ MAVİ HALKA ─────────────────────────────────── -->
+  <circle cx="512" cy="512" r="380" fill="url(#ring_g)"/>
+  <circle cx="512" cy="512" r="300" fill="#0d1f52"/>
 
-    <!-- ARAÇ GÖVDE: basit beyaz trapez -->
-    <!-- Alt gövde: geniş dikdörtgen -->
-    <rect x="112" y="490" width="800" height="270" rx="48" fill="#f0f4ff"/>
-    <!-- Üst kabini (tepe) -->
-    <rect x="262" y="260" width="500" height="258" rx="52" fill="#f0f4ff"/>
-    <!-- Birleşim çizgisi -->
-    <rect x="262" y="490" width="500" height="30" fill="#f0f4ff"/>
+  <!-- ── DİREKSİYON SİMİDİ ─────────────────────────────── -->
+  <circle cx="512" cy="512" r="265" fill="url(#wheel_g)"/>
+  <circle cx="512" cy="512" r="185" fill="#0d1f52"/>
 
-    <!-- ÖN CAM: mavi -->
-    <rect x="286" y="278" width="452" height="228" rx="42" fill="#3b82f6"/>
+  <!-- 3 Kol (0°=üst, 120°, 240°) -->
+  <rect x="494" y="252" width="36" height="176" rx="18" fill="#1e3a7a"/>
+  <rect x="494" y="252" width="36" height="176" rx="18" fill="#1e3a7a"
+        transform="rotate(120,512,512)"/>
+  <rect x="494" y="252" width="36" height="176" rx="18" fill="#1e3a7a"
+        transform="rotate(240,512,512)"/>
 
-    <!-- CAM ÜST PARLAMA: beyaz şerit -->
-    <rect x="300" y="284" width="200" height="18" rx="9" fill="white" opacity="0.25"/>
+  <!-- Merkez göbek -->
+  <circle cx="512" cy="512" r="80"  fill="#1a3270"/>
+  <circle cx="512" cy="512" r="60"  fill="#0d1f52"/>
 
-    <!-- FAR KASASI SAĞ: siyah oval yirti -->
-    <rect x="644" y="400" width="238" height="120" rx="24" fill="#0a0f28"/>
-    <!-- DRL şeridi -->
-    <rect x="658" y="412" width="210" height="16" rx="8" fill="white"/>
-    <!-- Ana far oval -->
-    <ellipse cx="763" cy="472" rx="75" ry="44" fill="#ffd700"/>
-    <ellipse cx="763" cy="472" rx="42" ry="25" fill="#fff5aa"/>
+  <!-- ── SL HARFLERİ ────────────────────────────────────── -->
+  <!-- S — cyan/turkuaz -->
+  <text x="490" y="544"
+    font-family="DejaVu Sans, Arial Black, sans-serif"
+    font-weight="900" font-size="72"
+    fill="#22d3ee" text-anchor="middle">S</text>
+  <!-- L — turuncu/altın -->
+  <text x="538" y="544"
+    font-family="DejaVu Sans, Arial Black, sans-serif"
+    font-weight="900" font-size="72"
+    fill="#f59e0b" text-anchor="middle">L</text>
 
-    <!-- FAR KASASI SOL -->
-    <rect x="142" y="400" width="238" height="120" rx="24" fill="#0a0f28"/>
-    <rect x="156" y="412" width="210" height="16" rx="8" fill="white"/>
-    <ellipse cx="261" cy="472" rx="75" ry="44" fill="#ffd700"/>
-    <ellipse cx="261" cy="472" rx="42" ry="25" fill="#fff5aa"/>
+  <!-- ── DÖNEN OK (sağ üst, saat yönünde) ──────────────── -->
+  <!-- Yay: r=380, saat 11'den saat 2'ye yaklaşık 100° -->
+  <!-- 11 saat = 300°, 2 saat = 60° -->
+  <!-- SVG arc: başlangıç=300°, bitiş=60° saat yönü -->
+  <!-- x=512+380*cos(300°)=512+190=702, y=512+380*sin(300°)=512-329=183 -->
+  <!-- x=512+380*cos(60°)=512+190=702, y=512+380*sin(60°)=512+329=841 -->
+  <!-- Daha basit: sağ üstten sağ alta 120° yay -->
+  <path d="M 718 200 A 380 380 0 0 1 858 640"
+        fill="none"
+        stroke="#38bdf8"
+        stroke-width="44"
+        stroke-linecap="round"
+        opacity="0.95"/>
+  <!-- Ok başı (sağ alt yönünde) -->
+  <polygon
+    points="0,-28 24,20 -24,20"
+    fill="#38bdf8"
+    transform="translate(858,640) rotate(148)"/>
 
-    <!-- FAR ARASI MAVI BANT -->
-    <rect x="390" y="506" width="244" height="14" rx="7" fill="#3b82f6"/>
-
-    <!-- IZGARA: sadece 2 yatay çizgi -->
-    <rect x="390" y="530" width="244" height="118" rx="16" fill="#0a0f28"/>
-    <rect x="402" y="548" width="220" height="12" rx="6" fill="#1e3a8a"/>
-    <rect x="402" y="576" width="220" height="12" rx="6" fill="#1e3a8a"/>
-    <!-- Izgara mavi rozet -->
-    <circle cx="512" cy="612" r="20" fill="#3b82f6"/>
-
-    <!-- TAMPON -->
-    <rect x="112" y="726" width="800" height="58" rx="28" fill="#c8d4f0"/>
-
-    <!-- TEKERLEKLER -->
-    <ellipse cx="230" cy="800" rx="108" ry="72" fill="#0a0f28"/>
-    <ellipse cx="230" cy="800" rx="70" ry="47" fill="#1a2d5c"/>
-    <ellipse cx="230" cy="800" rx="26" ry="26" fill="#8ab0d8"/>
-
-    <ellipse cx="794" cy="800" rx="108" ry="72" fill="#0a0f28"/>
-    <ellipse cx="794" cy="800" rx="70" ry="47" fill="#1a2d5c"/>
-    <ellipse cx="794" cy="800" rx="26" ry="26" fill="#8ab0d8"/>
-
-  </g>
 </svg>
