@@ -6,6 +6,7 @@ import { View, StyleSheet, ActivityIndicator, Text } from 'react-native';
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
 import { db } from '@db/index';
 import migrations from '@db/migrations';
+import { BackupOnboardingModal } from '@components/BackupOnboardingModal';
 
 export default function RootLayout() {
   const { success, error } = useMigrations(db, migrations);
@@ -29,6 +30,7 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
+      <BackupOnboardingModal />
       <View style={styles.root}>
         <StatusBar style="light" backgroundColor="#0F172A" />
         <Stack
