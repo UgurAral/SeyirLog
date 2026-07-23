@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { signIn, signUp, resetPassword } from '@services/auth';
+import { onLoginSync } from '@services/sync';
 
 type Mode = 'login' | 'register' | 'reset';
 
@@ -23,10 +24,12 @@ export default function AuthScreen() {
     try {
       if (mode === 'login') {
         await signIn(email.trim(), password);
+        onLoginSync().catch(() => {});
         router.replace('/(tabs)');
       } else if (mode === 'register') {
         if (password.length < 6) return Alert.alert('Hata', 'Şifre en az 6 karakter olmalı.');
         await signUp(email.trim(), password);
+        onLoginSync().catch(() => {});
         router.replace('/(tabs)');
       } else {
         await resetPassword(email.trim());

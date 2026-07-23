@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { eq, desc } from 'drizzle-orm';
 import { db } from '@db/index';
 import { vehicles } from '@db/schema';
+import { fsUpsert, fsDelete } from '@services/firestore';
 import type { Vehicle, NewVehicle } from '@/types';
 
 interface VehicleStore {

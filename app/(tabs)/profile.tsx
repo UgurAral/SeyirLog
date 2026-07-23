@@ -14,6 +14,7 @@ import { Card } from '@components/ui/Card';
 import { Button } from '@components/ui/Button';
 import { useVehicles } from '@hooks/useVehicles';
 import { exportBackup, importBackup } from '@utils/backup';
+import { signOut } from '@services/auth';
 import type { Vehicle } from '@/types';
 
 const VEHICLE_TYPE_LABEL: Record<string, string> = {
@@ -174,6 +175,15 @@ export default function ProfileScreen() {
             </TouchableOpacity>
           </View>
         </View>
+
+        {/* Çıkış */}
+        <TouchableOpacity
+          style={styles.signOutBtn}
+          onPress={() => signOut()}
+          activeOpacity={0.85}
+        >
+          <Text style={styles.signOutText}>Oturumu Kapat</Text>
+        </TouchableOpacity>
 
         {/* Uygulama Bilgisi */}
         <Card style={styles.appInfoCard}>
@@ -358,6 +368,15 @@ const styles = StyleSheet.create({
   backupBtnIcon: { fontSize: 16 },
   backupBtnText: { color: '#FFFFFF', fontWeight: '700', fontSize: 14 },
 
+  signOutBtn: {
+    backgroundColor: '#1E293B',
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#EF4444',
+  },
+  signOutText: { color: '#EF4444', fontWeight: '700', fontSize: 15 },
   appInfoCard: { alignItems: 'center', gap: 4, paddingVertical: 16, marginTop: 8 },
   appInfoTitle: { color: '#F1F5F9', fontSize: 16, fontWeight: '800' },
   appInfoVersion: { color: '#3B82F6', fontSize: 12 },

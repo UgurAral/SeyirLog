@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { eq, desc } from 'drizzle-orm';
 import { db } from '@db/index';
 import { trips } from '@db/schema';
+import { fsUpsert, fsDelete } from '@services/firestore';
 import type { Trip, NewTrip } from '@/types';
 
 interface TripStore {

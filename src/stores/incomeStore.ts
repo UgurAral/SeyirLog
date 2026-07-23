@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { eq, desc } from 'drizzle-orm';
 import { db } from '@db/index';
 import { incomeEntries } from '@db/schema';
+import { fsUpsert, fsDelete } from '@services/firestore';
 import type { IncomeEntry, NewIncomeEntry } from '@/types';
 
 interface IncomeStore {
