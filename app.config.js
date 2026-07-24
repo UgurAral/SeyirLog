@@ -20,7 +20,9 @@ module.exports = {
         backgroundColor: '#1a1a2e',
       },
       package: 'com.seyirlog.app',
+      "googleServicesFile": "./google-services.json",
     },
+
     plugins: [
       [
         '@react-native-firebase/app',

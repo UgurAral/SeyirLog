@@ -1,8 +1,7 @@
 import './global.css';
 import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
+import { View, StyleSheet, ActivityIndicator, Text, StatusBar } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { View, StyleSheet, ActivityIndicator, Text } from 'react-native';
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
 import { db } from '@db/index';
 import migrations from '@db/migrations';
@@ -23,14 +22,14 @@ export default function RootLayout() {
   }, []);
 
   useEffect(() => {
-    if (!initialized) return;
+    if (!initialized || !success) return;
     if (!user) {
       stopRealtimeSync();
       router.replace('/auth');
     } else {
       startRealtimeSync();
     }
-  }, [user, initialized]);
+  }, [user, initialized, success]);
 
   if (error) {
     return (
@@ -53,7 +52,7 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <BackupOnboardingModal />
       <View style={styles.root}>
-        <StatusBar style="light" backgroundColor="#0F172A" />
+        <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
         <Stack
           screenOptions={{
             headerStyle: { backgroundColor: '#1a1a2e' },
