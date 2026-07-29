@@ -7,13 +7,10 @@ module.exports = {
     orientation: 'portrait',
     icon: './assets/icon.png',
     userInterfaceStyle: 'automatic',
-    splash: {
-      resizeMode: 'contain',
-      backgroundColor: '#1a1a2e',
-    },
     ios: {
       supportsTablet: false,
       bundleIdentifier: 'com.seyirlog.app',
+      googleServicesFile: './GoogleService-Info.plist',
     },
     android: {
       adaptiveIcon: {
@@ -24,14 +21,31 @@ module.exports = {
     },
 
     plugins: [
+      '@react-native-firebase/app',
+      'expo-router',
       [
-        '@react-native-firebase/app',
+        'expo-build-properties',
         {
-          iosGoogleServicesFile: './GoogleService-Info.plist',
+          ios: {
+            useFrameworks: 'static',
+            // RNFB'nin Objective-C başlıkları React'ın <React/RCTBridgeModule.h>
+            // gibi header'larını modüler olmayan şekilde import ediyor; framework
+            // olarak derlenince bu bir hataya dönüşüyor. Bu pod'ları statik
+            // kütüphane olarak linklemek (framework değil) sorunu çözüyor.
+            forceStaticLinking: ['RNFBApp', 'RNFBAuth', 'RNFBFirestore'],
+          },
         },
       ],
-      'expo-router',
+      [
+        'expo-splash-screen',
+        {
+          image: './assets/splash.png',
+          resizeMode: 'contain',
+          backgroundColor: '#1a1a2e',
+        },
+      ],
       ['expo-sqlite', { useSQLiteCPP: true }],
+      './plugins/withFirebaseModularHeadersFix',
       [
         'react-native-google-mobile-ads',
         {
