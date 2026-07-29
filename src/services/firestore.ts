@@ -33,6 +33,20 @@ export async function fsDelete(collection: string, id: number) {
   await userCol(collection).doc(String(id)).delete();
 }
 
+// ── Arka planda, sonucu beklemeden gönderim (yazma anında tetiklenir) ───────
+
+export function syncUpsert(collection: string, id: number, data: object): void {
+  fsUpsert(collection, id, data).catch((e) => {
+    console.warn(`Firestore sync hatası (${collection} upsert):`, e);
+  });
+}
+
+export function syncDelete(collection: string, id: number): void {
+  fsDelete(collection, id).catch((e) => {
+    console.warn(`Firestore sync hatası (${collection} delete):`, e);
+  });
+}
+
 export async function fsPullAll(collection: string): Promise<any[]> {
   const snap = await userCol(collection).get();
   return snap.docs.map((d) => ({ ...d.data(), id: parseInt(d.id, 10) }));

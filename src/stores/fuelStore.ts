@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { eq, desc } from 'drizzle-orm';
 import { db } from '@db/index';
 import { fuelEntries } from '@db/schema';
-import { fsUpsert, fsDelete } from '@services/firestore';
+import { syncUpsert, syncDelete } from '@services/firestore';
 import type { FuelEntry, NewFuelEntry } from '@/types';
 
 interface FuelStore {
@@ -44,6 +44,7 @@ export const useFuelStore = create<FuelStore>((set, get) => ({
     const result = await db.insert(fuelEntries).values(newEntry).returning();
     const inserted = result[0];
     set((state) => ({ fuelEntries: [inserted, ...state.fuelEntries] }));
+    syncUpsert('fuel_entries', inserted.id, inserted);
     return inserted;
   },
 
@@ -58,6 +59,7 @@ export const useFuelStore = create<FuelStore>((set, get) => ({
         f.id === id ? { ...f, ...data, updatedAt: now } : f,
       ),
     }));
+    syncUpsert('fuel_entries', id, { ...data, updatedAt: now });
   },
 
   deleteFuelEntry: async (id: number) => {
@@ -65,6 +67,7 @@ export const useFuelStore = create<FuelStore>((set, get) => ({
     set((state) => ({
       fuelEntries: state.fuelEntries.filter((f) => f.id !== id),
     }));
+    syncDelete('fuel_entries', id);
   },
 
   getTotalFuelCost: (vehicleId?: number) => {

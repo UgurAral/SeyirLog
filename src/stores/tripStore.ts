@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { eq, desc } from 'drizzle-orm';
 import { db } from '@db/index';
 import { trips } from '@db/schema';
-import { fsUpsert, fsDelete } from '@services/firestore';
+import { syncUpsert, syncDelete } from '@services/firestore';
 import type { Trip, NewTrip } from '@/types';
 
 interface TripStore {
@@ -71,6 +71,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
     if (inserted.status === 'active') {
       set({ activeTrip: inserted });
     }
+    syncUpsert('trips', inserted.id, inserted);
     return inserted;
   },
 
@@ -89,6 +90,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
           ? { ...state.activeTrip, ...data, updatedAt: now }
           : state.activeTrip,
     }));
+    syncUpsert('trips', id, { ...data, updatedAt: now });
   },
 
   completeTrip: async (
@@ -134,6 +136,15 @@ export const useTripStore = create<TripStore>((set, get) => ({
       ),
       activeTrip: null,
     }));
+    syncUpsert('trips', id, {
+      endKm,
+      endTime,
+      earnings,
+      distanceKm,
+      durationMinutes,
+      status: 'completed',
+      updatedAt: now,
+    });
   },
 
   cancelTrip: async (id: number) => {
@@ -148,6 +159,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
       ),
       activeTrip: state.activeTrip?.id === id ? null : state.activeTrip,
     }));
+    syncUpsert('trips', id, { status: 'cancelled', updatedAt: now });
   },
 
   deleteTrip: async (id: number) => {
@@ -156,5 +168,6 @@ export const useTripStore = create<TripStore>((set, get) => ({
       trips: state.trips.filter((t) => t.id !== id),
       activeTrip: state.activeTrip?.id === id ? null : state.activeTrip,
     }));
+    syncDelete('trips', id);
   },
 }));

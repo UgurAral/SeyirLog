@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { eq, desc } from 'drizzle-orm';
 import { db } from '@db/index';
 import { expenses } from '@db/schema';
-import { fsUpsert, fsDelete } from '@services/firestore';
+import { syncUpsert, syncDelete } from '@services/firestore';
 import type { Expense, NewExpense, ExpenseCategory } from '@/types';
 
 interface ExpenseStore {
@@ -45,6 +45,7 @@ export const useExpenseStore = create<ExpenseStore>((set, get) => ({
     const result = await db.insert(expenses).values(newExpense).returning();
     const inserted = result[0];
     set((state) => ({ expenses: [inserted, ...state.expenses] }));
+    syncUpsert('expenses', inserted.id, inserted);
     return inserted;
   },
 
@@ -59,6 +60,7 @@ export const useExpenseStore = create<ExpenseStore>((set, get) => ({
         e.id === id ? { ...e, ...data, updatedAt: now } : e,
       ),
     }));
+    syncUpsert('expenses', id, { ...data, updatedAt: now });
   },
 
   deleteExpense: async (id: number) => {
@@ -66,6 +68,7 @@ export const useExpenseStore = create<ExpenseStore>((set, get) => ({
     set((state) => ({
       expenses: state.expenses.filter((e) => e.id !== id),
     }));
+    syncDelete('expenses', id);
   },
 
   getTotalExpenses: (vehicleId?: number) => {

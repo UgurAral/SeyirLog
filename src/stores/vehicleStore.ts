@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { eq, desc } from 'drizzle-orm';
 import { db } from '@db/index';
 import { vehicles } from '@db/schema';
-import { fsUpsert, fsDelete } from '@services/firestore';
+import { syncUpsert, syncDelete } from '@services/firestore';
 import type { Vehicle, NewVehicle } from '@/types';
 
 interface VehicleStore {
@@ -60,6 +60,7 @@ export const useVehicleStore = create<VehicleStore>((set, get) => ({
       // İlk araçsa otomatik aktif yap
       activeVehicle: state.activeVehicle ?? inserted,
     }));
+    syncUpsert('vehicles', inserted.id, inserted);
     return inserted;
   },
 
@@ -78,6 +79,7 @@ export const useVehicleStore = create<VehicleStore>((set, get) => ({
           ? { ...state.activeVehicle, ...data, updatedAt: now }
           : state.activeVehicle,
     }));
+    syncUpsert('vehicles', id, { ...data, updatedAt: now });
   },
 
   deleteVehicle: async (id) => {
@@ -92,5 +94,6 @@ export const useVehicleStore = create<VehicleStore>((set, get) => ({
             : state.activeVehicle,
       };
     });
+    syncDelete('vehicles', id);
   },
 }));

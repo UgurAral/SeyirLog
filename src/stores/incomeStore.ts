@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { eq, desc } from 'drizzle-orm';
 import { db } from '@db/index';
 import { incomeEntries } from '@db/schema';
-import { fsUpsert, fsDelete } from '@services/firestore';
+import { syncUpsert, syncDelete } from '@services/firestore';
 import type { IncomeEntry, NewIncomeEntry } from '@/types';
 
 interface IncomeStore {
@@ -56,6 +56,7 @@ export const useIncomeStore = create<IncomeStore>((set) => ({
       entries: [inserted, ...state.entries],
       totalAmount: state.totalAmount + inserted.amount,
     }));
+    syncUpsert('income_entries', inserted.id, inserted);
     return inserted;
   },
 
@@ -70,5 +71,6 @@ export const useIncomeStore = create<IncomeStore>((set) => ({
       entries: state.entries.filter((e) => e.id !== id),
       totalAmount: state.totalAmount - (entry?.amount ?? 0),
     }));
+    syncDelete('income_entries', id);
   },
 }));
