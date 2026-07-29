@@ -36,7 +36,7 @@ export function BackupOnboardingModal() {
       <View style={styles.overlay}>
         <View style={styles.sheet}>
           <Text style={styles.emoji}>🚖</Text>
-          <Text style={styles.title}>SeyirLog'a Hoş Geldin!</Text>
+          <Text style={styles.title}>SeyirLog&apos;a Hoş Geldin!</Text>
           <Text style={styles.body}>
             Tüm verilertin bu cihazda saklanır — internet gerekmez, tamamen senindir.
           </Text>
@@ -46,7 +46,7 @@ export function BackupOnboardingModal() {
           <Text style={styles.hint}>
             💾{'  '}Verilerin yalnızca bu telefonda tutulur. Zaman zaman{' '}
             <Text style={styles.hintBold}>Profil → Yedekle</Text> ile bir JSON
-            dosyası oluşturup WhatsApp veya Drive'a gönder. Telefon değişse ya
+            dosyası oluşturup WhatsApp veya Drive&apos;a gönder. Telefon değişse ya
             da uygulama silinse bile{' '}
             <Text style={styles.hintBold}>Geri Yükle</Text> ile her şeyi
             kurtarırsın.

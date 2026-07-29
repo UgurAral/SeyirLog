@@ -36,7 +36,7 @@ Tüm veriler yalnızca cihazınızda saklanır. JSON yedekleme ile verilerinizi 
 ✅ İnternet bağlantısı gerekmez
 ✅ Hızlı giriş: tek ekranda sefer, yakıt, gider ve gelir
 ✅ Net kazanç = Kazanç - Yakıt - Giderler otomatik hesap
-✅ Tamamen ücretsiz
+✅ Ücretsiz — reklamlarla desteklenir
 
 ---
 
@@ -58,7 +58,7 @@ SeyirLog is a fully offline logbook app designed for professional and personal d
 
 💾 **Data Safety** — All data stays on your device. Backup to JSON and restore anytime.
 
-✅ No internet required | ✅ Quick entry | ✅ Completely free
+✅ No internet required | ✅ Quick entry | ✅ Free, ad-supported
 
 ---
 
@@ -78,7 +78,7 @@ SeyirLog is a fully offline logbook app designed for professional and personal d
 - Herkes (4+) — şiddet, uygunsuz içerik yok
 
 ## 💰 Fiyatlandırma
-- Ücretsiz (reklam yok, uygulama içi satın alma yok)
+- Ücretsiz (reklam destekli — Google AdMob banner reklamı, uygulama içi satın alma yok)
 
 ## 🔒 Privacy Policy URL
 - **https://uguraral.github.io/SeyirLog/**

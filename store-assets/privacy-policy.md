@@ -9,8 +9,9 @@ Son güncelleme / Last updated: 2026-07-23
 
 ### 1. Toplanan Veriler
 
-SeyirLog uygulaması, aşağıdaki verileri **yalnızca cihazınızda** saklar:
+SeyirLog uygulaması aşağıdaki verileri toplar:
 
+- Hesap bilgileri: e-posta adresi (Firebase Authentication ile kayıt/giriş için)
 - Araç bilgileri (marka, model, plaka, yıl)
 - Sefer kayıtları (kalkış/varış, kilometre, kazanç, süre)
 - Yakıt giriş kayıtları (litre, fiyat, tarih)
@@ -19,11 +20,9 @@ SeyirLog uygulaması, aşağıdaki verileri **yalnızca cihazınızda** saklar:
 
 ### 2. Verilerinizin Saklanması
 
-Tüm veriler **yalnızca cihazınızdaki yerel SQLite veritabanında** tutulur. Uygulama:
+Veriler önce cihazınızdaki yerel SQLite veritabanında saklanır — uygulama internet olmadan da çalışmaya devam eder. Hesabınızla giriş yaptığınızda, verileriniz yedekleme ve cihazlar arası senkronizasyon amacıyla Google Firebase (Firestore) sunucularına da gönderilir ve hesabınıza özel olarak orada saklanır. Firebase Authentication, e-posta/şifre ile giriş yapmanızı sağlar.
 
-- İnternet bağlantısı gerektirmez
-- Sunucularımıza hiçbir veri göndermez
-- Üçüncü taraf analitik veya reklam SDK'sı kullanmaz
+Google/Firebase'in gizlilik politikası: https://policies.google.com/privacy
 
 ### 3. Reklamlar
 
@@ -33,17 +32,21 @@ Google'ın gizlilik politikası: https://policies.google.com/privacy
 
 ### 4. Veri Paylaşımı
 
-Verileriniz yalnızca sizin başlattığınız **"Yedekle"** işlemiyle JSON dosyasına aktarılır. Bu dosyayı nereye kaydettiğiniz tamamen sizin kontrolünüzdedir.
+Verileriniz, hesabınıza özel olarak Google Firebase altyapısında saklanır ve başka kullanıcılarla veya üçüncü taraflarla paylaşılmaz. Ayrıca, sizin başlattığınız **"Yedekle"** işlemiyle tüm verileriniz bir JSON dosyasına aktarılabilir; bu dosyayı nereye kaydettiğiniz tamamen sizin kontrolünüzdedir.
 
-### 5. Çocukların Gizliliği
+### 5. Hesap Silme
+
+Hesabınızı ve tüm verilerinizi silmek isterseniz, uygulama içindeki Profil ekranından ya da şu sayfadan talepte bulunabilirsiniz: https://uguraral.github.io/SeyirLog/delete-account.html
+
+### 6. Çocukların Gizliliği
 
 Uygulama 13 yaş altı kullanıcılara yönelik değildir ve bu kullanıcılardan bilerek veri toplanmaz.
 
-### 6. Değişiklikler
+### 7. Değişiklikler
 
 Bu politika gerektiğinde güncellenebilir. Değişiklikler bu sayfada yayınlanır.
 
-### 7. İletişim
+### 8. İletişim
 
 Sorularınız için: **info.erdoral@gmail.com** 
 
@@ -53,8 +56,9 @@ Sorularınız için: **info.erdoral@gmail.com**
 
 ### 1. Data Collected
 
-SeyirLog stores the following data **locally on your device only**:
+SeyirLog collects the following data:
 
+- Account information: email address (for sign-in via Firebase Authentication)
 - Vehicle information (brand, model, plate, year)
 - Trip records (origin/destination, kilometers, earnings, duration)
 - Fuel entries (liters, price, date)
@@ -63,11 +67,9 @@ SeyirLog stores the following data **locally on your device only**:
 
 ### 2. Data Storage
 
-All data is stored **only in a local SQLite database on your device**. The app:
+Data is stored first in a local SQLite database on your device — the app keeps working without an internet connection. Once you sign in, your data is also sent to Google Firebase (Firestore) for backup and cross-device sync, and stored there under your account. Firebase Authentication is used for email/password sign-in.
 
-- Does not require an internet connection
-- Does not send any data to our servers
-- Does not use third-party analytics or advertising SDKs
+Google/Firebase Privacy Policy: https://policies.google.com/privacy
 
 ### 3. Advertising
 
@@ -77,16 +79,20 @@ Google Privacy Policy: https://policies.google.com/privacy
 
 ### 4. Data Sharing
 
-Your data is only exported to a JSON file when you initiate the **"Backup"** function. You have full control over where this file is saved.
+Your data is stored under your own account on Google Firebase and is not shared with other users or third parties. You can also export all of your data to a JSON file at any time using the **"Backup"** function; you control where that file is saved.
 
-### 5. Children's Privacy
+### 5. Account Deletion
+
+To delete your account and all associated data, use the Profile screen in the app, or request deletion here: https://uguraral.github.io/SeyirLog/delete-account.html
+
+### 6. Children's Privacy
 
 The app is not directed to users under 13 and we do not knowingly collect data from such users.
 
-### 6. Changes
+### 7. Changes
 
 This policy may be updated as needed. Changes will be posted on this page.
 
-### 7. Contact
+### 8. Contact
 
 For questions: **info.erdoral@gmail.com** 

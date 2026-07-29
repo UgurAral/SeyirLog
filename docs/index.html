@@ -98,15 +98,16 @@
 
   <!-- TÜRKÇE -->
   <section id="tr" class="active">
-    <span class="badge">Son güncelleme: 23 Temmuz 2026</span>
+    <span class="badge">Son güncelleme: 25 Temmuz 2026</span>
 
     <div class="highlight">
-      SeyirLog, tüm verilerinizi yalnızca cihazınızda saklar. Sunucularımıza hiçbir veri gönderilmez.
+      SeyirLog verilerinizi önce cihazınızda saklar; hesabınızla giriş yaptığınızda yedekleme ve cihazlar arası senkronizasyon için Google Firebase sunucularına da gönderilir.
     </div>
 
     <h2>1. Toplanan Veriler</h2>
-    <p>SeyirLog aşağıdaki verileri <strong>yalnızca cihazınızda</strong> saklar:</p>
+    <p>SeyirLog aşağıdaki verileri toplar:</p>
     <ul>
+      <li>Hesap bilgileri: e-posta adresi (Firebase Authentication ile giriş için)</li>
       <li>Araç bilgileri (marka, model, plaka, yıl, yakıt türü)</li>
       <li>Sefer kayıtları (kalkış/varış noktası, kilometre, kazanç, süre)</li>
       <li>Yakıt girişleri (litre, fiyat, tarih, istasyon)</li>
@@ -115,40 +116,43 @@
     </ul>
 
     <h2>2. Verilerinizin Saklanması</h2>
-    <p>Tüm veriler cihazınızdaki <strong>yerel SQLite veritabanında</strong> tutulur. Uygulama:</p>
+    <p>Veriler önce cihazınızdaki <strong>yerel SQLite veritabanında</strong> tutulur — uygulama internet olmadan da çalışır. Hesabınızla giriş yaptığınızda verileriniz, yedekleme ve cihazlar arası senkronizasyon amacıyla <strong>Google Firebase (Firestore)</strong> sunucularına da gönderilir ve hesabınıza özel olarak orada saklanır.</p>
     <ul>
-      <li>İnternet bağlantısı gerektirmez</li>
-      <li>Herhangi bir sunucuya veri göndermez</li>
-      <li>Üçüncü taraf analitik veya reklam SDK'sı kullanmaz</li>
-      <li>Konum verisi toplamaz</li>
+      <li>Konum verisi toplanmaz</li>
     </ul>
 
-    <h2>3. Yedekleme ve Veri Paylaşımı</h2>
-    <p>Verileriniz yalnızca sizin başlattığınız <strong>"Yedekle"</strong> işlemiyle JSON dosyasına aktarılabilir. Bu dosyayı nereye kaydettiğiniz tamamen sizin kontrolünüzdedir (WhatsApp, e-posta, Google Drive vb.).</p>
+    <h2>3. Reklamlar</h2>
+    <p>Uygulama <strong>Google AdMob</strong> reklam ağını kullanır. AdMob, reklam sunmak amacıyla reklam tanımlayıcısı (Advertising ID) toplayabilir. Kişiselleştirilmemiş reklam modu aktiftir — konum veya hassas kişisel veri paylaşılmaz.</p>
+    <p>Google'ın gizlilik politikası: <a href="https://policies.google.com/privacy">policies.google.com/privacy</a></p>
 
-    
+    <h2>4. Yedekleme ve Veri Paylaşımı</h2>
+    <p>Verileriniz hesabınıza özel olarak Google Firebase altyapısında saklanır ve başka kullanıcılarla ya da üçüncü taraflarla paylaşılmaz. Ayrıca sizin başlattığınız <strong>"Yedekle"</strong> işlemiyle tüm verileriniz bir JSON dosyasına aktarılabilir; bu dosyayı nereye kaydettiğiniz tamamen sizin kontrolünüzdedir (WhatsApp, e-posta, Google Drive vb.).</p>
 
-    <h2>5. Çocukların Gizliliği</h2>
+    <h2>5. Hesap Silme</h2>
+    <p>Hesabınızı ve tüm verilerinizi silmek isterseniz, uygulama içindeki Profil ekranından ya da <a href="./delete-account.html">bu sayfadan</a> talepte bulunabilirsiniz.</p>
+
+    <h2>6. Çocukların Gizliliği</h2>
     <p>Uygulama 13 yaş altı kullanıcılara yönelik değildir. Bu yaş grubundan bilerek veri toplanmaz.</p>
 
-    <h2>6. Değişiklikler</h2>
+    <h2>7. Değişiklikler</h2>
     <p>Bu politika gerektiğinde güncellenebilir. Önemli değişiklikler bu sayfada duyurulur.</p>
 
-    <h2>7. İletişim</h2>
+    <h2>8. İletişim</h2>
     <p>Sorularınız için: <a href="mailto:info.erdoral@gmail.com">info.erdoral@gmail.com</a></p>
   </section>
 
   <!-- ENGLISH -->
   <section id="en">
-    <span class="badge">Last updated: July 23, 2026</span>
+    <span class="badge">Last updated: July 25, 2026</span>
 
     <div class="highlight">
-      SeyirLog stores all your data locally on your device only. No data is sent to our servers.
+      SeyirLog stores your data locally on your device first; once you sign in, it is also sent to Google Firebase servers for backup and cross-device sync.
     </div>
 
     <h2>1. Data Collected</h2>
-    <p>SeyirLog stores the following data <strong>only on your device</strong>:</p>
+    <p>SeyirLog collects the following data:</p>
     <ul>
+      <li>Account information: email address (for sign-in via Firebase Authentication)</li>
       <li>Vehicle information (brand, model, plate, year, fuel type)</li>
       <li>Trip records (origin/destination, kilometers, earnings, duration)</li>
       <li>Fuel entries (liters, price, date, station)</li>
@@ -157,26 +161,28 @@
     </ul>
 
     <h2>2. Data Storage</h2>
-    <p>All data is stored in a <strong>local SQLite database on your device</strong>. The app:</p>
+    <p>Data is stored first in a <strong>local SQLite database on your device</strong> — the app keeps working without an internet connection. Once you sign in, your data is also sent to <strong>Google Firebase (Firestore)</strong> for backup and cross-device sync, and stored there under your account.</p>
     <ul>
-      <li>Does not require an internet connection</li>
-      <li>Does not send any data to external servers</li>
-      <li>Does not use third-party analytics or advertising SDKs</li>
-      <li>Does not collect location data</li>
+      <li>No location data is collected</li>
     </ul>
 
-    <h2>3. Backup &amp; Data Sharing</h2>
-    <p>Your data can only be exported to a JSON file when you initiate the <strong>"Backup"</strong> function. You have full control over where this file is saved (WhatsApp, email, Google Drive, etc.).</p>
+    <h2>3. Advertising</h2>
+    <p>The app uses <strong>Google AdMob</strong> for advertising. AdMob may collect the Advertising ID to serve ads. Non-personalized ad mode is enabled — no location or sensitive personal data is shared.</p>
+    <p>Google Privacy Policy: <a href="https://policies.google.com/privacy">policies.google.com/privacy</a></p>
 
-    
+    <h2>4. Backup &amp; Data Sharing</h2>
+    <p>Your data is stored under your own account on Google Firebase and is not shared with other users or third parties. You can also export all of your data to a JSON file at any time using the <strong>"Backup"</strong> function; you control where this file is saved (WhatsApp, email, Google Drive, etc.).</p>
 
-    <h2>5. Children's Privacy</h2>
+    <h2>5. Account Deletion</h2>
+    <p>To delete your account and all associated data, use the Profile screen in the app, or <a href="./delete-account.html">request deletion here</a>.</p>
+
+    <h2>6. Children's Privacy</h2>
     <p>The app is not directed to users under 13. We do not knowingly collect data from such users.</p>
 
-    <h2>6. Changes</h2>
+    <h2>7. Changes</h2>
     <p>This policy may be updated as needed. Significant changes will be announced on this page.</p>
 
-    <h2>7. Contact</h2>
+    <h2>8. Contact</h2>
     <p>For questions: <a href="mailto:info.erdoral@gmail.com">info.erdoral@gmail.com</a></p>
   </section>
 </main>
