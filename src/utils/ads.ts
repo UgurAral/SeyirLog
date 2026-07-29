@@ -19,27 +19,20 @@ export { BannerAd, BannerAdSize };
 // ── Platform bazlı Ad Unit ID seçimi ─────────────────────────────────────────
 const isAndroid = Platform.OS === 'android';
 
+// Gerçek ad unit ID'si tanımlanmamışsa (env değişkeni eksikse) sessizce boş
+// string'e düşüp reklamı hiç yüklememek yerine Google'ın test ID'sine düş —
+// böylece ID'ler eksik kalsa bile en azından test reklamı gösterilir.
+const androidBannerTop = process.env.EXPO_PUBLIC_ADMOB_ANDROID_BANNER_TOP || TestIds.ADAPTIVE_BANNER;
+const iosBannerTop = process.env.EXPO_PUBLIC_ADMOB_BANNER_TOP || TestIds.ADAPTIVE_BANNER;
+const androidBannerBottom = process.env.EXPO_PUBLIC_ADMOB_ANDROID_BANNER_BOTTOM || TestIds.ADAPTIVE_BANNER;
+const iosBannerBottom = process.env.EXPO_PUBLIC_ADMOB_BANNER_BOTTOM || TestIds.ADAPTIVE_BANNER;
+const androidRewarded = process.env.EXPO_PUBLIC_ADMOB_ANDROID_REWARDED || TestIds.REWARDED;
+const iosRewarded = process.env.EXPO_PUBLIC_ADMOB_REWARDED || TestIds.REWARDED;
+
 export const AD_UNITS = {
-  BANNER_TOP:
-    __DEV__
-      ? TestIds.ADAPTIVE_BANNER
-      : isAndroid
-        ? (process.env.EXPO_PUBLIC_ADMOB_ANDROID_BANNER_TOP ?? '')
-        : (process.env.EXPO_PUBLIC_ADMOB_BANNER_TOP ?? ''),
-
-  BANNER_BOTTOM:
-    __DEV__
-      ? TestIds.ADAPTIVE_BANNER
-      : isAndroid
-        ? (process.env.EXPO_PUBLIC_ADMOB_ANDROID_BANNER_BOTTOM ?? '')
-        : (process.env.EXPO_PUBLIC_ADMOB_BANNER_BOTTOM ?? ''),
-
-  REWARDED:
-    __DEV__
-      ? TestIds.REWARDED
-      : isAndroid
-        ? (process.env.EXPO_PUBLIC_ADMOB_ANDROID_REWARDED ?? '')
-        : (process.env.EXPO_PUBLIC_ADMOB_REWARDED ?? ''),
+  BANNER_TOP: __DEV__ ? TestIds.ADAPTIVE_BANNER : isAndroid ? androidBannerTop : iosBannerTop,
+  BANNER_BOTTOM: __DEV__ ? TestIds.ADAPTIVE_BANNER : isAndroid ? androidBannerBottom : iosBannerBottom,
+  REWARDED: __DEV__ ? TestIds.REWARDED : isAndroid ? androidRewarded : iosRewarded,
 };
 
 // ── 5 dakika kapısı ───────────────────────────────────────────────────────────
