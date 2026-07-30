@@ -36,7 +36,7 @@ Verileriniz, hesabınıza özel olarak Google Firebase altyapısında saklanır 
 
 ### 5. Hesap Silme
 
-Hesabınızı ve tüm verilerinizi silmek isterseniz, uygulama içindeki Profil ekranından ya da şu sayfadan talepte bulunabilirsiniz: https://uguraral.github.io/SeyirLog/delete-account.html
+Hesabınızı ve tüm verilerinizi silmek isterseniz, şu sayfadan talepte bulunabilirsiniz: https://uguraral.github.io/SeyirLog/delete-account.html
 
 ### 6. Çocukların Gizliliği
 
@@ -83,7 +83,7 @@ Your data is stored under your own account on Google Firebase and is not shared 
 
 ### 5. Account Deletion
 
-To delete your account and all associated data, use the Profile screen in the app, or request deletion here: https://uguraral.github.io/SeyirLog/delete-account.html
+To delete your account and all associated data, request deletion here: https://uguraral.github.io/SeyirLog/delete-account.html
 
 ### 6. Children's Privacy
 

@@ -14,9 +14,28 @@ const migrations = {
         tag: '0001_initial',
         breakpoints: true,
       },
+      {
+        idx: 1,
+        version: '0001',
+        when: 1753800000000,
+        tag: '0002_fix_missing_tables',
+        breakpoints: true,
+      },
+      {
+        idx: 2,
+        version: '0001',
+        when: 1753900000000,
+        tag: '0003_trip_start_km_nullable',
+        breakpoints: true,
+      },
     ],
   },
   migrations: {
+    // NOT: bu statement'lar `--> statement-breakpoint` ile ayrılmalı — migrator
+    // (drizzle-orm/expo-sqlite/migrator.js) bu işarete göre böler ve her parçayı
+    // ayrı çalıştırır. Ayraç olmadan tüm blok tek bir statement sayılır ve
+    // expo-sqlite yalnızca ilkini (vehicles) çalıştırıp gerisini sessizce yok
+    // sayar — trips/fuel_entries/expenses/income_entries hiç oluşmaz.
     m0000: `
       CREATE TABLE IF NOT EXISTS vehicles (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -30,7 +49,7 @@ const migrations = {
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL
       );
-
+      --> statement-breakpoint
       CREATE TABLE IF NOT EXISTS trips (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         vehicle_id INTEGER REFERENCES vehicles(id),
@@ -48,7 +67,7 @@ const migrations = {
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL
       );
-
+      --> statement-breakpoint
       CREATE TABLE IF NOT EXISTS fuel_entries (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         vehicle_id INTEGER REFERENCES vehicles(id),
@@ -62,7 +81,7 @@ const migrations = {
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL
       );
-
+      --> statement-breakpoint
       CREATE TABLE IF NOT EXISTS expenses (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         vehicle_id INTEGER REFERENCES vehicles(id),
@@ -74,7 +93,7 @@ const migrations = {
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL
       );
-
+      --> statement-breakpoint
       CREATE TABLE IF NOT EXISTS income_entries (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         vehicle_id INTEGER REFERENCES vehicles(id),
@@ -85,6 +104,93 @@ const migrations = {
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL
       );
+    `,
+    // Bu migration, m0000'ın ayraçsız haliyle zaten "uygulandı" işaretlenmiş
+    // ama sadece vehicles'ı oluşturmuş cihazları da onarır (IF NOT EXISTS ile
+    // idempotent) — hem bizim test cihazımız hem gerçek erken kullanıcılar için.
+    m0001: `
+      CREATE TABLE IF NOT EXISTS trips (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        vehicle_id INTEGER REFERENCES vehicles(id),
+        origin TEXT NOT NULL,
+        destination TEXT NOT NULL,
+        start_km REAL NOT NULL,
+        end_km REAL,
+        distance_km REAL,
+        start_time INTEGER NOT NULL,
+        end_time INTEGER,
+        duration_minutes INTEGER,
+        earnings REAL,
+        notes TEXT,
+        status TEXT NOT NULL DEFAULT 'active',
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL
+      );
+      --> statement-breakpoint
+      CREATE TABLE IF NOT EXISTS fuel_entries (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        vehicle_id INTEGER REFERENCES vehicles(id),
+        liters REAL NOT NULL,
+        price_per_liter REAL NOT NULL,
+        total_cost REAL NOT NULL,
+        current_km REAL,
+        station_name TEXT,
+        date INTEGER NOT NULL,
+        notes TEXT,
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL
+      );
+      --> statement-breakpoint
+      CREATE TABLE IF NOT EXISTS expenses (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        vehicle_id INTEGER REFERENCES vehicles(id),
+        trip_id INTEGER REFERENCES trips(id),
+        category TEXT NOT NULL,
+        amount REAL NOT NULL,
+        description TEXT,
+        date INTEGER NOT NULL,
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL
+      );
+      --> statement-breakpoint
+      CREATE TABLE IF NOT EXISTS income_entries (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        vehicle_id INTEGER REFERENCES vehicles(id),
+        amount REAL NOT NULL,
+        source TEXT,
+        description TEXT,
+        date INTEGER NOT NULL,
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL
+      );
+    `,
+    // Sefer ekranında artık başlangıç/bitiş km yerine doğrudan "mesafe" isteniyor
+    // — start_km bu yüzden zorunlu olmaktan çıkarılıyor. SQLite ALTER COLUMN
+    // desteklemediği için klasik "tabloyu yeniden oluştur" yöntemi kullanılıyor.
+    m0002: `
+      CREATE TABLE trips_new (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        vehicle_id INTEGER REFERENCES vehicles(id),
+        origin TEXT NOT NULL,
+        destination TEXT NOT NULL,
+        start_km REAL,
+        end_km REAL,
+        distance_km REAL,
+        start_time INTEGER NOT NULL,
+        end_time INTEGER,
+        duration_minutes INTEGER,
+        earnings REAL,
+        notes TEXT,
+        status TEXT NOT NULL DEFAULT 'active',
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL
+      );
+      --> statement-breakpoint
+      INSERT INTO trips_new SELECT * FROM trips;
+      --> statement-breakpoint
+      DROP TABLE trips;
+      --> statement-breakpoint
+      ALTER TABLE trips_new RENAME TO trips;
     `,
   },
 };

@@ -13,6 +13,7 @@ import { TripCard } from '@components/TripCard';
 import { useTrips } from '@hooks/useTrips';
 import { useFuel } from '@hooks/useFuel';
 import { useExpenses } from '@hooks/useExpenses';
+import { useIncome } from '@hooks/useIncome';
 import { useVehicles } from '@hooks/useVehicles';
 import { formatCurrency, formatKm } from '@utils/formatters';
 import { AdBanner } from '@components/AdBanner';
@@ -44,8 +45,9 @@ export default function DashboardScreen() {
 
   const { periodCost: fuelCost } = useFuel(vehicleId, period);
   const { periodTotal: expenseCost } = useExpenses(vehicleId, period);
+  const { periodTotal: incomeTotal } = useIncome(vehicleId, period);
 
-  const netEarnings = periodEarnings - fuelCost - expenseCost;
+  const netEarnings = periodEarnings + incomeTotal - fuelCost - expenseCost;
   const recentTrips = trips.slice(0, 5);
 
   // ── Araç yoksa CTA ────────────────────────────────────────────────────────
@@ -379,7 +381,7 @@ const styles = StyleSheet.create({
   },
   fab: {
     position: 'absolute',
-    bottom: 24,
+    bottom: 100,
     right: 20,
     width: 60,
     height: 60,
@@ -392,5 +394,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.4,
     shadowRadius: 8,
     elevation: 8,
+    zIndex: 20,
   },
 });

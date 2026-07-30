@@ -17,7 +17,7 @@ interface TripStore {
   updateTrip: (id: number, data: Partial<NewTrip>) => Promise<void>;
   completeTrip: (
     id: number,
-    endKm: number,
+    distanceKm: number,
     endTime: number,
     earnings: number,
   ) => Promise<void>;
@@ -95,13 +95,12 @@ export const useTripStore = create<TripStore>((set, get) => ({
 
   completeTrip: async (
     id: number,
-    endKm: number,
+    distanceKm: number,
     endTime: number,
     earnings: number,
   ) => {
     const now = Math.floor(Date.now() / 1000);
     const trip = get().trips.find((t) => t.id === id);
-    const distanceKm = trip ? endKm - trip.startKm : undefined;
     const durationMinutes = trip
       ? Math.floor((endTime - trip.startTime) / 60)
       : undefined;
@@ -109,7 +108,6 @@ export const useTripStore = create<TripStore>((set, get) => ({
     await db
       .update(trips)
       .set({
-        endKm,
         endTime,
         earnings,
         distanceKm,
@@ -124,10 +122,9 @@ export const useTripStore = create<TripStore>((set, get) => ({
         t.id === id
           ? {
               ...t,
-              endKm,
               endTime,
               earnings,
-              distanceKm: distanceKm ?? t.distanceKm,
+              distanceKm,
               durationMinutes: durationMinutes ?? t.durationMinutes,
               status: 'completed',
               updatedAt: now,
@@ -137,7 +134,6 @@ export const useTripStore = create<TripStore>((set, get) => ({
       activeTrip: null,
     }));
     syncUpsert('trips', id, {
-      endKm,
       endTime,
       earnings,
       distanceKm,

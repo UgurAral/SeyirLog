@@ -56,24 +56,26 @@ export default function QuickEntryModal() {
     setAdLoading(true);
     const watched = await showRewardedAd();
     setAdLoading(false);
-    if (watched) setAdBlocked(false);
+    if (watched) {
+      // showRewardedAd yalnızca ödül tam kazanıldığında AsyncStorage'daki
+      // zaman damgasını günceller — kapıyı ona göre yeniden değerlendiriyoruz,
+      // reklam yarıda kapatılmışsa bir sonraki kayıtta kapı hâlâ kapalı kalır.
+      setAdBlocked(await shouldShowAd());
+    } else {
+      Alert.alert('Reklam Yüklenemedi', 'Kaydetmek için lütfen tekrar deneyin.');
+    }
     return watched;
   }, [adBlocked]);
 
   // ── Sefer formu ──────────────────────────────────────────────────────────────
-  const [tripForm, setTripForm] = useState({ origin: '', destination: '', startKm: '' });
-  const [endForm, setEndForm] = useState({ endKm: '', earnings: '' });
+  const [tripForm, setTripForm] = useState({ origin: '', destination: '' });
+  const [endForm, setEndForm] = useState({ distanceKm: '', earnings: '' });
   const [tripSaving, setTripSaving] = useState(false);
 
   const handleStartTrip = useCallback(async () => {
     if (!(await handleAdGate())) return;
     if (!tripForm.origin.trim() || !tripForm.destination.trim()) {
       Alert.alert('Eksik', 'Kalkış ve varış zorunlu.');
-      return;
-    }
-    const startKm = parseFloat(tripForm.startKm);
-    if (isNaN(startKm) || startKm < 0) {
-      Alert.alert('Geçersiz KM', 'Başlangıç km giriniz.');
       return;
     }
     setTripSaving(true);
@@ -83,13 +85,12 @@ export default function QuickEntryModal() {
         vehicleId,
         origin: tripForm.origin.trim(),
         destination: tripForm.destination.trim(),
-        startKm,
         startTime: now,
         status: 'active',
         createdAt: now,
         updatedAt: now,
       });
-      setTripForm({ origin: '', destination: '', startKm: '' });
+      setTripForm({ origin: '', destination: '' });
       Alert.alert('✅ Sefer Başladı', `${tripForm.origin} → ${tripForm.destination}`, [
         { text: 'Tamam', onPress: () => router.back() },
       ]);
@@ -103,21 +104,20 @@ export default function QuickEntryModal() {
   const handleEndTrip = useCallback(async () => {
     if (!activeTrip) return;
     if (!(await handleAdGate())) return;
-    const endKm = parseFloat(endForm.endKm);
+    const distanceKm = parseFloat(endForm.distanceKm);
     const earnings = parseFloat(endForm.earnings) || 0;
-    if (isNaN(endKm) || endKm < activeTrip.startKm) {
-      Alert.alert('Geçersiz KM', `Bitiş km ${activeTrip.startKm}'den büyük olmalı.`);
+    if (isNaN(distanceKm) || distanceKm <= 0) {
+      Alert.alert('Geçersiz Mesafe', 'Gidilen mesafeyi (km) giriniz.');
       return;
     }
     setTripSaving(true);
     try {
       const now = Math.floor(Date.now() / 1000);
-      await completeTrip(activeTrip.id, endKm, now, earnings);
-      setEndForm({ endKm: '', earnings: '' });
-      const dist = endKm - activeTrip.startKm;
+      await completeTrip(activeTrip.id, distanceKm, now, earnings);
+      setEndForm({ distanceKm: '', earnings: '' });
       Alert.alert(
         '✅ Sefer Tamamlandı',
-        `${dist.toFixed(0)} km · ${formatCurrency(earnings)}`,
+        `${distanceKm.toFixed(0)} km · ${formatCurrency(earnings)}`,
         [{ text: 'Tamam', onPress: () => router.back() }],
       );
     } catch (e) {
@@ -298,25 +298,17 @@ export default function QuickEntryModal() {
                       <Text style={styles.activeTripRoute}>
                         {activeTrip.origin} → {activeTrip.destination}
                       </Text>
-                      <Text style={styles.activeTripKm}>
-                        Başlangıç: {activeTrip.startKm} km
-                      </Text>
                     </View>
                   </View>
 
                   <Text style={styles.sectionLabel}>Seferi Bitir</Text>
                   <QInput
-                    label="Bitiş KM *"
-                    placeholder={`${activeTrip.startKm}+'den büyük`}
-                    value={endForm.endKm}
-                    onChangeText={(v) => setEndForm((f) => ({ ...f, endKm: v }))}
+                    label="Mesafe (km) *"
+                    placeholder="Kaç km gittiniz?"
+                    value={endForm.distanceKm}
+                    onChangeText={(v) => setEndForm((f) => ({ ...f, distanceKm: v }))}
                     keyboardType="numeric"
                   />
-                  {endForm.endKm && parseFloat(endForm.endKm) > activeTrip.startKm && (
-                    <Text style={styles.calcHint}>
-                      📏 {(parseFloat(endForm.endKm) - activeTrip.startKm).toFixed(0)} km
-                    </Text>
-                  )}
                   <QInput
                     label="Kazanç (₺)"
                     placeholder="0.00"
@@ -348,13 +340,6 @@ export default function QuickEntryModal() {
                     value={tripForm.destination}
                     onChangeText={(v) => setTripForm((f) => ({ ...f, destination: v }))}
                     autoCapitalize="sentences"
-                  />
-                  <QInput
-                    label="Başlangıç KM *"
-                    placeholder="Sayaç değeri"
-                    value={tripForm.startKm}
-                    onChangeText={(v) => setTripForm((f) => ({ ...f, startKm: v }))}
-                    keyboardType="numeric"
                   />
                   <SaveButton
                     label="Seferi Başlat"

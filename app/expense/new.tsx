@@ -5,6 +5,8 @@ import {
   Text,
   StyleSheet,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -12,12 +14,14 @@ import { Card } from '@components/ui/Card';
 import { Input } from '@components/ui/Input';
 import { Button } from '@components/ui/Button';
 import { useExpenseStore } from '@stores/expenseStore';
+import { useVehicleStore } from '@stores/vehicleStore';
 import type { NewExpense, ExpenseCategory } from '@/types';
 import { EXPENSE_CATEGORY_OPTIONS } from '@/types';
 
 export default function NewExpenseScreen() {
   const router = useRouter();
   const { addExpense } = useExpenseStore();
+  const { activeVehicle } = useVehicleStore();
 
   const [category, setCategory] = useState<ExpenseCategory>('other');
   const [form, setForm] = useState({
@@ -37,6 +41,7 @@ export default function NewExpenseScreen() {
     try {
       const now = Math.floor(Date.now() / 1000);
       const expense: NewExpense = {
+        vehicleId: activeVehicle?.id,
         category,
         amount: amountNum,
         description: form.description.trim() || undefined,
@@ -55,6 +60,10 @@ export default function NewExpenseScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['bottom']}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
       <ScrollView
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
@@ -109,6 +118,7 @@ export default function NewExpenseScreen() {
           />
         </View>
       </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

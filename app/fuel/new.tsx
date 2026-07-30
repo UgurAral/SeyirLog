@@ -5,6 +5,8 @@ import {
   Text,
   StyleSheet,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -12,12 +14,14 @@ import { Card } from '@components/ui/Card';
 import { Input } from '@components/ui/Input';
 import { Button } from '@components/ui/Button';
 import { useFuelStore } from '@stores/fuelStore';
+import { useVehicleStore } from '@stores/vehicleStore';
 import type { NewFuelEntry } from '@/types';
 import { formatCurrency } from '@utils/formatters';
 
 export default function NewFuelScreen() {
   const router = useRouter();
   const { addFuelEntry } = useFuelStore();
+  const { activeVehicle } = useVehicleStore();
 
   const [form, setForm] = useState({
     liters: '',
@@ -46,6 +50,7 @@ export default function NewFuelScreen() {
     try {
       const now = Math.floor(Date.now() / 1000);
       const entry: NewFuelEntry = {
+        vehicleId: activeVehicle?.id,
         liters: litersNum,
         pricePerLiter: priceNum,
         totalCost,
@@ -67,6 +72,10 @@ export default function NewFuelScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['bottom']}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
       <ScrollView
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
@@ -139,6 +148,7 @@ export default function NewFuelScreen() {
           />
         </View>
       </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

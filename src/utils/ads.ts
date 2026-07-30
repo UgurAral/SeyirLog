@@ -70,21 +70,25 @@ export function showRewardedAd(): Promise<boolean> {
 
     const unsubClose = rewarded.addAdEventListener('closed' as any, () => {
       if (!loaded) return;
+      // Reklam gerçekten gösterildi ama ödül alınmadan erken kapatıldı:
+      // kaydı yine de geçir, ama 5 dakikalık sayacı başlatma — kullanıcı
+      // reklamı tam izlemeden sayaç işlemiş olmasın.
       unsubLoad();
       unsubEarned();
       unsubClose();
-      resolve(false);
+      resolve(true);
     });
 
     rewarded.load();
 
-    // 10 sn içinde yüklenemezse geç (kullanıcıyı engelleme)
+    // Reklam 10 sn içinde hiç yüklenemezse kaydı YAPMA — sayaç da
+    // başlamaz, bir sonraki denemede tekrar reklam yüklemeyi dener.
     setTimeout(() => {
       if (!loaded) {
         unsubLoad();
         unsubEarned();
         unsubClose();
-        resolve(true);
+        resolve(false);
       }
     }, 10000);
   });

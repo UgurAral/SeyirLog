@@ -5,6 +5,8 @@ import {
   Text,
   StyleSheet,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -12,16 +14,17 @@ import { Card } from '@components/ui/Card';
 import { Input } from '@components/ui/Input';
 import { Button } from '@components/ui/Button';
 import { useTripStore } from '@stores/tripStore';
+import { useVehicleStore } from '@stores/vehicleStore';
 import type { NewTrip } from '@/types';
 
 export default function NewTripScreen() {
   const router = useRouter();
   const { addTrip } = useTripStore();
+  const { activeVehicle } = useVehicleStore();
 
   const [form, setForm] = useState({
     origin: '',
     destination: '',
-    startKm: '',
     notes: '',
   });
   const [saving, setSaving] = useState(false);
@@ -31,19 +34,14 @@ export default function NewTripScreen() {
       Alert.alert('Eksik Bilgi', 'Kalkış ve varış noktaları zorunludur.');
       return;
     }
-    const startKmNum = parseFloat(form.startKm);
-    if (isNaN(startKmNum) || startKmNum < 0) {
-      Alert.alert('Geçersiz KM', 'Lütfen geçerli bir başlangıç km değeri girin.');
-      return;
-    }
 
     setSaving(true);
     try {
       const now = Math.floor(Date.now() / 1000);
       const newTrip: NewTrip = {
+        vehicleId: activeVehicle?.id,
         origin: form.origin.trim(),
         destination: form.destination.trim(),
-        startKm: startKmNum,
         startTime: now,
         notes: form.notes.trim() || undefined,
         status: 'active',
@@ -61,6 +59,10 @@ export default function NewTripScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['bottom']}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
       <ScrollView
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
@@ -80,18 +82,6 @@ export default function NewTripScreen() {
             value={form.destination}
             onChangeText={(v) => setForm((f) => ({ ...f, destination: v }))}
             autoCapitalize="sentences"
-          />
-        </Card>
-
-        <Card style={styles.card}>
-          <Text style={styles.sectionTitle}>KM Bilgisi</Text>
-          <Input
-            label="Başlangıç KM *"
-            placeholder="Araç saatindeki km değeri"
-            value={form.startKm}
-            onChangeText={(v) => setForm((f) => ({ ...f, startKm: v }))}
-            keyboardType="numeric"
-            suffix="km"
           />
         </Card>
 
@@ -122,6 +112,7 @@ export default function NewTripScreen() {
           />
         </View>
       </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

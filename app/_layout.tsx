@@ -5,7 +5,6 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
 import { db } from '@db/index';
 import migrations from '@db/migrations';
-import { BackupOnboardingModal } from '@components/BackupOnboardingModal';
 import { useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { initAuthListener, useAuthStore } from '@stores/authStore';
@@ -50,7 +49,6 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <BackupOnboardingModal />
       <View style={styles.root}>
         <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
         <Stack

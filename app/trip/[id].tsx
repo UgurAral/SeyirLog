@@ -5,6 +5,8 @@ import {
   Text,
   StyleSheet,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -26,7 +28,7 @@ export default function TripDetailScreen() {
     [trips, tripId],
   );
 
-  const [endKm, setEndKm] = useState('');
+  const [distanceKm, setDistanceKm] = useState('');
   const [earnings, setEarnings] = useState('');
   const [completing, setCompleting] = useState(false);
 
@@ -48,10 +50,10 @@ export default function TripDetailScreen() {
       : null;
 
   const handleComplete = async () => {
-    const endKmNum = parseFloat(endKm);
+    const distanceNum = parseFloat(distanceKm);
     const earningsNum = parseFloat(earnings);
-    if (isNaN(endKmNum) || endKmNum <= trip.startKm) {
-      Alert.alert('Geçersiz KM', `Bitiş km, başlangıç km'den (${trip.startKm}) büyük olmalı.`);
+    if (isNaN(distanceNum) || distanceNum <= 0) {
+      Alert.alert('Geçersiz Mesafe', 'Lütfen gidilen mesafeyi (km) girin.');
       return;
     }
     if (isNaN(earningsNum) || earningsNum < 0) {
@@ -61,7 +63,7 @@ export default function TripDetailScreen() {
     setCompleting(true);
     try {
       const now = Math.floor(Date.now() / 1000);
-      await completeTrip(tripId, endKmNum, now, earningsNum);
+      await completeTrip(tripId, distanceNum, now, earningsNum);
       Alert.alert('Sefer Tamamlandı', 'Sefer başarıyla kapatıldı!');
     } catch (e) {
       Alert.alert('Hata', String(e));
@@ -108,6 +110,10 @@ export default function TripDetailScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['bottom']}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
       <ScrollView
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
@@ -135,7 +141,9 @@ export default function TripDetailScreen() {
           {trip.endTime ? (
             <DetailRow label="Bitiş" value={formatDateTime(trip.endTime)} />
           ) : null}
-          <DetailRow label="Başlangıç KM" value={formatKm(trip.startKm)} />
+          {trip.startKm != null && (
+            <DetailRow label="Başlangıç KM" value={formatKm(trip.startKm)} />
+          )}
           {trip.endKm != null && (
             <DetailRow label="Bitiş KM" value={formatKm(trip.endKm)} />
           )}
@@ -162,10 +170,10 @@ export default function TripDetailScreen() {
           <Card style={styles.card}>
             <Text style={styles.sectionTitle}>Seferi Tamamla</Text>
             <Input
-              label="Bitiş KM *"
-              placeholder={`${trip.startKm} km'den büyük olmalı`}
-              value={endKm}
-              onChangeText={setEndKm}
+              label="Mesafe (km) *"
+              placeholder="Kaç km gittiniz?"
+              value={distanceKm}
+              onChangeText={setDistanceKm}
               keyboardType="numeric"
               suffix="km"
             />
@@ -199,6 +207,7 @@ export default function TripDetailScreen() {
           />
         ) : null}
       </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

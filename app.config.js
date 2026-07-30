@@ -11,6 +11,7 @@ module.exports = {
       supportsTablet: false,
       bundleIdentifier: 'com.seyirlog.app',
       googleServicesFile: './GoogleService-Info.plist',
+      buildNumber: '1',
     },
     android: {
       adaptiveIcon: {
@@ -18,6 +19,7 @@ module.exports = {
       },
       package: 'com.seyirlog.app',
       "googleServicesFile": "./google-services.json",
+      versionCode: 1,
     },
 
     plugins: [

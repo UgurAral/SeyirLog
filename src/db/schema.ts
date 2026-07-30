@@ -33,7 +33,7 @@ export const trips = sqliteTable('trips', {
   vehicleId: integer('vehicle_id').references(() => vehicles.id),
   origin: text('origin').notNull(),
   destination: text('destination').notNull(),
-  startKm: real('start_km').notNull(),
+  startKm: real('start_km'),
   endKm: real('end_km'),
   distanceKm: real('distance_km'),
   startTime: integer('start_time').notNull(),
