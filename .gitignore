@@ -14,3 +14,5 @@ android/
 ios/
 .idea/
 .vscode/
+*.keystore
+*.jks

@@ -12,6 +12,9 @@ module.exports = {
       bundleIdentifier: 'com.seyirlog.app',
       googleServicesFile: './GoogleService-Info.plist',
       buildNumber: '1',
+      infoPlist: {
+        ITSAppUsesNonExemptEncryption: false,
+      },
     },
     android: {
       adaptiveIcon: {
