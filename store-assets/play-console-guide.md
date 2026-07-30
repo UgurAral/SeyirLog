@@ -4,9 +4,9 @@
 
 | Varlık | Gereksinim | Mevcut Durum |
 |---|---|---|
-| **Uygulama ikonu** | 512×512 px, 32-bit PNG (alfa kanallı), max 1 MB | `assets/icon.png` 1024×1024 var — Play Console'a yüklerken 512×512'ye küçültülmüş bir kopyası gerekebilir (bazı Play Console sürümleri APK/AAB'den otomatik alıyor, bazıları ayrı yükleme istiyor) |
-| **Feature graphic (kapak görseli)** | 1024×500 px, JPG veya 24-bit PNG (alfasız) | ❌ **Yok, oluşturulmalı** — store listing sayfasının en üstünde görünen banner |
-| **Telefon ekran görüntüleri** | Min 2, max 8 adet. JPEG/24-bit PNG (alfasız). Her boyut 320–3840 px arası. **En uzun kenar, en kısa kenarın 2 katından fazla olamaz** (max oran 2:1) | ❌ **Yok, oluşturulmalı** |
+| **Uygulama ikonu** | 512×512 px, 32-bit PNG (alfa kanallı), max 1 MB | ✅ `store-assets/icon-512.png` hazır |
+| **Feature graphic (kapak görseli)** | 1024×500 px, JPG veya 24-bit PNG (alfasız) | ✅ `store-assets/feature-graphic.png` hazır (programatik oluşturuldu — beğenmezsen tasarımcıya iyileştirtebilirsin) |
+| **Telefon ekran görüntüleri** | Min 2, max 8 adet. JPEG/24-bit PNG (alfasız). Her boyut 320–3840 px arası. **En uzun kenar, en kısa kenarın 2 katından fazla olamaz** (max oran 2:1) | ❌ **Yok, senin oluşturman lazım** — uygulamada demo veri girip Dashboard/Hızlı Giriş/liste/Profil ekranlarından ekran görüntüsü al, sonra bana ver, oranı Play'e uygun kırpayım |
 | 7" tablet ekran görüntüleri | Opsiyonel | Yok (gerekmiyor, telefon-only uygulama) |
 | 10" tablet ekran görüntüleri | Opsiyonel | Yok (gerekmiyor) |
 | Promo video | Opsiyonel, YouTube linki | Yok (opsiyonel, atlanabilir) |

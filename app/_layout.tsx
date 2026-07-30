@@ -25,6 +25,9 @@ export default function RootLayout() {
     if (!user) {
       stopRealtimeSync();
       router.replace('/auth');
+    } else if (!user.emailVerified) {
+      stopRealtimeSync();
+      router.replace('/verify-email');
     } else {
       startRealtimeSync();
     }
@@ -94,6 +97,10 @@ export default function RootLayout() {
           />
           <Stack.Screen
             name="auth"
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="verify-email"
             options={{ headerShown: false }}
           />
         </Stack>

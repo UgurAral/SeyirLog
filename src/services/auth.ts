@@ -3,7 +3,19 @@ import auth from '@react-native-firebase/auth';
 export const firebaseAuth = auth();
 
 export async function signUp(email: string, password: string) {
-  return firebaseAuth.createUserWithEmailAndPassword(email, password);
+  const result = await firebaseAuth.createUserWithEmailAndPassword(email, password);
+  await result.user.sendEmailVerification();
+  return result;
+}
+
+export async function sendVerificationEmail() {
+  const user = firebaseAuth.currentUser;
+  if (user) await user.sendEmailVerification();
+}
+
+export async function reloadCurrentUser() {
+  await firebaseAuth.currentUser?.reload();
+  return firebaseAuth.currentUser;
 }
 
 export async function signIn(email: string, password: string) {

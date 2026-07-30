@@ -4,7 +4,7 @@ import {
   StyleSheet, KeyboardAvoidingView, Platform, Alert, ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { signIn, signUp, resetPassword } from '@services/auth';
+import { signIn, signUp, resetPassword, firebaseAuth } from '@services/auth';
 import { onLoginSync } from '@services/sync';
 
 type Mode = 'login' | 'register' | 'reset';
@@ -24,13 +24,16 @@ export default function AuthScreen() {
     try {
       if (mode === 'login') {
         await signIn(email.trim(), password);
-        onLoginSync().catch(() => {});
-        router.replace('/(tabs)');
+        if (!firebaseAuth.currentUser?.emailVerified) {
+          router.replace('/verify-email');
+        } else {
+          onLoginSync().catch(() => {});
+          router.replace('/(tabs)');
+        }
       } else if (mode === 'register') {
         if (password.length < 6) return Alert.alert('Hata', 'Şifre en az 6 karakter olmalı.');
         await signUp(email.trim(), password);
-        onLoginSync().catch(() => {});
-        router.replace('/(tabs)');
+        router.replace('/verify-email');
       } else {
         await resetPassword(email.trim());
         Alert.alert('✅ Gönderildi', 'Şifre sıfırlama e-postası gönderildi.');
