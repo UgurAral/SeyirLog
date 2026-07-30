@@ -6,16 +6,16 @@
 **SeyirLog**
 
 ## 🏷️ Kısa Açıklama (80 karakter — Google Play)
-Sürücüler için sefer, yakıt ve gider takibi. Tamamen offline.
+Şoförün cebindeki muhasebeci: sefer, yakıt, gider, gelir — tek dokunuşla kayıt.
 
 ## 📝 Tam Açıklama — Türkçe (4000 karakter max)
 
-SeyirLog, profesyonel ve bireysel sürücüler için tasarlanmış, tamamen çevrimdışı çalışan bir seyir defteri uygulamasıdır.
+Gün sonunda "bugün ne kazandım, ne harcadım?" sorusuna Excel açmadan, elle hesap yapmadan cevap vermek ister misiniz? SeyirLog, taksi/VIP transfer şoförlerinden kurye ve satış temsilcilerine kadar direksiyon başında geçirdiği zamanı takip eden herkes için tasarlanmış bir kazanç ve gider defteridir.
 
 **Ne Yapabilirsiniz?**
 
 🚖 **Sefer Takibi**
-Her seferinizi kaydedin: kalkış noktası, varış noktası, başlangıç km, bitiş km, kazanç ve süre. Aktif sefer başlatıp sonradan tamamlayabilirsiniz.
+Her seferinizi kaydedin: kalkış noktası, varış noktası, gidilen mesafe, kazanç ve süre. Aktif sefer başlatıp sonradan tamamlayabilirsiniz.
 
 ⛽ **Yakıt Yönetimi**
 Yakıt doluşlarınızı takip edin. Litre, litre fiyatı ve toplam maliyet otomatik hesaplanır. Ortalama tüketim ve km başına maliyet görürsünüz.
@@ -29,24 +29,25 @@ Sefer dışı bonus ve ek gelirlerinizi de kayıt altına alın.
 📊 **Dönem Analizleri**
 Bugün / Bu Hafta / Bu Ay / Tümü filtresiyle net kazancınızı, toplam km'nizi ve sefer sayınızı anında görün.
 
-💾 **Veri Güvenliği**
-Tüm veriler yalnızca cihazınızda saklanır. JSON yedekleme ile verilerinizi WhatsApp, Drive veya e-posta ile güvence altına alın.
+☁️ **Çevrimdışı Çalışır, Bulutta Yedeklenir**
+Sefer/yakıt/gider kaydı internet olmadan da anında çalışır — veriler önce cihazınızda saklanır. Hesabınızla giriş yaptığınızda aynı veriler otomatik olarak bulutta yedeklenir ve birden fazla cihaz arasında senkronize edilir. Ayrıca istediğiniz an JSON olarak dışa aktarıp WhatsApp, Drive veya e-posta ile kendi yedeğinizi de alabilirsiniz.
 
 **Neden SeyirLog?**
-✅ İnternet bağlantısı gerekmez
+✅ Sefer/yakıt/gider girişi internet gerektirmez
 ✅ Hızlı giriş: tek ekranda sefer, yakıt, gider ve gelir
-✅ Net kazanç = Kazanç - Yakıt - Giderler otomatik hesap
+✅ Net kazanç = Kazanç + Gelir - Yakıt - Giderler otomatik hesap
+✅ Hesabınızla birden fazla cihazda aynı verilere erişin
 ✅ Ücretsiz — reklamlarla desteklenir
 
 ---
 
 ## 📝 Full Description — English
 
-SeyirLog is a fully offline logbook app designed for professional and personal drivers.
+Tired of guessing how much you actually earned today? SeyirLog is an earnings and expense logbook built for taxi/rideshare drivers, couriers, and anyone who tracks time on the road — no spreadsheets, no manual math.
 
 **Features:**
 
-🚖 **Trip Tracking** — Log every trip: origin, destination, start/end km, earnings, and duration.
+🚖 **Trip Tracking** — Log every trip: origin, destination, distance, earnings, and duration.
 
 ⛽ **Fuel Management** — Track fuel fills with automatic cost calculation.
 
@@ -56,9 +57,9 @@ SeyirLog is a fully offline logbook app designed for professional and personal d
 
 📊 **Period Analytics** — Today / Week / Month / All filters with net earnings, total km, and trip count.
 
-💾 **Data Safety** — All data stays on your device. Backup to JSON and restore anytime.
+☁️ **Works Offline, Backed Up in the Cloud** — Trip/fuel/expense entries work instantly without internet; data is saved to your device first. Once signed in, the same data is automatically backed up to the cloud and synced across your devices. You can also export a JSON backup anytime via WhatsApp, Drive, or email.
 
-✅ No internet required | ✅ Quick entry | ✅ Free, ad-supported
+✅ No internet needed for logging | ✅ Quick entry | ✅ Multi-device sync | ✅ Free, ad-supported
 
 ---
 
