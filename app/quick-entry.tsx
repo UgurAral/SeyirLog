@@ -54,17 +54,14 @@ export default function QuickEntryModal() {
   const handleAdGate = useCallback(async (): Promise<boolean> => {
     if (!adBlocked) return true;
     setAdLoading(true);
-    const watched = await showRewardedAd();
+    // showRewardedAd her zaman kaydın geçmesine izin verir (reklam ağı
+    // NO_FILL/hata dönse bile çekirdek işlev kilitlenmez) — yalnızca ödül
+    // tam kazanıldığında AsyncStorage'daki zaman damgasını günceller, o
+    // yüzden kapıyı ona göre yeniden değerlendiriyoruz.
+    await showRewardedAd();
     setAdLoading(false);
-    if (watched) {
-      // showRewardedAd yalnızca ödül tam kazanıldığında AsyncStorage'daki
-      // zaman damgasını günceller — kapıyı ona göre yeniden değerlendiriyoruz,
-      // reklam yarıda kapatılmışsa bir sonraki kayıtta kapı hâlâ kapalı kalır.
-      setAdBlocked(await shouldShowAd());
-    } else {
-      Alert.alert('Reklam Yüklenemedi', 'Kaydetmek için lütfen tekrar deneyin.');
-    }
-    return watched;
+    setAdBlocked(await shouldShowAd());
+    return true;
   }, [adBlocked]);
 
   // ── Sefer formu ──────────────────────────────────────────────────────────────

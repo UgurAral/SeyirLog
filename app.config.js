@@ -3,7 +3,7 @@ module.exports = {
   expo: {
     name: 'SeyirLog',
     slug: 'seyirlog',
-    version: '1.0.0',
+    version: '1.0.1',
     orientation: 'portrait',
     icon: './assets/icon.png',
     userInterfaceStyle: 'automatic',
@@ -22,7 +22,7 @@ module.exports = {
       },
       package: 'com.seyirlog.app',
       "googleServicesFile": "./google-services.json",
-      versionCode: 1,
+      versionCode: 2,
     },
 
     plugins: [

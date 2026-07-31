@@ -6,6 +6,7 @@
 
 import { Platform } from 'react-native';
 import {
+  AdEventType,
   BannerAd,
   BannerAdSize,
   RewardedAd,
@@ -76,19 +77,31 @@ export function showRewardedAd(): Promise<boolean> {
       unsubLoad();
       unsubEarned();
       unsubClose();
+      unsubError();
+      resolve(true);
+    });
+
+    // Reklam ağı NO_FILL/hata dönerse (AdMob'un doldurmadığı durumlar dahil)
+    // çekirdek işlevi (veri girişi) kilitleme — kaydı geçir, sayaç başlamaz.
+    const unsubError = rewarded.addAdEventListener(AdEventType.ERROR, () => {
+      unsubLoad();
+      unsubEarned();
+      unsubClose();
+      unsubError();
       resolve(true);
     });
 
     rewarded.load();
 
-    // Reklam 10 sn içinde hiç yüklenemezse kaydı YAPMA — sayaç da
+    // Reklam 10 sn içinde hiç yüklenemezse yine de kaydı geçir — sayaç
     // başlamaz, bir sonraki denemede tekrar reklam yüklemeyi dener.
     setTimeout(() => {
       if (!loaded) {
         unsubLoad();
         unsubEarned();
         unsubClose();
-        resolve(false);
+        unsubError();
+        resolve(true);
       }
     }, 10000);
   });
