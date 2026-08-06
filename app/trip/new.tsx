@@ -16,6 +16,7 @@ import { Input } from '@components/ui/Input';
 import { Button } from '@components/ui/Button';
 import { useTripStore } from '@stores/tripStore';
 import { useVehicleStore } from '@stores/vehicleStore';
+import { AdBanner } from '@components/AdBanner';
 import type { NewTrip } from '@/types';
 
 export default function NewTripScreen() {
@@ -25,25 +26,20 @@ export default function NewTripScreen() {
   const { activeVehicle } = useVehicleStore();
 
   const [form, setForm] = useState({
-    origin: '',
-    destination: '',
+    origin: 'A',
+    destination: 'B',
     notes: '',
   });
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
-    if (!form.origin.trim() || !form.destination.trim()) {
-      Alert.alert(t('tripNew.missingInfoTitle'), t('tripNew.missingInfoBody'));
-      return;
-    }
-
     setSaving(true);
     try {
       const now = Math.floor(Date.now() / 1000);
       const newTrip: NewTrip = {
         vehicleId: activeVehicle?.id,
-        origin: form.origin.trim(),
-        destination: form.destination.trim(),
+        origin: form.origin.trim() || 'A',
+        destination: form.destination.trim() || 'B',
         startTime: now,
         notes: form.notes.trim() || undefined,
         status: 'active',
@@ -65,6 +61,7 @@ export default function NewTripScreen() {
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
+      <AdBanner position="top" />
       <ScrollView
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"

@@ -8,6 +8,7 @@
  */
 
 import type { AnySQLiteTable } from 'drizzle-orm/sqlite-core';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { db as localDb } from '@db/index';
 import {
   vehicles, trips, fuelEntries, expenses, incomeEntries,
@@ -66,12 +67,33 @@ export async function pullFromCloud(): Promise<void> {
   await useIncomeStore.getState().fetchEntries();
 }
 
+// ── Yerel veriyi tamamen sil (hesap değişiminde önceki kullanıcının verisi
+// yeni hesaba karışmasın diye) ────────────────────────────────────────────────
+const LOCAL_DATA_UID_KEY = '@seyirlog_local_data_uid';
+
+export async function clearAllLocalData(): Promise<void> {
+  await localDb.delete(incomeEntries);
+  await localDb.delete(expenses);
+  await localDb.delete(fuelEntries);
+  await localDb.delete(trips);
+  await localDb.delete(vehicles);
+}
+
 // ── Giriş sonrası tam sync ───────────────────────────────────────────────────
-export async function onLoginSync(): Promise<void> {
+// Lokal SQLite, o an cihazda giriş yapılmış tek bir kullanıcıya ait kabul
+// edilir. Farklı bir hesapla giriş yapıldığında (uid değiştiğinde), önceki
+// kullanıcının kalıntı verisini yeni hesaba karıştırmamak / yanlışlıkla
+// onun Firestore'una push etmemek için önce lokal veriyi tamamen temizleyip
+// sıfırdan çekiyoruz — aynı hesaba tekrar giriş yapılıyorsa normal push+pull.
+export async function onLoginSync(uid: string): Promise<void> {
   try {
-    // 1. Lokal veri varsa cloud'a yükle
-    await pushAllToCloud();
-    // 2. Cloud'dan en güncel veriyi çek
+    const storedUid = await AsyncStorage.getItem(LOCAL_DATA_UID_KEY);
+    if (storedUid !== uid) {
+      await clearAllLocalData();
+      await AsyncStorage.setItem(LOCAL_DATA_UID_KEY, uid);
+    } else {
+      await pushAllToCloud();
+    }
     await pullFromCloud();
   } catch (e) {
     console.warn('Sync hatası:', e);

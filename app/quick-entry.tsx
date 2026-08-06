@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -21,7 +21,6 @@ import { useIncomeStore } from '@stores/incomeStore';
 import { useVehicles } from '@hooks/useVehicles';
 import { formatCurrency } from '@utils/formatters';
 import { useCurrencyStore, CURRENCY_SYMBOLS } from '@stores/currencyStore';
-import { shouldShowAd, showRewardedAd } from '@utils/ads';
 import { AdBanner } from '@components/AdBanner';
 import { useExpenseCategoryOptions } from '@/i18n/options';
 import type { ExpenseCategory } from '@/types';
@@ -48,52 +47,29 @@ export default function QuickEntryModal() {
   ];
 
   const vehicleId = activeVehicle?.id;
-  const [adBlocked, setAdBlocked] = useState(false);
-  const [adLoading, setAdLoading] = useState(false);
-
-  // Çalışırken reklam gerekip gerekmediğini kontrol et
-  useEffect(() => {
-    shouldShowAd().then(setAdBlocked);
-  }, []);
-
-  const handleAdGate = useCallback(async (): Promise<boolean> => {
-    if (!adBlocked) return true;
-    setAdLoading(true);
-    // showRewardedAd her zaman kaydın geçmesine izin verir (reklam ağı
-    // NO_FILL/hata dönse bile çekirdek işlev kilitlenmez) — yalnızca ödül
-    // tam kazanıldığında AsyncStorage'daki zaman damgasını günceller, o
-    // yüzden kapıyı ona göre yeniden değerlendiriyoruz.
-    await showRewardedAd();
-    setAdLoading(false);
-    setAdBlocked(await shouldShowAd());
-    return true;
-  }, [adBlocked]);
 
   // ── Sefer formu ──────────────────────────────────────────────────────────────
-  const [tripForm, setTripForm] = useState({ origin: '', destination: '' });
+  const [tripForm, setTripForm] = useState({ origin: 'A', destination: 'B' });
   const [endForm, setEndForm] = useState({ distanceKm: '', earnings: '' });
   const [tripSaving, setTripSaving] = useState(false);
 
   const handleStartTrip = useCallback(async () => {
-    if (!(await handleAdGate())) return;
-    if (!tripForm.origin.trim() || !tripForm.destination.trim()) {
-      Alert.alert(t('quickEntry.missingTitle'), t('quickEntry.missingRouteBody'));
-      return;
-    }
+    const origin = tripForm.origin.trim() || 'A';
+    const destination = tripForm.destination.trim() || 'B';
     setTripSaving(true);
     try {
       const now = Math.floor(Date.now() / 1000);
       await addTrip({
         vehicleId,
-        origin: tripForm.origin.trim(),
-        destination: tripForm.destination.trim(),
+        origin,
+        destination,
         startTime: now,
         status: 'active',
         createdAt: now,
         updatedAt: now,
       });
-      setTripForm({ origin: '', destination: '' });
-      Alert.alert(t('quickEntry.tripStartedTitle'), `${tripForm.origin} → ${tripForm.destination}`, [
+      setTripForm({ origin: 'A', destination: 'B' });
+      Alert.alert(t('quickEntry.tripStartedTitle'), `${origin} → ${destination}`, [
         { text: t('common.ok'), onPress: () => router.back() },
       ]);
     } catch (e) {
@@ -105,7 +81,6 @@ export default function QuickEntryModal() {
 
   const handleEndTrip = useCallback(async () => {
     if (!activeTrip) return;
-    if (!(await handleAdGate())) return;
     const distanceKm = parseFloat(endForm.distanceKm);
     const earnings = parseFloat(endForm.earnings) || 0;
     if (isNaN(distanceKm) || distanceKm <= 0) {
@@ -117,9 +92,10 @@ export default function QuickEntryModal() {
       const now = Math.floor(Date.now() / 1000);
       await completeTrip(activeTrip.id, distanceKm, now, earnings);
       setEndForm({ distanceKm: '', earnings: '' });
+      const perKm = distanceKm > 0 ? earnings / distanceKm : 0;
       Alert.alert(
         t('quickEntry.tripCompletedTitle'),
-        `${distanceKm.toFixed(0)} km · ${formatCurrency(earnings, activeCurrency)}`,
+        `${distanceKm.toFixed(0)} km · ${formatCurrency(earnings, activeCurrency)}\n${t('quickEntry.perKmLabel')}: ${formatCurrency(perKm, activeCurrency)}/km`,
         [{ text: t('common.ok'), onPress: () => router.back() }],
       );
     } catch (e) {
@@ -127,7 +103,7 @@ export default function QuickEntryModal() {
     } finally {
       setTripSaving(false);
     }
-  }, [activeTrip, endForm, completeTrip, router, t]);
+  }, [activeTrip, endForm, completeTrip, router, t, activeCurrency]);
 
   // ── Yakıt formu ──────────────────────────────────────────────────────────────
   const [fuelForm, setFuelForm] = useState({ liters: '', pricePerLiter: '', currentKm: '' });
@@ -135,7 +111,6 @@ export default function QuickEntryModal() {
   const fuelTotal = (parseFloat(fuelForm.liters) || 0) * (parseFloat(fuelForm.pricePerLiter) || 0);
 
   const handleAddFuel = useCallback(async () => {
-    if (!(await handleAdGate())) return;
     const liters = parseFloat(fuelForm.liters);
     const price = parseFloat(fuelForm.pricePerLiter);
     if (isNaN(liters) || liters <= 0 || isNaN(price) || price <= 0) {
@@ -175,7 +150,6 @@ export default function QuickEntryModal() {
   const [expenseSaving, setExpenseSaving] = useState(false);
 
   const handleAddExpense = useCallback(async () => {
-    if (!(await handleAdGate())) return;
     const amount = parseFloat(expenseForm.amount);
     if (isNaN(amount) || amount <= 0) {
       Alert.alert(t('quickEntry.missingTitle'), t('quickEntry.missingAmountBody'));
@@ -209,7 +183,6 @@ export default function QuickEntryModal() {
   const [incomeSaving, setIncomeSaving] = useState(false);
 
   const handleAddIncome = useCallback(async () => {
-    if (!(await handleAdGate())) return;
     const amount = parseFloat(incomeForm.amount);
     if (isNaN(amount) || amount <= 0) {
       Alert.alert(t('quickEntry.missingTitle'), t('quickEntry.missingAmountBody'));
@@ -244,15 +217,6 @@ export default function QuickEntryModal() {
       >
         {/* Üst banner */}
         <AdBanner position="top" />
-
-        {/* Reklam kapısı uyarısı */}
-        {adBlocked && (
-          <View style={styles.adGateBanner}>
-            <Text style={styles.adGateText}>
-              {adLoading ? t('quickEntry.adGateLoading') : t('quickEntry.adGateMessage')}
-            </Text>
-          </View>
-        )}
 
         {/* Header */}
         <View style={styles.header}>
@@ -327,6 +291,12 @@ export default function QuickEntryModal() {
                 /* Aktif sefer yok → başlatma formu */
                 <>
                   <Text style={styles.sectionLabel}>{t('quickEntry.startTripSection')}</Text>
+                  <SaveButton
+                    label={t('quickEntry.startTripButton')}
+                    color="#22C55E"
+                    loading={tripSaving}
+                    onPress={handleStartTrip}
+                  />
                   <QInput
                     label={t('quickEntry.departureLabel')}
                     placeholder={t('quickEntry.departurePlaceholder')}
@@ -340,12 +310,6 @@ export default function QuickEntryModal() {
                     value={tripForm.destination}
                     onChangeText={(v) => setTripForm((f) => ({ ...f, destination: v }))}
                     autoCapitalize="sentences"
-                  />
-                  <SaveButton
-                    label={t('quickEntry.startTripButton')}
-                    color="#22C55E"
-                    loading={tripSaving}
-                    onPress={handleStartTrip}
                   />
                 </>
               )}
@@ -540,19 +504,6 @@ function SaveButton({
 // ── Styles ────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  adGateBanner: {
-    backgroundColor: '#1E293B',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F59E0B40',
-  },
-  adGateText: {
-    color: '#F59E0B',
-    fontSize: 13,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
   safe: { flex: 1, backgroundColor: '#0F172A' },
 
   header: {

@@ -20,6 +20,7 @@ import { useCurrencyStore, CURRENCY_SYMBOLS } from '@stores/currencyStore';
 import type { NewIncomeEntry, IncomeSource } from '@/types';
 import { useIncomeSourceOptions } from '@/i18n/options';
 import { formatCurrency } from '@utils/formatters';
+import { AdBanner } from '@components/AdBanner';
 
 export default function NewIncomeScreen() {
   const router = useRouter();
@@ -69,6 +70,7 @@ export default function NewIncomeScreen() {
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
+      <AdBanner position="top" />
       <ScrollView
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"

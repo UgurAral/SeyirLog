@@ -13,9 +13,11 @@ import { useTranslation } from 'react-i18next';
 import { Card } from '@components/ui/Card';
 import { Input } from '@components/ui/Input';
 import { Button } from '@components/ui/Button';
+import { BrandModelFields } from '@components/ui/BrandModelFields';
 import { useVehicleStore } from '@stores/vehicleStore';
 import type { Vehicle, VehicleType, FuelType } from '@/types';
 import { useVehicleTypeOptions, useFuelTypeOptions } from '@/i18n/options';
+import { AdBanner } from '@components/AdBanner';
 
 export default function VehicleDetailScreen() {
   const router = useRouter();
@@ -31,6 +33,7 @@ export default function VehicleDetailScreen() {
   const [isEditing, setIsEditing] = useState(false);
   const [form, setForm] = useState<Partial<Vehicle>>(vehicle ?? {});
   const [saving, setSaving] = useState(false);
+  const [brandDropdownOpen, setBrandDropdownOpen] = useState(false);
 
   useEffect(() => {
     if (vehicle) {
@@ -122,6 +125,7 @@ export default function VehicleDetailScreen() {
             ) : null,
         }}
       />
+      <AdBanner position="top" />
       <ScrollView
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
@@ -190,21 +194,18 @@ export default function VehicleDetailScreen() {
         ) : (
           /* ─── Düzenleme Modu ─── */
           <>
-            <Card style={styles.card}>
+            <Card style={[styles.card, brandDropdownOpen && styles.cardRaised]}>
               <Text style={styles.sectionTitle}>{t('vehicleDetail.editSection')}</Text>
-              <Input
-                label={t('vehicleNew.brandLabel')}
-                placeholder={t('vehicleNew.brandPlaceholder')}
-                value={form.brand ?? ''}
-                onChangeText={(v) => setForm((f) => ({ ...f, brand: v }))}
-                autoCapitalize="words"
-              />
-              <Input
-                label={t('vehicleNew.modelLabel')}
-                placeholder={t('vehicleNew.modelPlaceholder')}
-                value={form.model ?? ''}
-                onChangeText={(v) => setForm((f) => ({ ...f, model: v }))}
-                autoCapitalize="words"
+              <BrandModelFields
+                brand={form.brand ?? ''}
+                model={form.model ?? ''}
+                onChangeBrand={(v) => setForm((f) => ({ ...f, brand: v }))}
+                onChangeModel={(v) => setForm((f) => ({ ...f, model: v }))}
+                brandLabel={t('vehicleNew.brandLabel')}
+                brandPlaceholder={t('vehicleNew.brandPlaceholder')}
+                modelLabel={t('vehicleNew.modelLabel')}
+                modelPlaceholder={t('vehicleNew.modelPlaceholder')}
+                onDropdownVisibleChange={setBrandDropdownOpen}
               />
               <Input
                 label={t('vehicleNew.plateLabel')}
@@ -342,6 +343,7 @@ const styles = StyleSheet.create({
   },
   activeBadgeText: { color: '#DCFCE7', fontSize: 12, fontWeight: '600' },
   card: { gap: 8 },
+  cardRaised: { zIndex: 50, elevation: 50 },
   sectionTitle: { color: '#F1F5F9', fontSize: 15, fontWeight: '700', marginBottom: 4 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   actionGroup: { gap: 10 },

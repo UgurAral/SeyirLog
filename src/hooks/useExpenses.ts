@@ -5,7 +5,7 @@ import { sumByCurrency } from '@utils/calculations';
 import { isInPeriod } from '@utils/dateHelpers';
 import type { ExpenseCategory } from '@/types';
 
-export type ExpensePeriod = 'today' | 'week' | 'month' | 'all';
+export type ExpensePeriod = 'today' | 'last24h' | 'week' | 'month' | 'all';
 
 /**
  * Gider verilerini ve kategorilere göre istatistikleri sağlayan hook.

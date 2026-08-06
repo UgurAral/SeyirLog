@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
   StyleSheet, KeyboardAvoidingView, Platform, Alert, ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { signIn, signUp, resetPassword, firebaseAuth } from '@services/auth';
+import * as AppleAuthentication from 'expo-apple-authentication';
+import { signIn, signUp, resetPassword, signInWithGoogle, signInWithApple, firebaseAuth } from '@services/auth';
 import { onLoginSync } from '@services/sync';
 
 type Mode = 'login' | 'register' | 'reset';
@@ -17,6 +18,50 @@ export default function AuthScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [appleLoading, setAppleLoading] = useState(false);
+  const [appleAvailable, setAppleAvailable] = useState(false);
+
+  useEffect(() => {
+    if (Platform.OS === 'ios') {
+      AppleAuthentication.isAvailableAsync().then(setAppleAvailable);
+    }
+  }, []);
+
+  const handleGoogleSignIn = async () => {
+    setGoogleLoading(true);
+    try {
+      const result = await signInWithGoogle();
+      // Google hesapları Firebase'e her zaman emailVerified: true olarak gelir,
+      // ayrıca doğrulama adımına gerek yok. Farklı bir hesaba geçilmiş olabilir —
+      // yönlendirmeden önce sync'in (ve gerekiyorsa lokal veri temizliğinin)
+      // bitmesini bekliyoruz ki önceki kullanıcının verisi asla görünmesin.
+      await onLoginSync(result.user.uid);
+      router.replace('/(tabs)');
+    } catch (e: any) {
+      if (e.code !== 'SIGN_IN_CANCELLED' && e.code !== '12501') {
+        Alert.alert(t('common.error'), e.message);
+      }
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
+  const handleAppleSignIn = async () => {
+    setAppleLoading(true);
+    try {
+      const result = await signInWithApple();
+      // Apple hesapları da Firebase'e emailVerified: true olarak gelir.
+      await onLoginSync(result.user.uid);
+      router.replace('/(tabs)');
+    } catch (e: any) {
+      if (e.code !== 'ERR_REQUEST_CANCELED') {
+        Alert.alert(t('common.error'), e.message);
+      }
+    } finally {
+      setAppleLoading(false);
+    }
+  };
 
   const handleSubmit = async () => {
     if (!email.trim()) return Alert.alert(t('common.error'), t('auth.emailRequired'));
@@ -25,11 +70,13 @@ export default function AuthScreen() {
     setLoading(true);
     try {
       if (mode === 'login') {
-        await signIn(email.trim(), password);
+        const result = await signIn(email.trim(), password);
         if (!firebaseAuth.currentUser?.emailVerified) {
           router.replace('/verify-email');
         } else {
-          onLoginSync().catch(() => {});
+          // Farklı bir hesaba geçilmiş olabilir — yönlendirmeden önce sync'in
+          // bitmesini bekliyoruz ki önceki kullanıcının verisi görünmesin.
+          await onLoginSync(result.user.uid);
           router.replace('/(tabs)');
         }
       } else if (mode === 'register') {
@@ -120,6 +167,44 @@ export default function AuthScreen() {
             </TouchableOpacity>
           )}
         </View>
+
+        {mode !== 'reset' && (
+          <>
+            <View style={styles.dividerRow}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>{t('auth.orDivider')}</Text>
+              <View style={styles.dividerLine} />
+            </View>
+
+            <TouchableOpacity
+              style={[styles.googleBtn, googleLoading && { opacity: 0.6 }]}
+              onPress={handleGoogleSignIn}
+              disabled={googleLoading || loading}
+              activeOpacity={0.85}
+            >
+              {googleLoading
+                ? <ActivityIndicator color="#1E293B" />
+                : <Text style={styles.googleBtnText}>{t('auth.googleButton')}</Text>
+              }
+            </TouchableOpacity>
+
+            {appleAvailable && (
+              appleLoading ? (
+                <View style={[styles.appleBtn, styles.appleBtnLoading]}>
+                  <ActivityIndicator color="#fff" />
+                </View>
+              ) : (
+                <AppleAuthentication.AppleAuthenticationButton
+                  buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
+                  buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+                  cornerRadius={12}
+                  style={styles.appleBtn}
+                  onPress={handleAppleSignIn}
+                />
+              )
+            )}
+          </>
+        )}
       </View>
     </KeyboardAvoidingView>
   );
@@ -139,4 +224,13 @@ const styles = StyleSheet.create({
   btnText: { color: '#fff', fontWeight: '700', fontSize: 16 },
   links: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 },
   link: { color: '#3B82F6', fontSize: 13 },
+  dividerRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 6 },
+  dividerLine: { flex: 1, height: 1, backgroundColor: '#334155' },
+  dividerText: { color: '#64748B', fontSize: 12 },
+  googleBtn: {
+    backgroundColor: '#F1F5F9', borderRadius: 12, paddingVertical: 14, alignItems: 'center',
+  },
+  googleBtnText: { color: '#1E293B', fontWeight: '700', fontSize: 16 },
+  appleBtn: { height: 48, width: '100%' },
+  appleBtnLoading: { backgroundColor: '#000', borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
 });

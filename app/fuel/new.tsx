@@ -19,6 +19,7 @@ import { useVehicleStore } from '@stores/vehicleStore';
 import { useCurrencyStore, CURRENCY_SYMBOLS } from '@stores/currencyStore';
 import type { NewFuelEntry } from '@/types';
 import { formatCurrency } from '@utils/formatters';
+import { AdBanner } from '@components/AdBanner';
 
 export default function NewFuelScreen() {
   const router = useRouter();
@@ -80,6 +81,7 @@ export default function NewFuelScreen() {
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
+      <AdBanner position="top" />
       <ScrollView
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"

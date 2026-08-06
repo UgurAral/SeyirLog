@@ -4,7 +4,7 @@ import { useCurrencyStore } from '@stores/currencyStore';
 import { sumByCurrency } from '@utils/calculations';
 import { isInPeriod } from '@utils/dateHelpers';
 
-export type IncomePeriod = 'today' | 'week' | 'month' | 'all';
+export type IncomePeriod = 'today' | 'last24h' | 'week' | 'month' | 'all';
 
 /**
  * Gelir kayıtlarını otomatik olarak yükler ve incomeStore'u expose eder.

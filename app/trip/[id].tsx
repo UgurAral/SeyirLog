@@ -18,6 +18,7 @@ import { useTripStore } from '@stores/tripStore';
 import { useCurrencyStore, CURRENCY_SYMBOLS } from '@stores/currencyStore';
 import { formatCurrency, formatKm, formatDateTime } from '@utils/formatters';
 import { calculateTripDuration } from '@utils/calculations';
+import { AdBanner } from '@components/AdBanner';
 
 export default function TripDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -68,7 +69,11 @@ export default function TripDetailScreen() {
     try {
       const now = Math.floor(Date.now() / 1000);
       await completeTrip(tripId, distanceNum, now, earningsNum);
-      Alert.alert(t('tripDetail.completedTitle'), t('tripDetail.completedBody'));
+      const perKm = distanceNum > 0 ? earningsNum / distanceNum : 0;
+      Alert.alert(
+        t('tripDetail.completedTitle'),
+        `${t('tripDetail.completedBody')}\n${t('tripDetail.perKmLabel')}: ${formatCurrency(perKm, activeCurrency)}/km`,
+      );
     } catch (e) {
       Alert.alert(t('common.error'), String(e));
     } finally {
@@ -118,6 +123,7 @@ export default function TripDetailScreen() {
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
+      <AdBanner position="top" />
       <ScrollView
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"

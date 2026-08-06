@@ -5,6 +5,8 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  ActivityIndicator,
+  Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -20,6 +22,7 @@ import { useCurrencyStore } from '@stores/currencyStore';
 import { formatKm } from '@utils/formatters';
 import { AdBanner } from '@components/AdBanner';
 import { CurrencyBreakdownValue } from '@components/ui/CurrencyBreakdownValue';
+import { showRewardedAd } from '@utils/ads';
 
 type Period = 'today' | 'week' | 'month' | 'all';
 
@@ -27,8 +30,18 @@ export default function DashboardScreen() {
   const router = useRouter();
   const { t } = useTranslation();
   const [period, setPeriod] = useState<Period>('today');
+  const [summaryLoading, setSummaryLoading] = useState(false);
   const { vehicles, activeVehicle } = useVehicles();
   const vehicleId = activeVehicle?.id;
+
+  const handleOpenDaySummary = async () => {
+    setSummaryLoading(true);
+    // Günün özeti, ödüllü reklam karşılığında açılan bir içerik — reklam ağı
+    // NO_FILL/hata dönse bile showRewardedAd her zaman devam etmeye izin verir.
+    await showRewardedAd();
+    setSummaryLoading(false);
+    router.push('/day-summary');
+  };
 
   const PERIODS: { id: Period; label: string }[] = [
     { id: 'today', label: t('periods.today') },
@@ -102,14 +115,17 @@ export default function DashboardScreen() {
         <AdBanner position="top" />
         {/* ── Header ── */}
         <View style={styles.header}>
-          <View>
-            <Text style={styles.appName}>SeyirLog</Text>
-            {activeVehicle && (
-              <Text style={styles.vehicleName} numberOfLines={1}>
-                {activeVehicle.brand} {activeVehicle.model}
-                {activeVehicle.plate ? ` · ${activeVehicle.plate}` : ''}
-              </Text>
-            )}
+          <View style={styles.appNameRow}>
+            <Image source={require('../../assets/icon.png')} style={styles.appLogo} />
+            <View>
+              <Text style={styles.appName}>SeyirLog</Text>
+              {activeVehicle && (
+                <Text style={styles.vehicleName} numberOfLines={1}>
+                  {activeVehicle.brand} {activeVehicle.model}
+                  {activeVehicle.plate ? ` · ${activeVehicle.plate}` : ''}
+                </Text>
+              )}
+            </View>
           </View>
           <TouchableOpacity
             onPress={() => router.push('/(tabs)/profile')}
@@ -142,6 +158,19 @@ export default function DashboardScreen() {
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
         >
+          {/* ── Günün Özeti butonu ── */}
+          <TouchableOpacity
+            style={[styles.daySummaryBtn, summaryLoading && { opacity: 0.7 }]}
+            onPress={handleOpenDaySummary}
+            disabled={summaryLoading}
+            activeOpacity={0.85}
+          >
+            {summaryLoading
+              ? <ActivityIndicator color="#fff" />
+              : <Text style={styles.daySummaryBtnText}>{t('dashboard.daySummaryButton')}</Text>
+            }
+          </TouchableOpacity>
+
           {/* ── Aktif Sefer Banner ── */}
           {activeTrip && (
             <TouchableOpacity
@@ -322,6 +351,8 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     paddingBottom: 8,
   },
+  appNameRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  appLogo: { width: 36, height: 36, borderRadius: 10 },
   appName: { color: '#F1F5F9', fontSize: 24, fontWeight: '800' },
   vehicleName: { color: '#64748B', fontSize: 12, marginTop: 1 },
   profileBtn: {
@@ -335,9 +366,9 @@ const styles = StyleSheet.create({
 
   periodBar: {
     flexDirection: 'row',
+    justifyContent: 'space-evenly',
     paddingHorizontal: 16,
     paddingBottom: 12,
-    gap: 8,
   },
   periodChip: {
     paddingHorizontal: 16,
@@ -353,6 +384,15 @@ const styles = StyleSheet.create({
 
   scroll: { flex: 1 },
   content: { paddingHorizontal: 16, gap: 12, paddingBottom: 16 },
+
+  daySummaryBtn: {
+    backgroundColor: '#3B82F6',
+    borderRadius: 14,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  daySummaryBtnText: { color: '#FFFFFF', fontWeight: '700', fontSize: 15 },
 
   activeTripCard: {
     flexDirection: 'row',

@@ -24,6 +24,7 @@ import { signOut } from '@services/auth';
 import { LANGUAGE_OPTIONS, changeLanguage, type SupportedLanguage } from '@/i18n';
 import { useCurrencyStore, type SupportedCurrency } from '@stores/currencyStore';
 import { useCurrencyOptions } from '@/i18n/options';
+import { AdBanner } from '@components/AdBanner';
 import type { Vehicle } from '@/types';
 
 export default function ProfileScreen() {
@@ -81,6 +82,7 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
+      <AdBanner position="top" />
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.content}
@@ -309,6 +311,9 @@ export default function ProfileScreen() {
           </Text>
         </Card>
       </ScrollView>
+      <View style={styles.bottomBannerWrap}>
+        <AdBanner position="bottom" />
+      </View>
     </SafeAreaView>
   );
 }
@@ -382,7 +387,8 @@ function VehicleCard({
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#0F172A' },
   scroll: { flex: 1 },
-  content: { padding: 16, gap: 16, paddingBottom: 40 },
+  content: { padding: 16, gap: 16, paddingBottom: 90 },
+  bottomBannerWrap: { position: 'absolute', bottom: 0, left: 0, right: 0 },
 
   headerRow: {
     flexDirection: 'row',

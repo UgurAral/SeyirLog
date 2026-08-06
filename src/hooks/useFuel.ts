@@ -4,7 +4,7 @@ import { useCurrencyStore } from '@stores/currencyStore';
 import { sumByCurrency } from '@utils/calculations';
 import { isInPeriod } from '@utils/dateHelpers';
 
-export type FuelPeriod = 'today' | 'week' | 'month' | 'all';
+export type FuelPeriod = 'today' | 'last24h' | 'week' | 'month' | 'all';
 
 /**
  * Yakıt verilerini ve istatistiklerini sağlayan hook.

@@ -18,6 +18,7 @@ import { useVehicles } from '@hooks/useVehicles';
 import { useCurrencyStore } from '@stores/currencyStore';
 import { formatLiters } from '@utils/formatters';
 import { CurrencyBreakdownValue } from '@components/ui/CurrencyBreakdownValue';
+import { AdBanner } from '@components/AdBanner';
 import type { FuelEntry } from '@/types';
 
 export default function FuelScreen() {
@@ -43,6 +44,7 @@ export default function FuelScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
+      <AdBanner position="top" />
       <FlatList
         data={filteredEntries}
         keyExtractor={(item) => String(item.id)}
@@ -135,13 +137,17 @@ export default function FuelScreen() {
           )
         }
       />
+      <View style={styles.bottomBannerWrap}>
+        <AdBanner position="bottom" />
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#0F172A' },
-  list: { padding: 16, paddingBottom: 32 },
+  list: { padding: 16, paddingBottom: 90 },
+  bottomBannerWrap: { position: 'absolute', bottom: 0, left: 0, right: 0 },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',

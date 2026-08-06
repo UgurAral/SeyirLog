@@ -34,11 +34,11 @@ export function getStartOfMonth(date: Date): number {
 /**
  * Verilen Unix timestamp'in belirtilen döneme dahil olup olmadığını kontrol eder.
  * @param timestamp - Unix saniye cinsinden timestamp
- * @param period - 'today' | 'week' | 'month'
+ * @param period - 'today' | 'last24h' | 'week' | 'month'
  */
 export function isInPeriod(
   timestamp: number,
-  period: 'today' | 'week' | 'month',
+  period: 'today' | 'last24h' | 'week' | 'month',
 ): boolean {
   const now = new Date();
   let start: number;
@@ -46,6 +46,9 @@ export function isInPeriod(
   switch (period) {
     case 'today':
       start = getStartOfDay(now);
+      break;
+    case 'last24h':
+      start = Math.floor(now.getTime() / 1000) - 24 * 60 * 60;
       break;
     case 'week':
       start = getStartOfWeek(now);

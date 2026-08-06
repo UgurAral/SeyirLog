@@ -24,6 +24,7 @@ import { isInPeriod } from '@utils/dateHelpers';
 import { sumByCurrency } from '@utils/calculations';
 import { formatCurrency, formatDate } from '@utils/formatters';
 import { CurrencyBreakdownValue } from '@components/ui/CurrencyBreakdownValue';
+import { AdBanner } from '@components/AdBanner';
 import type { IncomeEntry, IncomeSource, Expense, ExpenseCategory } from '@/types';
 
 type Mode = 'income' | 'expense';
@@ -41,6 +42,7 @@ export default function FinansScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
+      <AdBanner position="top" />
       <View style={styles.header}>
         <Text style={styles.title}>{t('finans.title')}</Text>
         <TouchableOpacity
@@ -73,6 +75,9 @@ export default function FinansScreen() {
       </View>
 
       {mode === 'income' ? <IncomeSection /> : <ExpenseSection />}
+      <View style={styles.bottomBannerWrap}>
+        <AdBanner position="bottom" />
+      </View>
     </SafeAreaView>
   );
 }
@@ -342,7 +347,8 @@ const styles = StyleSheet.create({
   modeTabText: { color: '#64748B', fontSize: 13, fontWeight: '700' },
   modeTabTextActive: { color: '#FFFFFF' },
 
-  list: { padding: 16, paddingBottom: 32 },
+  list: { padding: 16, paddingBottom: 90 },
+  bottomBannerWrap: { position: 'absolute', bottom: 0, left: 0, right: 0 },
   statCardValue: { fontSize: 22, fontWeight: '700' },
   totalCard: { marginBottom: 12 },
   statsRow: { flexDirection: 'row', gap: 12, marginBottom: 12 },

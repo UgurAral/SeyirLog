@@ -19,6 +19,7 @@ import { useVehicleStore } from '@stores/vehicleStore';
 import { useCurrencyStore, CURRENCY_SYMBOLS } from '@stores/currencyStore';
 import type { NewExpense, ExpenseCategory } from '@/types';
 import { useExpenseCategoryOptions } from '@/i18n/options';
+import { AdBanner } from '@components/AdBanner';
 
 export default function NewExpenseScreen() {
   const router = useRouter();
@@ -69,6 +70,7 @@ export default function NewExpenseScreen() {
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
+      <AdBanner position="top" />
       <ScrollView
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"

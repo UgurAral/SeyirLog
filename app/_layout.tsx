@@ -1,6 +1,7 @@
 import './global.css';
 import { Stack } from 'expo-router';
 import { View, StyleSheet, ActivityIndicator, Text, StatusBar } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
 import { db } from '@db/index';
@@ -66,6 +67,7 @@ export default function RootLayout() {
   }
 
   return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
     <SafeAreaProvider>
       <View style={styles.root}>
         <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
@@ -111,6 +113,10 @@ export default function RootLayout() {
             options={{ title: t('quickEntry.title'), presentation: 'modal', headerShown: false }}
           />
           <Stack.Screen
+            name="day-summary"
+            options={{ presentation: 'modal', headerShown: false }}
+          />
+          <Stack.Screen
             name="auth"
             options={{ headerShown: false }}
           />
@@ -125,6 +131,7 @@ export default function RootLayout() {
         </Stack>
       </View>
     </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
 

@@ -17,6 +17,7 @@ import { useVehicles } from '@hooks/useVehicles';
 import { useCurrencyStore } from '@stores/currencyStore';
 import { formatKm } from '@utils/formatters';
 import { CurrencyBreakdownValue } from '@components/ui/CurrencyBreakdownValue';
+import { AdBanner } from '@components/AdBanner';
 import type { Trip } from '@/types';
 
 export default function TripsScreen() {
@@ -40,6 +41,7 @@ export default function TripsScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
+      <AdBanner position="top" />
       <FlatList
         data={filteredTrips}
         keyExtractor={(item) => String(item.id)}
@@ -92,6 +94,9 @@ export default function TripsScreen() {
           )
         }
       />
+      <View style={styles.bottomBannerWrap}>
+        <AdBanner position="bottom" />
+      </View>
     </SafeAreaView>
   );
 }
@@ -119,7 +124,8 @@ function SummaryItem({
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#0F172A' },
-  list: { padding: 16, paddingBottom: 32 },
+  list: { padding: 16, paddingBottom: 90 },
+  bottomBannerWrap: { position: 'absolute', bottom: 0, left: 0, right: 0 },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',

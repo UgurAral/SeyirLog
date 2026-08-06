@@ -5,7 +5,10 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { deleteAccount } from '@services/accountDeletion';
+import { deleteAccountWithPassword, deleteAccountWithGoogle, deleteAccountWithApple } from '@services/accountDeletion';
+import { firebaseAuth } from '@services/auth';
+
+type ReauthProvider = 'password' | 'google' | 'apple';
 
 export default function DeleteAccountScreen() {
   const router = useRouter();
@@ -13,11 +16,16 @@ export default function DeleteAccountScreen() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleDelete = () => {
-    if (!password) {
-      return Alert.alert(t('deleteAccount.passwordRequiredTitle'), t('deleteAccount.passwordRequiredBody'));
-    }
+  // Google/Apple ile giriş yapmış kullanıcıların şifresi yok — sağlayıcıya
+  // göre farklı bir yeniden doğrulama akışı gerekiyor.
+  const providerIds = firebaseAuth.currentUser?.providerData.map((p) => p.providerId) ?? ['password'];
+  const provider: ReauthProvider = providerIds.includes('password')
+    ? 'password'
+    : providerIds.includes('apple.com')
+      ? 'apple'
+      : 'google';
 
+  const runDelete = (deleteFn: () => Promise<void>) => {
     Alert.alert(
       t('deleteAccount.confirmTitle'),
       t('deleteAccount.confirmBody'),
@@ -29,7 +37,7 @@ export default function DeleteAccountScreen() {
           onPress: async () => {
             setLoading(true);
             try {
-              await deleteAccount(password);
+              await deleteFn();
               // Firebase auth durumu değişince app/_layout.tsx otomatik
               // olarak /auth ekranına yönlendirir.
             } catch (e: any) {
@@ -47,6 +55,16 @@ export default function DeleteAccountScreen() {
     );
   };
 
+  const handleDelete = () => {
+    if (!password) {
+      return Alert.alert(t('deleteAccount.passwordRequiredTitle'), t('deleteAccount.passwordRequiredBody'));
+    }
+    runDelete(() => deleteAccountWithPassword(password));
+  };
+
+  const handleProviderDelete = () =>
+    runDelete(provider === 'apple' ? deleteAccountWithApple : deleteAccountWithGoogle);
+
   return (
     <KeyboardAvoidingView
       style={styles.root}
@@ -57,25 +75,33 @@ export default function DeleteAccountScreen() {
         <Text style={styles.title}>{t('deleteAccount.title')}</Text>
         <Text style={styles.warning}>{t('deleteAccount.warning')}</Text>
 
-        <TextInput
-          style={styles.input}
-          placeholder={t('deleteAccount.passwordPlaceholder')}
-          placeholderTextColor="#475569"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          autoCapitalize="none"
-        />
+        {provider === 'password' && (
+          <TextInput
+            style={styles.input}
+            placeholder={t('deleteAccount.passwordPlaceholder')}
+            placeholderTextColor="#475569"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+            autoCapitalize="none"
+          />
+        )}
 
         <TouchableOpacity
           style={[styles.deleteBtn, loading && { opacity: 0.6 }]}
-          onPress={handleDelete}
+          onPress={provider === 'password' ? handleDelete : handleProviderDelete}
           disabled={loading}
           activeOpacity={0.85}
         >
           {loading
             ? <ActivityIndicator color="#fff" />
-            : <Text style={styles.deleteBtnText}>{t('deleteAccount.deleteButton')}</Text>
+            : <Text style={styles.deleteBtnText}>
+                {provider === 'password'
+                  ? t('deleteAccount.deleteButton')
+                  : provider === 'apple'
+                    ? t('deleteAccount.deleteButtonApple')
+                    : t('deleteAccount.deleteButtonGoogle')}
+              </Text>
           }
         </TouchableOpacity>
 

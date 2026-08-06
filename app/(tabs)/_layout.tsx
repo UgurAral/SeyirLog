@@ -1,5 +1,6 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 
 type IoniconName = React.ComponentProps<typeof Ionicons>['name'];
 
@@ -10,46 +11,46 @@ interface TabConfig {
   iconFocused: IoniconName;
 }
 
-const TABS: TabConfig[] = [
-  {
-    name: 'index',
-    title: 'Ana Sayfa',
-    icon: 'home-outline',
-    iconFocused: 'home',
-  },
-  {
-    name: 'trips',
-    title: 'Seferler',
-    icon: 'navigate-circle-outline',
-    iconFocused: 'navigate-circle',
-  },
-  {
-    name: 'fuel',
-    title: 'Yakıt',
-    icon: 'flame-outline',
-    iconFocused: 'flame',
-  },
-  {
-    name: 'finans',
-    title: 'Finans',
-    icon: 'swap-vertical-outline',
-    iconFocused: 'swap-vertical',
-  },
-  {
-    name: 'profile',
-    title: 'Araç & Profil',
-    icon: 'car-outline',
-    iconFocused: 'car',
-  },
-];
-
 export default function TabsLayout() {
+  const { t } = useTranslation();
+
+  const TABS: TabConfig[] = [
+    {
+      name: 'index',
+      title: t('tabs.home'),
+      icon: 'home-outline',
+      iconFocused: 'home',
+    },
+    {
+      name: 'trips',
+      title: t('tabs.trips'),
+      icon: 'navigate-circle-outline',
+      iconFocused: 'navigate-circle',
+    },
+    {
+      name: 'fuel',
+      title: t('tabs.fuel'),
+      icon: 'flame-outline',
+      iconFocused: 'flame',
+    },
+    {
+      name: 'finans',
+      title: t('tabs.finans'),
+      icon: 'swap-vertical-outline',
+      iconFocused: 'swap-vertical',
+    },
+    {
+      name: 'profile',
+      title: t('tabs.profile'),
+      icon: 'car-outline',
+      iconFocused: 'car',
+    },
+  ];
+
   return (
     <Tabs
       screenOptions={{
-        headerStyle: { backgroundColor: '#1a1a2e' },
-        headerTintColor: '#F1F5F9',
-        headerTitleStyle: { fontWeight: '700' },
+        headerShown: false,
         tabBarStyle: {
           backgroundColor: '#1E293B',
           borderTopColor: '#334155',

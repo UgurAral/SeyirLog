@@ -12,6 +12,7 @@ module.exports = {
       bundleIdentifier: 'com.seyirlog.app',
       googleServicesFile: './GoogleService-Info.plist',
       buildNumber: '3',
+      usesAppleSignIn: true,
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
       },
@@ -51,6 +52,8 @@ module.exports = {
         },
       ],
       ['expo-sqlite', { useSQLiteCPP: true }],
+      '@react-native-google-signin/google-signin',
+      'expo-apple-authentication',
       './plugins/withFirebaseModularHeadersFix',
       [
         'react-native-google-mobile-ads',

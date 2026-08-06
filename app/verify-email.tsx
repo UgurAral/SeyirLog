@@ -23,7 +23,7 @@ export default function VerifyEmailScreen() {
       if (updatedUser?.emailVerified) {
         setUser(updatedUser);
         startRealtimeSync();
-        onLoginSync().catch(() => {});
+        await onLoginSync(updatedUser.uid);
         router.replace('/(tabs)');
       } else {
         Alert.alert(t('verifyEmail.notVerifiedTitle'), t('verifyEmail.notVerifiedBody'));

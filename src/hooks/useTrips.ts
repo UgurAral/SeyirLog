@@ -6,7 +6,7 @@ import { useExpenseStore } from '@stores/expenseStore';
 import { useCurrencyStore } from '@stores/currencyStore';
 import { isInPeriod } from '@utils/dateHelpers';
 
-export type TripPeriod = 'today' | 'week' | 'month' | 'all';
+export type TripPeriod = 'today' | 'last24h' | 'week' | 'month' | 'all';
 
 /**
  * Sefer verilerini ve ilgili yardımcı fonksiyonları sağlayan hook.
