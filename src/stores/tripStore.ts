@@ -3,6 +3,7 @@ import { eq, desc } from 'drizzle-orm';
 import { db } from '@db/index';
 import { trips } from '@db/schema';
 import { syncUpsert, syncDelete } from '@services/firestore';
+import { useCurrencyStore } from '@stores/currencyStore';
 import type { Trip, NewTrip } from '@/types';
 
 interface TripStore {
@@ -64,7 +65,12 @@ export const useTripStore = create<TripStore>((set, get) => ({
 
   addTrip: async (trip: NewTrip) => {
     const now = Math.floor(Date.now() / 1000);
-    const newTrip = { ...trip, createdAt: now, updatedAt: now };
+    const newTrip = {
+      ...trip,
+      currency: useCurrencyStore.getState().currency,
+      createdAt: now,
+      updatedAt: now,
+    };
     const result = await db.insert(trips).values(newTrip).returning();
     const inserted = result[0];
     set((state) => ({ trips: [inserted, ...state.trips] }));
@@ -104,12 +110,14 @@ export const useTripStore = create<TripStore>((set, get) => ({
     const durationMinutes = trip
       ? Math.floor((endTime - trip.startTime) / 60)
       : undefined;
+    const currency = useCurrencyStore.getState().currency;
 
     await db
       .update(trips)
       .set({
         endTime,
         earnings,
+        currency,
         distanceKm,
         durationMinutes,
         status: 'completed',
@@ -124,6 +132,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
               ...t,
               endTime,
               earnings,
+              currency,
               distanceKm,
               durationMinutes: durationMinutes ?? t.durationMinutes,
               status: 'completed',
@@ -136,6 +145,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
     syncUpsert('trips', id, {
       endTime,
       earnings,
+      currency,
       distanceKm,
       durationMinutes,
       status: 'completed',

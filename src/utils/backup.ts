@@ -21,6 +21,7 @@ import {
   expenses,
   incomeEntries,
 } from '@db/schema';
+import i18n from '@/i18n';
 
 const BACKUP_VERSION = 1;
 const APP_VERSION = '1.1.0';
@@ -77,7 +78,7 @@ export async function exportBackup(): Promise<{ success: boolean; message: strin
 
     const json = JSON.stringify(backup, null, 2);
     const date = new Date().toISOString().slice(0, 10);
-    const fileName = `SeyirLog_yedek_${date}.json`;
+    const fileName = `${i18n.t('backup.fileNamePrefix')}_${date}.json`;
 
     // Yeni expo-file-system v19 API
     const file = new File(Paths.cache, fileName);
@@ -85,18 +86,18 @@ export async function exportBackup(): Promise<{ success: boolean; message: strin
 
     const canShare = await Sharing.isAvailableAsync();
     if (!canShare) {
-      return { success: false, message: 'Paylaşım bu cihazda desteklenmiyor.' };
+      return { success: false, message: i18n.t('backup.notSupported') };
     }
 
     await Sharing.shareAsync(file.uri, {
       mimeType: 'application/json',
-      dialogTitle: 'SeyirLog Yedeği',
+      dialogTitle: i18n.t('backup.shareDialogTitle'),
       UTI: 'public.json',
     });
 
-    return { success: true, message: 'Yedek başarıyla oluşturuldu.' };
+    return { success: true, message: i18n.t('backup.exportSuccess') };
   } catch (err) {
-    return { success: false, message: `Yedekleme hatası: ${String(err)}` };
+    return { success: false, message: i18n.t('backup.exportError', { error: String(err) }) };
   }
 }
 
@@ -110,7 +111,7 @@ export async function importBackup(): Promise<RestoreResult> {
     });
 
     if (result.canceled || !result.assets?.[0]) {
-      return { success: false, message: 'Dosya seçimi iptal edildi.' };
+      return { success: false, message: i18n.t('backup.cancelled') };
     }
 
     const uri = result.assets[0].uri;
@@ -121,16 +122,16 @@ export async function importBackup(): Promise<RestoreResult> {
     try {
       backup = JSON.parse(content);
     } catch {
-      return { success: false, message: 'Geçersiz dosya formatı.' };
+      return { success: false, message: i18n.t('backup.invalidFormat') };
     }
 
     if (!backup.version || !backup.data) {
-      return { success: false, message: 'Bu dosya SeyirLog yedeği değil.' };
+      return { success: false, message: i18n.t('backup.notBackupFile') };
     }
     if (backup.version !== BACKUP_VERSION) {
       return {
         success: false,
-        message: `Uyumsuz yedek versiyonu (v${backup.version}).`,
+        message: i18n.t('backup.incompatibleVersion', { version: backup.version }),
       };
     }
 
@@ -166,8 +167,8 @@ export async function importBackup(): Promise<RestoreResult> {
       counts.incomeEntries = d.incomeEntries.length;
     }
 
-    return { success: true, message: 'Veriler başarıyla geri yüklendi.', counts };
+    return { success: true, message: i18n.t('backup.restoreSuccess'), counts };
   } catch (err) {
-    return { success: false, message: `Geri yükleme hatası: ${String(err)}` };
+    return { success: false, message: i18n.t('backup.restoreError', { error: String(err) }) };
   }
 }

@@ -57,11 +57,3 @@ export function isInPeriod(
 
   return timestamp >= start;
 }
-
-/** Dönem etiketlerini Türkçe döndürür. */
-export const PERIOD_LABELS: Record<'today' | 'week' | 'month' | 'all', string> = {
-  today: 'Bugün',
-  week: 'Bu Hafta',
-  month: 'Bu Ay',
-  all: 'Tümü',
-};

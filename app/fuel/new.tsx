@@ -10,18 +10,22 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { Card } from '@components/ui/Card';
 import { Input } from '@components/ui/Input';
 import { Button } from '@components/ui/Button';
 import { useFuelStore } from '@stores/fuelStore';
 import { useVehicleStore } from '@stores/vehicleStore';
+import { useCurrencyStore, CURRENCY_SYMBOLS } from '@stores/currencyStore';
 import type { NewFuelEntry } from '@/types';
 import { formatCurrency } from '@utils/formatters';
 
 export default function NewFuelScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const { addFuelEntry } = useFuelStore();
   const { activeVehicle } = useVehicleStore();
+  const activeCurrency = useCurrencyStore((s) => s.currency);
 
   const [form, setForm] = useState({
     liters: '',
@@ -38,11 +42,11 @@ export default function NewFuelScreen() {
 
   const handleSave = async () => {
     if (!form.liters || !form.pricePerLiter) {
-      Alert.alert('Eksik Bilgi', 'Litre ve litre fiyatı zorunludur.');
+      Alert.alert(t('fuelNew.missingInfoTitle'), t('fuelNew.missingInfoBody'));
       return;
     }
     if (litersNum <= 0 || priceNum <= 0) {
-      Alert.alert('Geçersiz Değer', 'Litre ve fiyat sıfırdan büyük olmalıdır.');
+      Alert.alert(t('fuelNew.invalidValueTitle'), t('fuelNew.invalidValueBody'));
       return;
     }
 
@@ -64,7 +68,7 @@ export default function NewFuelScreen() {
       await addFuelEntry(entry);
       router.back();
     } catch (e) {
-      Alert.alert('Hata', String(e));
+      Alert.alert(t('common.error'), String(e));
     } finally {
       setSaving(false);
     }
@@ -81,51 +85,51 @@ export default function NewFuelScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <Card style={styles.card}>
-          <Text style={styles.sectionTitle}>Yakıt Bilgileri</Text>
+          <Text style={styles.sectionTitle}>{t('fuelNew.fuelInfo')}</Text>
           <Input
-            label="Litre *"
-            placeholder="Kaç litre yakıt aldın?"
+            label={t('fuelNew.litersLabel')}
+            placeholder={t('fuelNew.litersPlaceholder')}
             value={form.liters}
             onChangeText={(v) => setForm((f) => ({ ...f, liters: v }))}
             keyboardType="numeric"
             suffix="L"
           />
           <Input
-            label="Litre Fiyatı *"
-            placeholder="Litre başı fiyat"
+            label={t('fuelNew.priceLabel')}
+            placeholder={t('fuelNew.pricePlaceholder')}
             value={form.pricePerLiter}
             onChangeText={(v) => setForm((f) => ({ ...f, pricePerLiter: v }))}
             keyboardType="numeric"
-            suffix="₺/L"
+            suffix={`${CURRENCY_SYMBOLS[activeCurrency]}/L`}
           />
           {totalCost > 0 && (
             <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Toplam Maliyet</Text>
-              <Text style={styles.totalValue}>{formatCurrency(totalCost)}</Text>
+              <Text style={styles.totalLabel}>{t('fuelNew.totalCostLabel')}</Text>
+              <Text style={styles.totalValue}>{formatCurrency(totalCost, activeCurrency)}</Text>
             </View>
           )}
         </Card>
 
         <Card style={styles.card}>
-          <Text style={styles.sectionTitle}>Ek Bilgiler</Text>
+          <Text style={styles.sectionTitle}>{t('fuelNew.additionalInfo')}</Text>
           <Input
-            label="Güncel KM"
-            placeholder="Araç saatindeki km değeri"
+            label={t('fuelNew.currentKmLabel')}
+            placeholder={t('fuelNew.currentKmPlaceholder')}
             value={form.currentKm}
             onChangeText={(v) => setForm((f) => ({ ...f, currentKm: v }))}
             keyboardType="numeric"
             suffix="km"
           />
           <Input
-            label="İstasyon Adı"
-            placeholder="Örn: Shell, BP, Opet..."
+            label={t('fuelNew.stationLabel')}
+            placeholder={t('fuelNew.stationPlaceholder')}
             value={form.stationName}
             onChangeText={(v) => setForm((f) => ({ ...f, stationName: v }))}
             autoCapitalize="words"
           />
           <Input
-            label="Not"
-            placeholder="İsteğe bağlı not..."
+            label={t('fuelNew.noteLabel')}
+            placeholder={t('fuelNew.notePlaceholder')}
             value={form.notes}
             onChangeText={(v) => setForm((f) => ({ ...f, notes: v }))}
             multiline
@@ -135,13 +139,13 @@ export default function NewFuelScreen() {
 
         <View style={styles.actions}>
           <Button
-            label="İptal"
+            label={t('common.cancel')}
             onPress={() => router.back()}
             variant="ghost"
             style={styles.actionBtn}
           />
           <Button
-            label="⛽ Yakıtı Kaydet"
+            label={t('fuelNew.saveButton')}
             onPress={handleSave}
             loading={saving}
             style={styles.actionBtn}

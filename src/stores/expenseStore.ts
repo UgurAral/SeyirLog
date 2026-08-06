@@ -3,6 +3,7 @@ import { eq, desc } from 'drizzle-orm';
 import { db } from '@db/index';
 import { expenses } from '@db/schema';
 import { syncUpsert, syncDelete } from '@services/firestore';
+import { useCurrencyStore } from '@stores/currencyStore';
 import type { Expense, NewExpense, ExpenseCategory } from '@/types';
 
 interface ExpenseStore {
@@ -14,8 +15,11 @@ interface ExpenseStore {
   addExpense: (expense: NewExpense) => Promise<Expense>;
   updateExpense: (id: number, data: Partial<NewExpense>) => Promise<void>;
   deleteExpense: (id: number) => Promise<void>;
-  getTotalExpenses: (vehicleId?: number) => number;
-  getExpensesByCategory: (vehicleId?: number) => Record<ExpenseCategory, number>;
+  getTotalExpenses: (vehicleId?: number, currency?: string) => number;
+  getExpensesByCategory: (
+    vehicleId?: number,
+    currency?: string,
+  ) => Record<ExpenseCategory, number>;
 }
 
 export const useExpenseStore = create<ExpenseStore>((set, get) => ({
@@ -41,7 +45,12 @@ export const useExpenseStore = create<ExpenseStore>((set, get) => ({
 
   addExpense: async (expense: NewExpense) => {
     const now = Math.floor(Date.now() / 1000);
-    const newExpense = { ...expense, createdAt: now, updatedAt: now };
+    const newExpense = {
+      ...expense,
+      currency: useCurrencyStore.getState().currency,
+      createdAt: now,
+      updatedAt: now,
+    };
     const result = await db.insert(expenses).values(newExpense).returning();
     const inserted = result[0];
     set((state) => ({ expenses: [inserted, ...state.expenses] }));
@@ -71,17 +80,19 @@ export const useExpenseStore = create<ExpenseStore>((set, get) => ({
     syncDelete('expenses', id);
   },
 
-  getTotalExpenses: (vehicleId?: number) => {
-    const list = vehicleId
+  getTotalExpenses: (vehicleId?: number, currency?: string) => {
+    let list = vehicleId
       ? get().expenses.filter((e) => e.vehicleId === vehicleId)
       : get().expenses;
+    if (currency) list = list.filter((e) => e.currency === currency);
     return list.reduce((sum, e) => sum + e.amount, 0);
   },
 
-  getExpensesByCategory: (vehicleId?: number) => {
-    const list = vehicleId
+  getExpensesByCategory: (vehicleId?: number, currency?: string) => {
+    let list = vehicleId
       ? get().expenses.filter((e) => e.vehicleId === vehicleId)
       : get().expenses;
+    if (currency) list = list.filter((e) => e.currency === currency);
 
     const initial: Record<ExpenseCategory, number> = {
       bridge: 0,

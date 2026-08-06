@@ -9,6 +9,7 @@ import {
   Pressable,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { useVehicles } from '@hooks/useVehicles';
 import type { Vehicle } from '@/types';
 
@@ -27,6 +28,7 @@ function formatVehicleLabel(vehicle: Vehicle): string {
  * Dashboard header'ında kullanılır.
  */
 export function VehiclePicker({ style }: VehiclePickerProps) {
+  const { t } = useTranslation();
   const { vehicles, activeVehicle, setActiveVehicle } = useVehicles();
   const [visible, setVisible] = useState(false);
 
@@ -55,7 +57,7 @@ export function VehiclePicker({ style }: VehiclePickerProps) {
         activeOpacity={0.8}
       >
         <Text style={styles.vehicleLabel} numberOfLines={1}>
-          {activeVehicle ? formatVehicleLabel(activeVehicle) : 'Araç Seç'}
+          {activeVehicle ? formatVehicleLabel(activeVehicle) : t('vehicle.pickerTitle')}
         </Text>
         <Ionicons name="chevron-down" size={14} color="#94A3B8" />
       </TouchableOpacity>
@@ -68,7 +70,7 @@ export function VehiclePicker({ style }: VehiclePickerProps) {
       >
         <Pressable style={styles.overlay} onPress={() => setVisible(false)}>
           <View style={styles.sheet}>
-            <Text style={styles.sheetTitle}>Araç Seç</Text>
+            <Text style={styles.sheetTitle}>{t('vehicle.pickerTitle')}</Text>
             <FlatList
               data={vehicles}
               keyExtractor={(item) => String(item.id)}

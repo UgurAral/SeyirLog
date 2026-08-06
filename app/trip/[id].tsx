@@ -10,17 +10,21 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { Card } from '@components/ui/Card';
 import { Button } from '@components/ui/Button';
 import { Input } from '@components/ui/Input';
 import { useTripStore } from '@stores/tripStore';
-import { formatCurrency, formatKm, formatDateTime, formatDuration } from '@utils/formatters';
+import { useCurrencyStore, CURRENCY_SYMBOLS } from '@stores/currencyStore';
+import { formatCurrency, formatKm, formatDateTime } from '@utils/formatters';
 import { calculateTripDuration } from '@utils/calculations';
 
 export default function TripDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { t, i18n } = useTranslation();
   const { trips, completeTrip, cancelTrip, deleteTrip } = useTripStore();
+  const activeCurrency = useCurrencyStore((s) => s.currency);
 
   const tripId = parseInt(id, 10);
   const trip = useMemo(
@@ -36,8 +40,8 @@ export default function TripDetailScreen() {
     return (
       <SafeAreaView style={styles.safe}>
         <View style={styles.center}>
-          <Text style={styles.notFound}>Sefer bulunamadı</Text>
-          <Button label="Geri" onPress={() => router.back()} variant="ghost" />
+          <Text style={styles.notFound}>{t('tripDetail.notFound')}</Text>
+          <Button label={t('common.back')} onPress={() => router.back()} variant="ghost" />
         </View>
       </SafeAreaView>
     );
@@ -46,27 +50,27 @@ export default function TripDetailScreen() {
   const isActive = trip.status === 'active';
   const duration =
     trip.startTime && trip.endTime
-      ? calculateTripDuration(trip.startTime, trip.endTime)
+      ? calculateTripDuration(trip.startTime, trip.endTime, i18n.language)
       : null;
 
   const handleComplete = async () => {
     const distanceNum = parseFloat(distanceKm);
     const earningsNum = parseFloat(earnings);
     if (isNaN(distanceNum) || distanceNum <= 0) {
-      Alert.alert('Geçersiz Mesafe', 'Lütfen gidilen mesafeyi (km) girin.');
+      Alert.alert(t('tripDetail.invalidDistanceTitle'), t('tripDetail.invalidDistanceBody'));
       return;
     }
     if (isNaN(earningsNum) || earningsNum < 0) {
-      Alert.alert('Geçersiz Kazanç', 'Lütfen geçerli bir kazanç değeri girin.');
+      Alert.alert(t('tripDetail.invalidEarningsTitle'), t('tripDetail.invalidEarningsBody'));
       return;
     }
     setCompleting(true);
     try {
       const now = Math.floor(Date.now() / 1000);
       await completeTrip(tripId, distanceNum, now, earningsNum);
-      Alert.alert('Sefer Tamamlandı', 'Sefer başarıyla kapatıldı!');
+      Alert.alert(t('tripDetail.completedTitle'), t('tripDetail.completedBody'));
     } catch (e) {
-      Alert.alert('Hata', String(e));
+      Alert.alert(t('common.error'), String(e));
     } finally {
       setCompleting(false);
     }
@@ -74,12 +78,12 @@ export default function TripDetailScreen() {
 
   const handleCancel = () => {
     Alert.alert(
-      'Seferi İptal Et',
-      'Bu seferi iptal etmek istediğinden emin misin?',
+      t('tripDetail.cancelConfirmTitle'),
+      t('tripDetail.cancelConfirmBody'),
       [
-        { text: 'Hayır', style: 'cancel' },
+        { text: t('common.no'), style: 'cancel' },
         {
-          text: 'Evet, İptal Et',
+          text: t('tripDetail.yesCancelIt'),
           style: 'destructive',
           onPress: async () => {
             await cancelTrip(tripId);
@@ -92,12 +96,12 @@ export default function TripDetailScreen() {
 
   const handleDelete = () => {
     Alert.alert(
-      'Seferi Sil',
-      'Bu sefer kalıcı olarak silinecek. Emin misin?',
+      t('tripDetail.deleteConfirmTitle'),
+      t('tripDetail.deleteConfirmBody'),
       [
-        { text: 'Hayır', style: 'cancel' },
+        { text: t('common.no'), style: 'cancel' },
         {
-          text: 'Evet, Sil',
+          text: t('tripDetail.yesDeleteIt'),
           style: 'destructive',
           onPress: async () => {
             await deleteTrip(tripId);
@@ -120,15 +124,15 @@ export default function TripDetailScreen() {
       >
         {/* Route */}
         <Card style={styles.card}>
-          <Text style={styles.sectionTitle}>Rota</Text>
+          <Text style={styles.sectionTitle}>{t('tripDetail.route')}</Text>
           <View style={styles.routeRow}>
             <View style={styles.routePoint}>
-              <Text style={styles.routeLabel}>Kalkış</Text>
+              <Text style={styles.routeLabel}>{t('tripDetail.departure')}</Text>
               <Text style={styles.routeValue}>{trip.origin}</Text>
             </View>
             <Text style={styles.arrow}>→</Text>
             <View style={styles.routePoint}>
-              <Text style={styles.routeLabel}>Varış</Text>
+              <Text style={styles.routeLabel}>{t('tripDetail.arrival')}</Text>
               <Text style={styles.routeValue}>{trip.destination}</Text>
             </View>
           </View>
@@ -136,62 +140,62 @@ export default function TripDetailScreen() {
 
         {/* Details */}
         <Card style={styles.card}>
-          <Text style={styles.sectionTitle}>Detaylar</Text>
-          <DetailRow label="Başlangıç" value={formatDateTime(trip.startTime)} />
+          <Text style={styles.sectionTitle}>{t('tripDetail.details')}</Text>
+          <DetailRow label={t('tripDetail.start')} value={formatDateTime(trip.startTime, i18n.language)} />
           {trip.endTime ? (
-            <DetailRow label="Bitiş" value={formatDateTime(trip.endTime)} />
+            <DetailRow label={t('tripDetail.end')} value={formatDateTime(trip.endTime, i18n.language)} />
           ) : null}
           {trip.startKm != null && (
-            <DetailRow label="Başlangıç KM" value={formatKm(trip.startKm)} />
+            <DetailRow label={t('tripDetail.startKm')} value={formatKm(trip.startKm)} />
           )}
           {trip.endKm != null && (
-            <DetailRow label="Bitiş KM" value={formatKm(trip.endKm)} />
+            <DetailRow label={t('tripDetail.endKm')} value={formatKm(trip.endKm)} />
           )}
           {trip.distanceKm != null && (
-            <DetailRow label="Mesafe" value={formatKm(trip.distanceKm)} />
+            <DetailRow label={t('tripDetail.distance')} value={formatKm(trip.distanceKm)} />
           )}
           {duration ? (
-            <DetailRow label="Süre" value={duration.display} />
+            <DetailRow label={t('tripDetail.duration')} value={duration.display} />
           ) : null}
           {trip.earnings != null && (
             <DetailRow
-              label="Kazanç"
-              value={formatCurrency(trip.earnings)}
+              label={t('tripDetail.earnings')}
+              value={formatCurrency(trip.earnings, trip.currency)}
               valueColor="#22C55E"
             />
           )}
           {trip.notes ? (
-            <DetailRow label="Not" value={trip.notes} />
+            <DetailRow label={t('tripDetail.note')} value={trip.notes} />
           ) : null}
         </Card>
 
         {/* Complete Form */}
         {isActive ? (
           <Card style={styles.card}>
-            <Text style={styles.sectionTitle}>Seferi Tamamla</Text>
+            <Text style={styles.sectionTitle}>{t('tripDetail.completeSection')}</Text>
             <Input
-              label="Mesafe (km) *"
-              placeholder="Kaç km gittiniz?"
+              label={t('tripDetail.distanceLabel')}
+              placeholder={t('tripDetail.distancePlaceholder')}
               value={distanceKm}
               onChangeText={setDistanceKm}
               keyboardType="numeric"
               suffix="km"
             />
             <Input
-              label="Kazanç *"
-              placeholder="Bu seferden kazandığın tutar"
+              label={t('tripDetail.earningsLabel')}
+              placeholder={t('tripDetail.earningsPlaceholder')}
               value={earnings}
               onChangeText={setEarnings}
               keyboardType="numeric"
-              suffix="₺"
+              suffix={CURRENCY_SYMBOLS[activeCurrency]}
             />
             <Button
-              label="✅ Seferi Tamamla"
+              label={t('tripDetail.completeButton')}
               onPress={handleComplete}
               loading={completing}
             />
             <Button
-              label="Seferi İptal Et"
+              label={t('tripDetail.cancelTripButton')}
               onPress={handleCancel}
               variant="danger"
             />
@@ -201,7 +205,7 @@ export default function TripDetailScreen() {
         {/* Delete */}
         {!isActive ? (
           <Button
-            label="🗑️ Seferi Sil"
+            label={t('tripDetail.deleteButton')}
             onPress={handleDelete}
             variant="danger"
           />

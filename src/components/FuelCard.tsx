@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { Card } from './ui/Card';
 import { formatCurrency, formatLiters, formatDate, formatKm } from '@utils/formatters';
 import { useFuelStore } from '@stores/fuelStore';
@@ -11,16 +12,17 @@ interface FuelCardProps {
 }
 
 export function FuelCard({ entry }: FuelCardProps) {
+  const { t, i18n } = useTranslation();
   const { deleteFuelEntry } = useFuelStore();
 
   const handleDelete = () => {
     Alert.alert(
-      'Kaydı Sil',
-      `${entry.stationName ?? 'Bu yakıt kaydını'} silmek istediğinize emin misiniz?`,
+      t('card.deleteConfirmTitle'),
+      `${entry.stationName ?? t('card.fuelDefaultName')} ${t('card.fuelDeleteBody')}`,
       [
-        { text: 'İptal', style: 'cancel' },
+        { text: t('card.cancel'), style: 'cancel' },
         {
-          text: 'Sil',
+          text: t('card.delete'),
           style: 'destructive',
           onPress: () => deleteFuelEntry(entry.id),
         },
@@ -33,12 +35,12 @@ export function FuelCard({ entry }: FuelCardProps) {
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <Text style={styles.stationName}>
-            {entry.stationName ?? 'İstasyon'}
+            {entry.stationName ?? t('card.station')}
           </Text>
-          <Text style={styles.date}>{formatDate(entry.date)}</Text>
+          <Text style={styles.date}>{formatDate(entry.date, i18n.language)}</Text>
         </View>
         <View style={styles.headerRight}>
-          <Text style={styles.totalCost}>{formatCurrency(entry.totalCost)}</Text>
+          <Text style={styles.totalCost}>{formatCurrency(entry.totalCost, entry.currency)}</Text>
           <TouchableOpacity
             onPress={handleDelete}
             style={styles.deleteBtn}
@@ -52,18 +54,18 @@ export function FuelCard({ entry }: FuelCardProps) {
       <View style={styles.details}>
         <DetailItem
           icon="⛽"
-          label="Miktar"
+          label={t('card.amount')}
           value={formatLiters(entry.liters)}
         />
         <DetailItem
           icon="💰"
-          label="Litre Fiyatı"
-          value={formatCurrency(entry.pricePerLiter)}
+          label={t('card.literPrice')}
+          value={formatCurrency(entry.pricePerLiter, entry.currency)}
         />
         {entry.currentKm != null && (
           <DetailItem
             icon="🛣️"
-            label="Güncel KM"
+            label={t('card.currentKm')}
             value={formatKm(entry.currentKm)}
           />
         )}

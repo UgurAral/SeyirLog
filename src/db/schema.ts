@@ -40,6 +40,7 @@ export const trips = sqliteTable('trips', {
   endTime: integer('end_time'),
   durationMinutes: integer('duration_minutes'),
   earnings: real('earnings'),
+  currency: text('currency').notNull().default('TRY'),
   notes: text('notes'),
   status: text('status', { enum: ['active', 'completed', 'cancelled'] })
     .notNull()
@@ -56,6 +57,7 @@ export const fuelEntries = sqliteTable('fuel_entries', {
   liters: real('liters').notNull(),
   pricePerLiter: real('price_per_liter').notNull(),
   totalCost: real('total_cost').notNull(),
+  currency: text('currency').notNull().default('TRY'),
   currentKm: real('current_km'),
   stationName: text('station_name'),
   date: integer('date').notNull(),
@@ -74,6 +76,7 @@ export const expenses = sqliteTable('expenses', {
     enum: ['bridge', 'parking', 'maintenance', 'fine', 'tire', 'wash', 'other'],
   }).notNull(),
   amount: real('amount').notNull(),
+  currency: text('currency').notNull().default('TRY'),
   description: text('description'),
   date: integer('date').notNull(),
   createdAt: integer('created_at').notNull(),
@@ -86,6 +89,7 @@ export const incomeEntries = sqliteTable('income_entries', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   vehicleId: integer('vehicle_id').references(() => vehicles.id),
   amount: real('amount').notNull(),
+  currency: text('currency').notNull().default('TRY'),
   source: text('source', { enum: ['trip', 'bonus', 'other'] }),
   description: text('description'),
   date: integer('date').notNull(),

@@ -9,22 +9,27 @@ import {
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { TripCard } from '@components/TripCard';
 import { PeriodFilter, type Period } from '@components/ui/PeriodFilter';
 import { useTrips } from '@hooks/useTrips';
 import { useVehicles } from '@hooks/useVehicles';
-import { formatCurrency, formatKm } from '@utils/formatters';
+import { useCurrencyStore } from '@stores/currencyStore';
+import { formatKm } from '@utils/formatters';
+import { CurrencyBreakdownValue } from '@components/ui/CurrencyBreakdownValue';
 import type { Trip } from '@/types';
 
 export default function TripsScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [period, setPeriod] = useState<Period>('all');
   const { activeVehicle } = useVehicles();
+  const activeCurrency = useCurrencyStore((s) => s.currency);
 
   const {
     filteredTrips,
     isLoading,
-    periodEarnings,
+    periodEarningsByCurrency,
     periodKm,
     periodCount,
   } = useTrips(activeVehicle?.id, period);
@@ -44,7 +49,7 @@ export default function TripsScreen() {
         ListHeaderComponent={
           <View>
             <View style={styles.header}>
-              <Text style={styles.title}>Seferler</Text>
+              <Text style={styles.title}>{t('trips.title')}</Text>
               <TouchableOpacity
                 style={styles.addBtn}
                 onPress={() => router.push('/trip/new')}
@@ -59,11 +64,21 @@ export default function TripsScreen() {
             {/* Dönem Özeti */}
             {period !== 'all' && (
               <View style={styles.summaryBar}>
-                <SummaryItem label="Sefer" value={String(periodCount)} />
+                <SummaryItem label={t('trips.summaryTrip')} value={String(periodCount)} />
                 <View style={styles.summaryDivider} />
-                <SummaryItem label="Kazanç" value={formatCurrency(periodEarnings)} color="#22C55E" />
+                <SummaryItem
+                  label={t('trips.summaryEarnings')}
+                  value={
+                    <CurrencyBreakdownValue
+                      amounts={periodEarningsByCurrency}
+                      activeCurrency={activeCurrency}
+                      color="#22C55E"
+                      textStyle={styles.summaryValue}
+                    />
+                  }
+                />
                 <View style={styles.summaryDivider} />
-                <SummaryItem label="Mesafe" value={formatKm(periodKm)} color="#F59E0B" />
+                <SummaryItem label={t('trips.summaryDistance')} value={formatKm(periodKm)} color="#F59E0B" />
               </View>
             )}
           </View>
@@ -72,7 +87,7 @@ export default function TripsScreen() {
           isLoading ? null : (
             <View style={styles.empty}>
               <Text style={styles.emptyIcon}>🚖</Text>
-              <Text style={styles.emptyText}>Bu dönemde sefer kaydı yok</Text>
+              <Text style={styles.emptyText}>{t('trips.emptyText')}</Text>
             </View>
           )
         }
@@ -87,13 +102,17 @@ function SummaryItem({
   color = '#F1F5F9',
 }: {
   label: string;
-  value: string;
+  value: React.ReactNode;
   color?: string;
 }) {
   return (
     <View style={styles.summaryItem}>
       <Text style={styles.summaryLabel}>{label}</Text>
-      <Text style={[styles.summaryValue, { color }]}>{value}</Text>
+      {typeof value === 'string' ? (
+        <Text style={[styles.summaryValue, { color }]}>{value}</Text>
+      ) : (
+        value
+      )}
     </View>
   );
 }

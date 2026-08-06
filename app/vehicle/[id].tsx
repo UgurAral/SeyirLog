@@ -9,32 +9,22 @@ import {
 } from 'react-native';
 import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { Card } from '@components/ui/Card';
 import { Input } from '@components/ui/Input';
 import { Button } from '@components/ui/Button';
 import { useVehicleStore } from '@stores/vehicleStore';
 import type { Vehicle, VehicleType, FuelType } from '@/types';
-import { VEHICLE_TYPE_OPTIONS, FUEL_TYPE_OPTIONS } from '@/types';
-
-const VEHICLE_TYPE_LABEL: Record<string, string> = {
-  car: 'Araba',
-  motorcycle: 'Motosiklet',
-  truck: 'Kamyon',
-  van: 'Van',
-};
-
-const FUEL_TYPE_LABEL: Record<string, string> = {
-  gasoline: 'Benzin',
-  diesel: 'Dizel',
-  electric: 'Elektrik',
-  lpg: 'LPG',
-};
+import { useVehicleTypeOptions, useFuelTypeOptions } from '@/i18n/options';
 
 export default function VehicleDetailScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { vehicles, updateVehicle, deleteVehicle, setActiveVehicle, activeVehicle } =
     useVehicleStore();
+  const vehicleTypeOptions = useVehicleTypeOptions();
+  const fuelTypeOptions = useFuelTypeOptions();
 
   const vehicle = vehicles.find((v) => v.id === Number(id));
 
@@ -52,22 +42,24 @@ export default function VehicleDetailScreen() {
     return (
       <SafeAreaView style={styles.safe}>
         <View style={styles.center}>
-          <Text style={styles.notFoundText}>Araç bulunamadı.</Text>
-          <Button label="Geri Dön" onPress={() => router.back()} variant="ghost" />
+          <Text style={styles.notFoundText}>{t('vehicleDetail.notFound')}</Text>
+          <Button label={t('vehicleDetail.backButton')} onPress={() => router.back()} variant="ghost" />
         </View>
       </SafeAreaView>
     );
   }
 
   const isActive = activeVehicle?.id === vehicle.id;
+  const vehicleTypeLabel = t(`vehicleTypes.${vehicle.type}`);
+  const fuelTypeLabel = t(`fuelTypes.${vehicle.fuelType}`);
 
   const handleSave = async () => {
     if (!form.brand?.trim()) {
-      Alert.alert('Eksik Bilgi', 'Araç markası zorunludur.');
+      Alert.alert(t('vehicleDetail.missingBrandTitle'), t('vehicleDetail.missingBrandBody'));
       return;
     }
     if (!form.model?.trim()) {
-      Alert.alert('Eksik Bilgi', 'Araç modeli zorunludur.');
+      Alert.alert(t('vehicleDetail.missingModelTitle'), t('vehicleDetail.missingModelBody'));
       return;
     }
 
@@ -82,9 +74,9 @@ export default function VehicleDetailScreen() {
         fuelType: form.fuelType as FuelType,
       });
       setIsEditing(false);
-      Alert.alert('Başarılı', 'Araç güncellendi.');
+      Alert.alert(t('vehicleDetail.updateSuccessTitle'), t('vehicleDetail.updateSuccessBody'));
     } catch (e) {
-      Alert.alert('Hata', String(e));
+      Alert.alert(t('common.error'), String(e));
     } finally {
       setSaving(false);
     }
@@ -92,19 +84,19 @@ export default function VehicleDetailScreen() {
 
   const handleDelete = () => {
     Alert.alert(
-      'Aracı Sil',
-      `${vehicle.brand} ${vehicle.model} silinecek. Bu işlem geri alınamaz.`,
+      t('vehicleDetail.deleteConfirmTitle'),
+      t('vehicleDetail.deleteConfirmBody', { name: `${vehicle.brand} ${vehicle.model}` }),
       [
-        { text: 'İptal', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Sil',
+          text: t('common.delete'),
           style: 'destructive',
           onPress: async () => {
             try {
               await deleteVehicle(vehicle.id);
               router.back();
             } catch (e) {
-              Alert.alert('Hata', String(e));
+              Alert.alert(t('common.error'), String(e));
             }
           },
         },
@@ -114,7 +106,7 @@ export default function VehicleDetailScreen() {
 
   const handleSetActive = () => {
     setActiveVehicle(vehicle);
-    Alert.alert('Aktif Araç', `${vehicle.brand} ${vehicle.model} aktif araç olarak seçildi.`);
+    Alert.alert(t('vehicleDetail.setActiveTitle'), t('vehicleDetail.setActiveBody', { name: `${vehicle.brand} ${vehicle.model}` }));
   };
 
   return (
@@ -125,7 +117,7 @@ export default function VehicleDetailScreen() {
           headerRight: () =>
             !isEditing ? (
               <TouchableOpacity onPress={() => setIsEditing(true)} style={styles.editBtn}>
-                <Text style={styles.editBtnText}>Düzenle</Text>
+                <Text style={styles.editBtnText}>{t('vehicleDetail.editButton')}</Text>
               </TouchableOpacity>
             ) : null,
         }}
@@ -142,8 +134,8 @@ export default function VehicleDetailScreen() {
                 {vehicle.brand} {vehicle.model}
               </Text>
               <Text style={styles.vehicleMeta}>
-                {vehicle.year ?? '—'} • {VEHICLE_TYPE_LABEL[vehicle.type] ?? vehicle.type} •{' '}
-                {FUEL_TYPE_LABEL[vehicle.fuelType] ?? vehicle.fuelType}
+                {vehicle.year ?? '—'} • {vehicleTypeLabel} •{' '}
+                {fuelTypeLabel}
               </Text>
               {vehicle.plate && (
                 <View style={styles.plateBadge}>
@@ -153,7 +145,7 @@ export default function VehicleDetailScreen() {
             </View>
             {isActive && (
               <View style={styles.activeBadge}>
-                <Text style={styles.activeBadgeText}>✓ Aktif</Text>
+                <Text style={styles.activeBadgeText}>✓ {t('vehicle.active')}</Text>
               </View>
             )}
           </View>
@@ -163,33 +155,33 @@ export default function VehicleDetailScreen() {
           /* ─── Görüntüleme Modu ─── */
           <>
             <Card style={styles.card}>
-              <Text style={styles.sectionTitle}>Araç Detayları</Text>
-              <DetailRow label="Marka" value={vehicle.brand} />
-              <DetailRow label="Model" value={vehicle.model} />
-              <DetailRow label="Yıl" value={vehicle.year ? String(vehicle.year) : '—'} />
-              <DetailRow label="Plaka" value={vehicle.plate ?? '—'} />
-              <DetailRow label="Araç Tipi" value={VEHICLE_TYPE_LABEL[vehicle.type] ?? vehicle.type} />
+              <Text style={styles.sectionTitle}>{t('vehicleDetail.detailsSection')}</Text>
+              <DetailRow label={t('vehicleDetail.brand')} value={vehicle.brand} />
+              <DetailRow label={t('vehicleDetail.model')} value={vehicle.model} />
+              <DetailRow label={t('vehicleDetail.year')} value={vehicle.year ? String(vehicle.year) : '—'} />
+              <DetailRow label={t('vehicleDetail.plate')} value={vehicle.plate ?? '—'} />
+              <DetailRow label={t('vehicleDetail.vehicleType')} value={vehicleTypeLabel} />
               <DetailRow
-                label="Yakıt Tipi"
-                value={FUEL_TYPE_LABEL[vehicle.fuelType] ?? vehicle.fuelType}
+                label={t('vehicleDetail.fuelType')}
+                value={fuelTypeLabel}
               />
             </Card>
 
             <View style={styles.actionGroup}>
               {!isActive && (
                 <Button
-                  label="✓ Aktif Araç Yap"
+                  label={t('vehicleDetail.setActiveButton')}
                   onPress={handleSetActive}
                   variant="primary"
                 />
               )}
               <Button
-                label="✏️ Düzenle"
+                label={t('vehicleDetail.editButtonWithIcon')}
                 onPress={() => setIsEditing(true)}
                 variant="ghost"
               />
               <Button
-                label="🗑️ Aracı Sil"
+                label={t('vehicleDetail.deleteButton')}
                 onPress={handleDelete}
                 variant="danger"
               />
@@ -199,24 +191,24 @@ export default function VehicleDetailScreen() {
           /* ─── Düzenleme Modu ─── */
           <>
             <Card style={styles.card}>
-              <Text style={styles.sectionTitle}>Araç Bilgilerini Düzenle</Text>
+              <Text style={styles.sectionTitle}>{t('vehicleDetail.editSection')}</Text>
               <Input
-                label="Marka *"
-                placeholder="Toyota, Ford, Renault..."
+                label={t('vehicleNew.brandLabel')}
+                placeholder={t('vehicleNew.brandPlaceholder')}
                 value={form.brand ?? ''}
                 onChangeText={(v) => setForm((f) => ({ ...f, brand: v }))}
                 autoCapitalize="words"
               />
               <Input
-                label="Model *"
-                placeholder="Corolla, Focus, Megane..."
+                label={t('vehicleNew.modelLabel')}
+                placeholder={t('vehicleNew.modelPlaceholder')}
                 value={form.model ?? ''}
                 onChangeText={(v) => setForm((f) => ({ ...f, model: v }))}
                 autoCapitalize="words"
               />
               <Input
-                label="Plaka"
-                placeholder="34 ABC 1234"
+                label={t('vehicleNew.plateLabel')}
+                placeholder={t('vehicleNew.platePlaceholder')}
                 value={form.plate ?? ''}
                 onChangeText={(v) =>
                   setForm((f) => ({ ...f, plate: v.toUpperCase() }))
@@ -224,8 +216,8 @@ export default function VehicleDetailScreen() {
                 autoCapitalize="characters"
               />
               <Input
-                label="Yıl"
-                placeholder="2024"
+                label={t('vehicleNew.yearLabel')}
+                placeholder={t('vehicleNew.yearPlaceholder')}
                 value={form.year ? String(form.year) : ''}
                 onChangeText={(v) =>
                   setForm((f) => ({
@@ -239,9 +231,9 @@ export default function VehicleDetailScreen() {
             </Card>
 
             <Card style={styles.card}>
-              <Text style={styles.sectionTitle}>Araç Tipi</Text>
+              <Text style={styles.sectionTitle}>{t('vehicleDetail.typeSection')}</Text>
               <View style={styles.chips}>
-                {VEHICLE_TYPE_OPTIONS.map((opt) => (
+                {vehicleTypeOptions.map((opt) => (
                   <Button
                     key={opt.value}
                     label={opt.label}
@@ -256,9 +248,9 @@ export default function VehicleDetailScreen() {
             </Card>
 
             <Card style={styles.card}>
-              <Text style={styles.sectionTitle}>Yakıt Tipi</Text>
+              <Text style={styles.sectionTitle}>{t('vehicleDetail.fuelTypeSection')}</Text>
               <View style={styles.chips}>
-                {FUEL_TYPE_OPTIONS.map((opt) => (
+                {fuelTypeOptions.map((opt) => (
                   <Button
                     key={opt.value}
                     label={opt.label}
@@ -274,7 +266,7 @@ export default function VehicleDetailScreen() {
 
             <View style={styles.actions}>
               <Button
-                label="İptal"
+                label={t('common.cancel')}
                 onPress={() => {
                   setForm(vehicle);
                   setIsEditing(false);
@@ -283,7 +275,7 @@ export default function VehicleDetailScreen() {
                 style={styles.actionBtn}
               />
               <Button
-                label="💾 Kaydet"
+                label={t('vehicleDetail.saveButton')}
                 onPress={handleSave}
                 loading={saving}
                 style={styles.actionBtn}

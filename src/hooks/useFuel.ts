@@ -1,5 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import { useFuelStore } from '@stores/fuelStore';
+import { useCurrencyStore } from '@stores/currencyStore';
+import { sumByCurrency } from '@utils/calculations';
 import { isInPeriod } from '@utils/dateHelpers';
 
 export type FuelPeriod = 'today' | 'week' | 'month' | 'all';
@@ -18,8 +20,8 @@ export function useFuel(vehicleId?: number, period: FuelPeriod = 'all') {
     addFuelEntry,
     updateFuelEntry,
     deleteFuelEntry,
-    getTotalFuelCost,
   } = useFuelStore();
+  const activeCurrency = useCurrencyStore((s) => s.currency);
 
   useEffect(() => {
     fetchFuelEntries(vehicleId);
@@ -44,9 +46,25 @@ export function useFuel(vehicleId?: number, period: FuelPeriod = 'all') {
     [vehicleFiltered],
   );
 
-  const totalCost = getTotalFuelCost(vehicleId);
+  const totalCostByCurrency = useMemo(
+    () => sumByCurrency(vehicleFiltered, (f) => f.totalCost),
+    [vehicleFiltered],
+  );
+  const totalCost = totalCostByCurrency[activeCurrency] ?? 0;
 
-  const avgPricePerLiter = totalLiters > 0 ? totalCost / totalLiters : 0;
+  const litersByCurrency = useMemo(
+    () => sumByCurrency(vehicleFiltered, (f) => f.liters),
+    [vehicleFiltered],
+  );
+  const avgPricePerLiterByCurrency = useMemo(() => {
+    const result: Record<string, number> = {};
+    for (const currency of Object.keys(totalCostByCurrency)) {
+      const liters = litersByCurrency[currency] ?? 0;
+      result[currency] = liters > 0 ? totalCostByCurrency[currency] / liters : 0;
+    }
+    return result;
+  }, [totalCostByCurrency, litersByCurrency]);
+  const avgPricePerLiter = avgPricePerLiterByCurrency[activeCurrency] ?? 0;
 
   const lastEntry = vehicleFiltered[0] ?? null;
 
@@ -56,10 +74,11 @@ export function useFuel(vehicleId?: number, period: FuelPeriod = 'all') {
     [filteredEntries],
   );
 
-  const periodCost = useMemo(
-    () => filteredEntries.reduce((sum, f) => sum + f.totalCost, 0),
+  const periodCostByCurrency = useMemo(
+    () => sumByCurrency(filteredEntries, (f) => f.totalCost),
     [filteredEntries],
   );
+  const periodCost = periodCostByCurrency[activeCurrency] ?? 0;
 
   return {
     fuelEntries: vehicleFiltered,
@@ -68,10 +87,13 @@ export function useFuel(vehicleId?: number, period: FuelPeriod = 'all') {
     error,
     totalLiters,
     totalCost,
+    totalCostByCurrency,
     avgPricePerLiter,
+    avgPricePerLiterByCurrency,
     lastEntry,
     periodLiters,
     periodCost,
+    periodCostByCurrency,
     addFuelEntry,
     updateFuelEntry,
     deleteFuelEntry,

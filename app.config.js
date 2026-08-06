@@ -3,7 +3,7 @@ module.exports = {
   expo: {
     name: 'SeyirLog',
     slug: 'seyirlog',
-    version: '1.0.1',
+    version: '1.1.0',
     orientation: 'portrait',
     icon: './assets/icon.png',
     userInterfaceStyle: 'automatic',
@@ -11,7 +11,7 @@ module.exports = {
       supportsTablet: false,
       bundleIdentifier: 'com.seyirlog.app',
       googleServicesFile: './GoogleService-Info.plist',
-      buildNumber: '1',
+      buildNumber: '3',
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
       },
@@ -22,12 +22,13 @@ module.exports = {
       },
       package: 'com.seyirlog.app',
       "googleServicesFile": "./google-services.json",
-      versionCode: 2,
+      versionCode: 3,
     },
 
     plugins: [
       '@react-native-firebase/app',
       'expo-router',
+      'expo-localization',
       [
         'expo-build-properties',
         {

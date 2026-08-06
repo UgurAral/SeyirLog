@@ -4,7 +4,7 @@ import { Card } from './Card';
 
 interface StatCardProps {
   label: string;
-  value: string;
+  value: React.ReactNode;
   subValue?: string;
   icon?: string;
   accentColor?: string;
@@ -29,7 +29,11 @@ export function StatCard({
         ) : null}
         <Text style={styles.label}>{label}</Text>
       </View>
-      <Text style={[styles.value, { color: accentColor }]}>{value}</Text>
+      {typeof value === 'string' ? (
+        <Text style={[styles.value, { color: accentColor }]}>{value}</Text>
+      ) : (
+        value
+      )}
       {subValue ? <Text style={styles.subValue}>{subValue}</Text> : null}
     </Card>
   );

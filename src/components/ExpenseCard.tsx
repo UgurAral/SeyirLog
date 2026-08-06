@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { Card } from './ui/Card';
 import { formatCurrency, formatDate } from '@utils/formatters';
 import { useExpenseStore } from '@stores/expenseStore';
@@ -20,30 +21,21 @@ const CATEGORY_ICONS: Record<ExpenseCategory, string> = {
   other: '📋',
 };
 
-const CATEGORY_LABELS: Record<ExpenseCategory, string> = {
-  bridge: 'Köprü/Otoyol',
-  parking: 'Otopark',
-  maintenance: 'Bakım/Tamir',
-  fine: 'Ceza',
-  tire: 'Lastik',
-  wash: 'Yıkama',
-  other: 'Diğer',
-};
-
 export function ExpenseCard({ expense }: ExpenseCardProps) {
+  const { t, i18n } = useTranslation();
   const { deleteExpense } = useExpenseStore();
   const category = expense.category as ExpenseCategory;
   const icon = CATEGORY_ICONS[category] ?? '📋';
-  const label = CATEGORY_LABELS[category] ?? 'Gider';
+  const label = t(`expenseCategories.${category}`);
 
   const handleDelete = () => {
     Alert.alert(
-      'Kaydı Sil',
-      `${label} giderini (${formatCurrency(expense.amount)}) silmek istediğinize emin misiniz?`,
+      t('finans.deleteConfirmTitle'),
+      `${label} ${t('finans.deleteExpenseConfirmBody', { amount: formatCurrency(expense.amount, expense.currency) })}`,
       [
-        { text: 'İptal', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Sil',
+          text: t('common.delete'),
           style: 'destructive',
           onPress: () => deleteExpense(expense.id),
         },
@@ -64,10 +56,10 @@ export function ExpenseCard({ expense }: ExpenseCardProps) {
               {expense.description}
             </Text>
           ) : null}
-          <Text style={styles.date}>{formatDate(expense.date)}</Text>
+          <Text style={styles.date}>{formatDate(expense.date, i18n.language)}</Text>
         </View>
         <View style={styles.rightSection}>
-          <Text style={styles.amount}>{formatCurrency(expense.amount)}</Text>
+          <Text style={styles.amount}>{formatCurrency(expense.amount, expense.currency)}</Text>
           <TouchableOpacity
             onPress={handleDelete}
             style={styles.deleteBtn}

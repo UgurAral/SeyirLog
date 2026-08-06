@@ -1,8 +1,9 @@
 import { useEffect, useCallback, useMemo } from 'react';
 import { useTripStore } from '@stores/tripStore';
-import { calculatePeriodStats, calculateDailyStats } from '@utils/calculations';
+import { calculatePeriodStats, calculateDailyStats, sumByCurrency } from '@utils/calculations';
 import { useFuelStore } from '@stores/fuelStore';
 import { useExpenseStore } from '@stores/expenseStore';
+import { useCurrencyStore } from '@stores/currencyStore';
 import { isInPeriod } from '@utils/dateHelpers';
 
 export type TripPeriod = 'today' | 'week' | 'month' | 'all';
@@ -29,6 +30,7 @@ export function useTrips(vehicleId?: number, period: TripPeriod = 'all') {
 
   const { fuelEntries } = useFuelStore();
   const { expenses } = useExpenseStore();
+  const activeCurrency = useCurrencyStore((s) => s.currency);
 
   useEffect(() => {
     fetchTrips(vehicleId);
@@ -95,8 +97,11 @@ export function useTrips(vehicleId?: number, period: TripPeriod = 'all') {
   );
 
   const totalEarnings = useMemo(
-    () => completedTrips.reduce((sum, t) => sum + (t.earnings ?? 0), 0),
-    [completedTrips],
+    () =>
+      completedTrips
+        .filter((t) => t.currency === activeCurrency)
+        .reduce((sum, t) => sum + (t.earnings ?? 0), 0),
+    [completedTrips, activeCurrency],
   );
 
   // Dönem istatistikleri
@@ -105,10 +110,12 @@ export function useTrips(vehicleId?: number, period: TripPeriod = 'all') {
     [filteredTrips],
   );
 
-  const periodEarnings = useMemo(
-    () => periodCompleted.reduce((sum, t) => sum + (t.earnings ?? 0), 0),
+  const periodEarningsByCurrency = useMemo(
+    () => sumByCurrency(periodCompleted, (t) => t.earnings ?? 0),
     [periodCompleted],
   );
+
+  const periodEarnings = periodEarningsByCurrency[activeCurrency] ?? 0;
 
   const periodKm = useMemo(
     () => periodCompleted.reduce((sum, t) => sum + (t.distanceKm ?? 0), 0),
@@ -126,6 +133,7 @@ export function useTrips(vehicleId?: number, period: TripPeriod = 'all') {
     isLoading,
     error,
     periodEarnings,
+    periodEarningsByCurrency,
     periodKm,
     periodCount,
     addTrip,

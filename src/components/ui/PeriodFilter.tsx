@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { PERIOD_LABELS } from '@utils/dateHelpers';
+import { useTranslation } from 'react-i18next';
 
 export type Period = 'today' | 'week' | 'month' | 'all';
 
@@ -12,6 +12,7 @@ export interface PeriodFilterProps {
 }
 
 export function PeriodFilter({ selected, onChange }: PeriodFilterProps) {
+  const { t } = useTranslation();
   return (
     <View style={styles.container}>
       {PERIOD_OPTIONS.map((period) => {
@@ -24,7 +25,7 @@ export function PeriodFilter({ selected, onChange }: PeriodFilterProps) {
             activeOpacity={0.75}
           >
             <Text style={[styles.tabText, isActive && styles.tabTextActive]}>
-              {PERIOD_LABELS[period]}
+              {t(`periods.${period}`)}
             </Text>
           </TouchableOpacity>
         );

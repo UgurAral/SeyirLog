@@ -3,6 +3,7 @@ import {
   View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { sendVerificationEmail, reloadCurrentUser, signOut } from '@services/auth';
 import { useAuthStore } from '@stores/authStore';
 import { onLoginSync } from '@services/sync';
@@ -10,6 +11,7 @@ import { startRealtimeSync } from '@services/realtime';
 
 export default function VerifyEmailScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const { user, setUser } = useAuthStore();
   const [checking, setChecking] = useState(false);
   const [resending, setResending] = useState(false);
@@ -24,13 +26,10 @@ export default function VerifyEmailScreen() {
         onLoginSync().catch(() => {});
         router.replace('/(tabs)');
       } else {
-        Alert.alert(
-          'Henüz Doğrulanmadı',
-          'E-postandaki linke tıklayıp tekrar dene.',
-        );
+        Alert.alert(t('verifyEmail.notVerifiedTitle'), t('verifyEmail.notVerifiedBody'));
       }
     } catch (e) {
-      Alert.alert('Hata', String(e));
+      Alert.alert(t('common.error'), String(e));
     } finally {
       setChecking(false);
     }
@@ -40,12 +39,12 @@ export default function VerifyEmailScreen() {
     setResending(true);
     try {
       await sendVerificationEmail();
-      Alert.alert('✅ Gönderildi', 'Doğrulama e-postası tekrar gönderildi.');
+      Alert.alert(t('verifyEmail.resentTitle'), t('verifyEmail.resentBody'));
     } catch (e: any) {
       const msg = e.code === 'auth/too-many-requests'
-        ? 'Çok fazla deneme yaptın, biraz bekleyip tekrar dene.'
+        ? t('verifyEmail.tooManyRequests')
         : String(e.message ?? e);
-      Alert.alert('Hata', msg);
+      Alert.alert(t('common.error'), msg);
     } finally {
       setResending(false);
     }
@@ -55,11 +54,9 @@ export default function VerifyEmailScreen() {
     <View style={styles.root}>
       <View style={styles.card}>
         <Text style={styles.logo}>📧</Text>
-        <Text style={styles.title}>E-postanı Doğrula</Text>
+        <Text style={styles.title}>{t('verifyEmail.title')}</Text>
         <Text style={styles.body}>
-          <Text style={styles.email}>{user?.email}</Text> adresine bir doğrulama
-          linki gönderdik. Devam etmek için e-postandaki linke tıkla, sonra
-          aşağıdaki butona bas.
+          {t('verifyEmail.body', { email: user?.email ?? '' })}
         </Text>
 
         <TouchableOpacity
@@ -70,7 +67,7 @@ export default function VerifyEmailScreen() {
         >
           {checking
             ? <ActivityIndicator color="#fff" />
-            : <Text style={styles.btnText}>Doğruladım, Kontrol Et</Text>}
+            : <Text style={styles.btnText}>{t('verifyEmail.checkButton')}</Text>}
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -79,12 +76,12 @@ export default function VerifyEmailScreen() {
           disabled={resending}
         >
           <Text style={styles.link}>
-            {resending ? 'Gönderiliyor…' : 'E-postayı Tekrar Gönder'}
+            {resending ? t('verifyEmail.resending') : t('verifyEmail.resendButton')}
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.linkBtn} onPress={() => signOut()}>
-          <Text style={styles.linkMuted}>Farklı hesapla giriş yap</Text>
+          <Text style={styles.linkMuted}>{t('verifyEmail.differentAccount')}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -97,7 +94,6 @@ const styles = StyleSheet.create({
   logo: { fontSize: 48, textAlign: 'center' },
   title: { color: '#F1F5F9', fontSize: 22, fontWeight: '800', textAlign: 'center' },
   body: { color: '#94A3B8', fontSize: 14, textAlign: 'center', lineHeight: 21 },
-  email: { color: '#F1F5F9', fontWeight: '700' },
   btn: {
     backgroundColor: '#3B82F6', borderRadius: 12, paddingVertical: 14,
     alignItems: 'center', marginTop: 8,

@@ -13,7 +13,7 @@ interface TabConfig {
 const TABS: TabConfig[] = [
   {
     name: 'index',
-    title: 'Dashboard',
+    title: 'Ana Sayfa',
     icon: 'home-outline',
     iconFocused: 'home',
   },
@@ -30,16 +30,10 @@ const TABS: TabConfig[] = [
     iconFocused: 'flame',
   },
   {
-    name: 'income',
-    title: 'Gelirler',
-    icon: 'cash-outline',
-    iconFocused: 'cash',
-  },
-  {
-    name: 'expenses',
-    title: 'Giderler',
-    icon: 'wallet-outline',
-    iconFocused: 'wallet',
+    name: 'finans',
+    title: 'Finans',
+    icon: 'swap-vertical-outline',
+    iconFocused: 'swap-vertical',
   },
   {
     name: 'profile',

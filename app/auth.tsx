@@ -4,6 +4,7 @@ import {
   StyleSheet, KeyboardAvoidingView, Platform, Alert, ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { signIn, signUp, resetPassword, firebaseAuth } from '@services/auth';
 import { onLoginSync } from '@services/sync';
 
@@ -11,14 +12,15 @@ type Mode = 'login' | 'register' | 'reset';
 
 export default function AuthScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [mode, setMode] = useState<Mode>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async () => {
-    if (!email.trim()) return Alert.alert('Hata', 'E-posta zorunlu.');
-    if (mode !== 'reset' && !password) return Alert.alert('Hata', 'Şifre zorunlu.');
+    if (!email.trim()) return Alert.alert(t('common.error'), t('auth.emailRequired'));
+    if (mode !== 'reset' && !password) return Alert.alert(t('common.error'), t('auth.passwordRequired'));
 
     setLoading(true);
     try {
@@ -31,23 +33,23 @@ export default function AuthScreen() {
           router.replace('/(tabs)');
         }
       } else if (mode === 'register') {
-        if (password.length < 6) return Alert.alert('Hata', 'Şifre en az 6 karakter olmalı.');
+        if (password.length < 6) return Alert.alert(t('common.error'), t('auth.passwordMinLength'));
         await signUp(email.trim(), password);
         router.replace('/verify-email');
       } else {
         await resetPassword(email.trim());
-        Alert.alert('✅ Gönderildi', 'Şifre sıfırlama e-postası gönderildi.');
+        Alert.alert(t('auth.resetSentTitle'), t('auth.resetSentBody'));
         setMode('login');
       }
     } catch (e: any) {
       const msg: Record<string, string> = {
-        'auth/user-not-found': 'Bu e-posta ile kayıtlı kullanıcı yok.',
-        'auth/wrong-password': 'Şifre hatalı.',
-        'auth/email-already-in-use': 'Bu e-posta zaten kayıtlı.',
-        'auth/invalid-email': 'Geçersiz e-posta.',
-        'auth/too-many-requests': 'Çok fazla deneme. Lütfen bekleyin.',
+        'auth/user-not-found': t('auth.errors.userNotFound'),
+        'auth/wrong-password': t('auth.errors.wrongPassword'),
+        'auth/email-already-in-use': t('auth.errors.emailAlreadyInUse'),
+        'auth/invalid-email': t('auth.errors.invalidEmail'),
+        'auth/too-many-requests': t('auth.errors.tooManyRequests'),
       };
-      Alert.alert('Hata', msg[e.code] ?? e.message);
+      Alert.alert(t('common.error'), msg[e.code] ?? e.message);
     } finally {
       setLoading(false);
     }
@@ -60,14 +62,14 @@ export default function AuthScreen() {
     >
       <View style={styles.card}>
         <Text style={styles.logo}>🚖</Text>
-        <Text style={styles.title}>SeyirLog</Text>
+        <Text style={styles.title}>{t('auth.appName')}</Text>
         <Text style={styles.subtitle}>
-          {mode === 'login' ? 'Giriş Yap' : mode === 'register' ? 'Hesap Oluştur' : 'Şifre Sıfırla'}
+          {mode === 'login' ? t('auth.login') : mode === 'register' ? t('auth.register') : t('auth.reset')}
         </Text>
 
         <TextInput
           style={styles.input}
-          placeholder="E-posta"
+          placeholder={t('auth.email')}
           placeholderTextColor="#475569"
           value={email}
           onChangeText={setEmail}
@@ -79,7 +81,7 @@ export default function AuthScreen() {
         {mode !== 'reset' && (
           <TextInput
             style={styles.input}
-            placeholder="Şifre"
+            placeholder={t('auth.password')}
             placeholderTextColor="#475569"
             value={password}
             onChangeText={setPassword}
@@ -96,7 +98,7 @@ export default function AuthScreen() {
           {loading
             ? <ActivityIndicator color="#fff" />
             : <Text style={styles.btnText}>
-                {mode === 'login' ? 'Giriş Yap' : mode === 'register' ? 'Kayıt Ol' : 'Sıfırlama Gönder'}
+                {mode === 'login' ? t('auth.loginButton') : mode === 'register' ? t('auth.registerButton') : t('auth.resetButton')}
               </Text>
           }
         </TouchableOpacity>
@@ -105,16 +107,16 @@ export default function AuthScreen() {
           {mode === 'login' && (
             <>
               <TouchableOpacity onPress={() => setMode('register')}>
-                <Text style={styles.link}>Hesap oluştur →</Text>
+                <Text style={styles.link}>{t('auth.createAccount')}</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={() => setMode('reset')}>
-                <Text style={styles.link}>Şifremi unuttum</Text>
+                <Text style={styles.link}>{t('auth.forgotPassword')}</Text>
               </TouchableOpacity>
             </>
           )}
           {mode !== 'login' && (
             <TouchableOpacity onPress={() => setMode('login')}>
-              <Text style={styles.link}>← Giriş yap</Text>
+              <Text style={styles.link}>{t('auth.backToLogin')}</Text>
             </TouchableOpacity>
           )}
         </View>

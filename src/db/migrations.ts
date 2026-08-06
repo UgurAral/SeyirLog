@@ -28,6 +28,13 @@ const migrations = {
         tag: '0003_trip_start_km_nullable',
         breakpoints: true,
       },
+      {
+        idx: 3,
+        version: '0001',
+        when: 1754000000000,
+        tag: '0004_add_currency_column',
+        breakpoints: true,
+      },
     ],
   },
   migrations: {
@@ -191,6 +198,18 @@ const migrations = {
       DROP TABLE trips;
       --> statement-breakpoint
       ALTER TABLE trips_new RENAME TO trips;
+    `,
+    // Çoklu para birimi desteği — her para hareketinin girildiği anda geçerli
+    // olan global para birimi bu sütunda saklanır. Var olan kayıtlar TRY
+    // varsayımıyla (uygulamanın önceki tek para birimi) dolduruluyor.
+    m0003: `
+      ALTER TABLE trips ADD COLUMN currency TEXT NOT NULL DEFAULT 'TRY';
+      --> statement-breakpoint
+      ALTER TABLE fuel_entries ADD COLUMN currency TEXT NOT NULL DEFAULT 'TRY';
+      --> statement-breakpoint
+      ALTER TABLE expenses ADD COLUMN currency TEXT NOT NULL DEFAULT 'TRY';
+      --> statement-breakpoint
+      ALTER TABLE income_entries ADD COLUMN currency TEXT NOT NULL DEFAULT 'TRY';
     `,
   },
 };

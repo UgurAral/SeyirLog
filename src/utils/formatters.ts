@@ -1,3 +1,23 @@
+/** Desteklenen uygulama dili kodunu Intl locale koduna çevirir. */
+const INTL_LOCALES: Record<string, string> = {
+  tr: 'tr-TR',
+  en: 'en-US',
+  es: 'es-ES',
+  de: 'de-DE',
+};
+
+function toIntlLocale(lang?: string): string {
+  return INTL_LOCALES[lang ?? 'tr'] ?? 'tr-TR';
+}
+
+/** Saat/dakika kısaltmaları — dile göre değişen kelimeler. */
+const DURATION_UNITS: Record<string, { h: string; m: string }> = {
+  tr: { h: 's', m: 'dk' },
+  en: { h: 'h', m: 'm' },
+  es: { h: 'h', m: 'min' },
+  de: { h: 'Std', m: 'Min' },
+};
+
 /**
  * Para miktarını Türk Lirası formatında biçimlendirir.
  * @param amount - Para miktarı (sayı)
@@ -36,24 +56,27 @@ export function formatKm(km: number): string {
 /**
  * Dakika cinsinden süreyi saat ve dakika formatında biçimlendirir.
  * @param minutes - Toplam dakika
+ * @param lang - Uygulama dili kodu ('tr' | 'en' | 'es' | 'de'), varsayılan 'tr'
  * @returns Biçimlendirilmiş süre, örn. "2s 30dk" veya "45dk"
  */
-export function formatDuration(minutes: number): string {
-  if (minutes <= 0) return '0dk';
+export function formatDuration(minutes: number, lang?: string): string {
+  const units = DURATION_UNITS[lang ?? 'tr'] ?? DURATION_UNITS.tr;
+  if (minutes <= 0) return `0${units.m}`;
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;
-  if (h > 0 && m > 0) return `${h}s ${m}dk`;
-  if (h > 0) return `${h}s`;
-  return `${m}dk`;
+  if (h > 0 && m > 0) return `${h}${units.h} ${m}${units.m}`;
+  if (h > 0) return `${h}${units.h}`;
+  return `${m}${units.m}`;
 }
 
 /**
- * Unix timestamp'i Türkçe kısa tarih formatına çevirir.
+ * Unix timestamp'i kısa tarih formatına çevirir.
  * @param timestamp - Unix timestamp (saniye)
+ * @param lang - Uygulama dili kodu ('tr' | 'en' | 'es' | 'de'), varsayılan 'tr'
  * @returns Biçimlendirilmiş tarih, örn. "22 Tem 2026"
  */
-export function formatDate(timestamp: number): string {
-  return new Intl.DateTimeFormat('tr-TR', {
+export function formatDate(timestamp: number, lang?: string): string {
+  return new Intl.DateTimeFormat(toIntlLocale(lang), {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
@@ -62,12 +85,13 @@ export function formatDate(timestamp: number): string {
 }
 
 /**
- * Unix timestamp'i Türkçe tarih ve saat formatına çevirir.
+ * Unix timestamp'i tarih ve saat formatına çevirir.
  * @param timestamp - Unix timestamp (saniye)
+ * @param lang - Uygulama dili kodu ('tr' | 'en' | 'es' | 'de'), varsayılan 'tr'
  * @returns Biçimlendirilmiş tarih ve saat, örn. "22 Tem 2026, 14:30"
  */
-export function formatDateTime(timestamp: number): string {
-  return new Intl.DateTimeFormat('tr-TR', {
+export function formatDateTime(timestamp: number, lang?: string): string {
+  return new Intl.DateTimeFormat(toIntlLocale(lang), {
     day: 'numeric',
     month: 'short',
     year: 'numeric',

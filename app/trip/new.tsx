@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { Card } from '@components/ui/Card';
 import { Input } from '@components/ui/Input';
 import { Button } from '@components/ui/Button';
@@ -19,6 +20,7 @@ import type { NewTrip } from '@/types';
 
 export default function NewTripScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const { addTrip } = useTripStore();
   const { activeVehicle } = useVehicleStore();
 
@@ -31,7 +33,7 @@ export default function NewTripScreen() {
 
   const handleSave = async () => {
     if (!form.origin.trim() || !form.destination.trim()) {
-      Alert.alert('Eksik Bilgi', 'Kalkış ve varış noktaları zorunludur.');
+      Alert.alert(t('tripNew.missingInfoTitle'), t('tripNew.missingInfoBody'));
       return;
     }
 
@@ -51,7 +53,7 @@ export default function NewTripScreen() {
       await addTrip(newTrip);
       router.back();
     } catch (e) {
-      Alert.alert('Hata', String(e));
+      Alert.alert(t('common.error'), String(e));
     } finally {
       setSaving(false);
     }
@@ -68,17 +70,17 @@ export default function NewTripScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <Card style={styles.card}>
-          <Text style={styles.sectionTitle}>Rota Bilgileri</Text>
+          <Text style={styles.sectionTitle}>{t('tripNew.routeInfo')}</Text>
           <Input
-            label="Kalkış Noktası *"
-            placeholder="Nereden?"
+            label={t('tripNew.originLabel')}
+            placeholder={t('tripNew.originPlaceholder')}
             value={form.origin}
             onChangeText={(v) => setForm((f) => ({ ...f, origin: v }))}
             autoCapitalize="sentences"
           />
           <Input
-            label="Varış Noktası *"
-            placeholder="Nereye?"
+            label={t('tripNew.destinationLabel')}
+            placeholder={t('tripNew.destinationPlaceholder')}
             value={form.destination}
             onChangeText={(v) => setForm((f) => ({ ...f, destination: v }))}
             autoCapitalize="sentences"
@@ -86,10 +88,10 @@ export default function NewTripScreen() {
         </Card>
 
         <Card style={styles.card}>
-          <Text style={styles.sectionTitle}>Notlar</Text>
+          <Text style={styles.sectionTitle}>{t('tripNew.notesSection')}</Text>
           <Input
-            label="Not (isteğe bağlı)"
-            placeholder="Yolculuk hakkında not..."
+            label={t('tripNew.noteLabel')}
+            placeholder={t('tripNew.notePlaceholder')}
             value={form.notes}
             onChangeText={(v) => setForm((f) => ({ ...f, notes: v }))}
             multiline
@@ -99,13 +101,13 @@ export default function NewTripScreen() {
 
         <View style={styles.actions}>
           <Button
-            label="İptal"
+            label={t('common.cancel')}
             onPress={() => router.back()}
             variant="ghost"
             style={styles.actionBtn}
           />
           <Button
-            label="Seferi Başlat 🚀"
+            label={t('tripNew.startButton')}
             onPress={handleSave}
             loading={saving}
             style={styles.actionBtn}

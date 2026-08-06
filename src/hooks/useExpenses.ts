@@ -1,5 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import { useExpenseStore } from '@stores/expenseStore';
+import { useCurrencyStore } from '@stores/currencyStore';
+import { sumByCurrency } from '@utils/calculations';
 import { isInPeriod } from '@utils/dateHelpers';
 import type { ExpenseCategory } from '@/types';
 
@@ -22,6 +24,7 @@ export function useExpenses(vehicleId?: number, period: ExpensePeriod = 'all') {
     getTotalExpenses,
     getExpensesByCategory,
   } = useExpenseStore();
+  const activeCurrency = useCurrencyStore((s) => s.currency);
 
   useEffect(() => {
     fetchExpenses(vehicleId);
@@ -41,15 +44,25 @@ export function useExpenses(vehicleId?: number, period: ExpensePeriod = 'all') {
     return vehicleFiltered.filter((e) => isInPeriod(e.date, period));
   }, [vehicleFiltered, period]);
 
-  const totalAmount = getTotalExpenses(vehicleId);
-  const byCategory = getExpensesByCategory(vehicleId);
+  const totalAmountByCurrency = useMemo(
+    () => sumByCurrency(vehicleFiltered, (e) => e.amount),
+    [vehicleFiltered],
+  );
+  const totalAmount = getTotalExpenses(vehicleId, activeCurrency);
+  const byCategory = getExpensesByCategory(vehicleId, activeCurrency);
   const lastExpense = vehicleFiltered[0] ?? null;
 
-  // Dönem istatistikleri
-  const periodTotal = useMemo(
-    () => filteredExpenses.reduce((sum, e) => sum + e.amount, 0),
+  // Dönem istatistikleri (sadece aktif para birimi)
+  const currencyFilteredPeriod = useMemo(
+    () => filteredExpenses.filter((e) => e.currency === activeCurrency),
+    [filteredExpenses, activeCurrency],
+  );
+
+  const periodTotalByCurrency = useMemo(
+    () => sumByCurrency(filteredExpenses, (e) => e.amount),
     [filteredExpenses],
   );
+  const periodTotal = periodTotalByCurrency[activeCurrency] ?? 0;
 
   // Dönem kategori gruplandırması
   const periodByCategory = useMemo(() => {
@@ -62,11 +75,11 @@ export function useExpenses(vehicleId?: number, period: ExpensePeriod = 'all') {
       wash: 0,
       other: 0,
     };
-    return filteredExpenses.reduce((acc, e) => {
+    return currencyFilteredPeriod.reduce((acc, e) => {
       acc[e.category] = (acc[e.category] ?? 0) + e.amount;
       return acc;
     }, initial);
-  }, [filteredExpenses]);
+  }, [currencyFilteredPeriod]);
 
   return {
     expenses: vehicleFiltered,
@@ -74,9 +87,11 @@ export function useExpenses(vehicleId?: number, period: ExpensePeriod = 'all') {
     isLoading,
     error,
     totalAmount,
+    totalAmountByCurrency,
     byCategory,
     lastExpense,
     periodTotal,
+    periodTotalByCurrency,
     periodByCategory,
     addExpense,
     updateExpense,

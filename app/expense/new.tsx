@@ -10,18 +10,23 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { Card } from '@components/ui/Card';
 import { Input } from '@components/ui/Input';
 import { Button } from '@components/ui/Button';
 import { useExpenseStore } from '@stores/expenseStore';
 import { useVehicleStore } from '@stores/vehicleStore';
+import { useCurrencyStore, CURRENCY_SYMBOLS } from '@stores/currencyStore';
 import type { NewExpense, ExpenseCategory } from '@/types';
-import { EXPENSE_CATEGORY_OPTIONS } from '@/types';
+import { useExpenseCategoryOptions } from '@/i18n/options';
 
 export default function NewExpenseScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const { addExpense } = useExpenseStore();
   const { activeVehicle } = useVehicleStore();
+  const categoryOptions = useExpenseCategoryOptions();
+  const activeCurrency = useCurrencyStore((s) => s.currency);
 
   const [category, setCategory] = useState<ExpenseCategory>('other');
   const [form, setForm] = useState({
@@ -33,7 +38,7 @@ export default function NewExpenseScreen() {
   const handleSave = async () => {
     const amountNum = parseFloat(form.amount);
     if (isNaN(amountNum) || amountNum <= 0) {
-      Alert.alert('Geçersiz Tutar', 'Lütfen geçerli bir tutar girin.');
+      Alert.alert(t('expenseNew.invalidAmountTitle'), t('expenseNew.invalidAmountBody'));
       return;
     }
 
@@ -52,7 +57,7 @@ export default function NewExpenseScreen() {
       await addExpense(expense);
       router.back();
     } catch (e) {
-      Alert.alert('Hata', String(e));
+      Alert.alert(t('common.error'), String(e));
     } finally {
       setSaving(false);
     }
@@ -69,9 +74,9 @@ export default function NewExpenseScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <Card style={styles.card}>
-          <Text style={styles.sectionTitle}>Kategori</Text>
+          <Text style={styles.sectionTitle}>{t('expenseNew.category')}</Text>
           <View style={styles.chips}>
-            {EXPENSE_CATEGORY_OPTIONS.map((opt) => (
+            {categoryOptions.map((opt) => (
               <Button
                 key={opt.value}
                 label={opt.label}
@@ -84,18 +89,18 @@ export default function NewExpenseScreen() {
         </Card>
 
         <Card style={styles.card}>
-          <Text style={styles.sectionTitle}>Tutar</Text>
+          <Text style={styles.sectionTitle}>{t('expenseNew.amountSection')}</Text>
           <Input
-            label="Tutar *"
-            placeholder="Gider miktarı"
+            label={t('expenseNew.amountLabel')}
+            placeholder={t('expenseNew.amountPlaceholder')}
             value={form.amount}
             onChangeText={(v) => setForm((f) => ({ ...f, amount: v }))}
             keyboardType="numeric"
-            suffix="₺"
+            suffix={CURRENCY_SYMBOLS[activeCurrency]}
           />
           <Input
-            label="Açıklama"
-            placeholder="İsteğe bağlı açıklama..."
+            label={t('expenseNew.descriptionLabel')}
+            placeholder={t('expenseNew.descriptionPlaceholder')}
             value={form.description}
             onChangeText={(v) => setForm((f) => ({ ...f, description: v }))}
             multiline
@@ -105,13 +110,13 @@ export default function NewExpenseScreen() {
 
         <View style={styles.actions}>
           <Button
-            label="İptal"
+            label={t('common.cancel')}
             onPress={() => router.back()}
             variant="ghost"
             style={styles.actionBtn}
           />
           <Button
-            label="💰 Gideri Kaydet"
+            label={t('expenseNew.saveButton')}
             onPress={handleSave}
             loading={saving}
             style={styles.actionBtn}

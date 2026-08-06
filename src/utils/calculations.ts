@@ -1,4 +1,5 @@
 import type { Trip, FuelEntry, Expense, DailyStats, PeriodStats, TripDuration } from '@/types';
+import { formatDuration } from '@utils/formatters';
 
 /**
  * Net kazancı hesaplar.
@@ -38,21 +39,13 @@ export function calculateFuelCostPerKm(
 export function calculateTripDuration(
   startTime: number,
   endTime: number,
+  lang?: string,
 ): TripDuration {
   const totalMinutes = Math.max(0, Math.floor((endTime - startTime) / 60));
   const hours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
 
-  let display = '';
-  if (hours > 0 && minutes > 0) {
-    display = `${hours}s ${minutes}dk`;
-  } else if (hours > 0) {
-    display = `${hours}s`;
-  } else {
-    display = `${minutes}dk`;
-  }
-
-  return { hours, minutes, display };
+  return { hours, minutes, display: formatDuration(totalMinutes, lang) };
 }
 
 /**
@@ -167,6 +160,25 @@ export function calculatePeriodStats(
     avgTripEarnings,
     avgTripDistanceKm,
   };
+}
+
+/**
+ * Bir kayıt dizisini para birimine göre gruplayıp toplar. Farklı para
+ * birimleri dönüştürülmeden ayrı ayrı toplanır (kur takibi yapılmıyor).
+ * @param rows - currency alanı içeren kayıtlar
+ * @param amount - her kayıttan toplanacak tutarı döndüren fonksiyon
+ * @returns Para birimi koduna göre toplamlar, örn. { TRY: 100, USD: 20 }
+ */
+export function sumByCurrency<T extends { currency?: string | null }>(
+  rows: T[],
+  amount: (row: T) => number,
+): Record<string, number> {
+  const result: Record<string, number> = {};
+  for (const row of rows) {
+    const currency = row.currency ?? 'TRY';
+    result[currency] = (result[currency] ?? 0) + amount(row);
+  }
+  return result;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

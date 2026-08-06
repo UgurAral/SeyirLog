@@ -81,32 +81,6 @@ export interface SelectOption {
   value: string;
 }
 
-export const VEHICLE_TYPE_OPTIONS: SelectOption[] = [
-  { label: 'Araba', value: 'car' },
-  { label: 'Motosiklet', value: 'motorcycle' },
-  { label: 'Kamyon', value: 'truck' },
-  { label: 'Van', value: 'van' },
-];
-
-export const FUEL_TYPE_OPTIONS: SelectOption[] = [
-  { label: 'Benzin', value: 'gasoline' },
-  { label: 'Dizel', value: 'diesel' },
-  { label: 'Elektrik', value: 'electric' },
-  { label: 'LPG', value: 'lpg' },
-];
-
-export const EXPENSE_CATEGORY_OPTIONS: SelectOption[] = [
-  { label: 'Köprü/Otoyol', value: 'bridge' },
-  { label: 'Otopark', value: 'parking' },
-  { label: 'Bakım/Tamir', value: 'maintenance' },
-  { label: 'Ceza', value: 'fine' },
-  { label: 'Lastik', value: 'tire' },
-  { label: 'Yıkama', value: 'wash' },
-  { label: 'Diğer', value: 'other' },
-];
-
-export const INCOME_SOURCE_OPTIONS: SelectOption[] = [
-  { label: 'Sefer', value: 'trip' },
-  { label: 'Bonus', value: 'bonus' },
-  { label: 'Diğer', value: 'other' },
-];
+// Çeviriye duyarlı seçenek listeleri için bkz. @/i18n/options
+// (useVehicleTypeOptions, useFuelTypeOptions, useExpenseCategoryOptions,
+// useIncomeSourceOptions).

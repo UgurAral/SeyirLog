@@ -13,34 +13,39 @@ import {
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { useTripStore } from '@stores/tripStore';
 import { useFuelStore } from '@stores/fuelStore';
 import { useExpenseStore } from '@stores/expenseStore';
 import { useIncomeStore } from '@stores/incomeStore';
 import { useVehicles } from '@hooks/useVehicles';
 import { formatCurrency } from '@utils/formatters';
+import { useCurrencyStore, CURRENCY_SYMBOLS } from '@stores/currencyStore';
 import { shouldShowAd, showRewardedAd } from '@utils/ads';
 import { AdBanner } from '@components/AdBanner';
-import { EXPENSE_CATEGORY_OPTIONS } from '@/types';
+import { useExpenseCategoryOptions } from '@/i18n/options';
 import type { ExpenseCategory } from '@/types';
 
 type Tab = 'trip' | 'fuel' | 'expense' | 'income';
 
-const TABS: { id: Tab; label: string; icon: string; color: string }[] = [
-  { id: 'trip', label: 'Sefer', icon: '🚖', color: '#22C55E' },
-  { id: 'fuel', label: 'Yakıt', icon: '⛽', color: '#F59E0B' },
-  { id: 'expense', label: 'Gider', icon: '💸', color: '#EF4444' },
-  { id: 'income', label: 'Gelir', icon: '💰', color: '#3B82F6' },
-];
-
 export default function QuickEntryModal() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<Tab>('trip');
   const { activeVehicle } = useVehicles();
   const { activeTrip, addTrip, completeTrip } = useTripStore();
   const { addFuelEntry } = useFuelStore();
   const { addExpense } = useExpenseStore();
   const { addEntry: addIncomeEntry } = useIncomeStore();
+  const categoryOptions = useExpenseCategoryOptions();
+  const activeCurrency = useCurrencyStore((s) => s.currency);
+
+  const TABS: { id: Tab; label: string; icon: string; color: string }[] = [
+    { id: 'trip', label: t('quickEntry.tabTrip'), icon: '🚖', color: '#22C55E' },
+    { id: 'fuel', label: t('quickEntry.tabFuel'), icon: '⛽', color: '#F59E0B' },
+    { id: 'expense', label: t('quickEntry.tabExpense'), icon: '💸', color: '#EF4444' },
+    { id: 'income', label: t('quickEntry.tabIncome'), icon: '💰', color: '#3B82F6' },
+  ];
 
   const vehicleId = activeVehicle?.id;
   const [adBlocked, setAdBlocked] = useState(false);
@@ -72,7 +77,7 @@ export default function QuickEntryModal() {
   const handleStartTrip = useCallback(async () => {
     if (!(await handleAdGate())) return;
     if (!tripForm.origin.trim() || !tripForm.destination.trim()) {
-      Alert.alert('Eksik', 'Kalkış ve varış zorunlu.');
+      Alert.alert(t('quickEntry.missingTitle'), t('quickEntry.missingRouteBody'));
       return;
     }
     setTripSaving(true);
@@ -88,15 +93,15 @@ export default function QuickEntryModal() {
         updatedAt: now,
       });
       setTripForm({ origin: '', destination: '' });
-      Alert.alert('✅ Sefer Başladı', `${tripForm.origin} → ${tripForm.destination}`, [
-        { text: 'Tamam', onPress: () => router.back() },
+      Alert.alert(t('quickEntry.tripStartedTitle'), `${tripForm.origin} → ${tripForm.destination}`, [
+        { text: t('common.ok'), onPress: () => router.back() },
       ]);
     } catch (e) {
-      Alert.alert('Hata', String(e));
+      Alert.alert(t('common.error'), String(e));
     } finally {
       setTripSaving(false);
     }
-  }, [tripForm, vehicleId, addTrip, router]);
+  }, [tripForm, vehicleId, addTrip, router, t]);
 
   const handleEndTrip = useCallback(async () => {
     if (!activeTrip) return;
@@ -104,7 +109,7 @@ export default function QuickEntryModal() {
     const distanceKm = parseFloat(endForm.distanceKm);
     const earnings = parseFloat(endForm.earnings) || 0;
     if (isNaN(distanceKm) || distanceKm <= 0) {
-      Alert.alert('Geçersiz Mesafe', 'Gidilen mesafeyi (km) giriniz.');
+      Alert.alert(t('quickEntry.invalidDistanceTitle'), t('quickEntry.invalidDistanceBody'));
       return;
     }
     setTripSaving(true);
@@ -113,16 +118,16 @@ export default function QuickEntryModal() {
       await completeTrip(activeTrip.id, distanceKm, now, earnings);
       setEndForm({ distanceKm: '', earnings: '' });
       Alert.alert(
-        '✅ Sefer Tamamlandı',
-        `${distanceKm.toFixed(0)} km · ${formatCurrency(earnings)}`,
-        [{ text: 'Tamam', onPress: () => router.back() }],
+        t('quickEntry.tripCompletedTitle'),
+        `${distanceKm.toFixed(0)} km · ${formatCurrency(earnings, activeCurrency)}`,
+        [{ text: t('common.ok'), onPress: () => router.back() }],
       );
     } catch (e) {
-      Alert.alert('Hata', String(e));
+      Alert.alert(t('common.error'), String(e));
     } finally {
       setTripSaving(false);
     }
-  }, [activeTrip, endForm, completeTrip, router]);
+  }, [activeTrip, endForm, completeTrip, router, t]);
 
   // ── Yakıt formu ──────────────────────────────────────────────────────────────
   const [fuelForm, setFuelForm] = useState({ liters: '', pricePerLiter: '', currentKm: '' });
@@ -134,7 +139,7 @@ export default function QuickEntryModal() {
     const liters = parseFloat(fuelForm.liters);
     const price = parseFloat(fuelForm.pricePerLiter);
     if (isNaN(liters) || liters <= 0 || isNaN(price) || price <= 0) {
-      Alert.alert('Eksik', 'Litre ve fiyat zorunlu.');
+      Alert.alert(t('quickEntry.missingTitle'), t('quickEntry.missingFuelBody'));
       return;
     }
     setFuelSaving(true);
@@ -151,15 +156,15 @@ export default function QuickEntryModal() {
         updatedAt: now,
       });
       setFuelForm({ liters: '', pricePerLiter: '', currentKm: '' });
-      Alert.alert('✅ Yakıt Eklendi', `${liters}L · ${formatCurrency(fuelTotal)}`, [
-        { text: 'Tamam', onPress: () => router.back() },
+      Alert.alert(t('quickEntry.fuelAddedTitle'), `${liters}L · ${formatCurrency(fuelTotal, activeCurrency)}`, [
+        { text: t('common.ok'), onPress: () => router.back() },
       ]);
     } catch (e) {
-      Alert.alert('Hata', String(e));
+      Alert.alert(t('common.error'), String(e));
     } finally {
       setFuelSaving(false);
     }
-  }, [fuelForm, fuelTotal, vehicleId, addFuelEntry, router]);
+  }, [fuelForm, fuelTotal, vehicleId, addFuelEntry, router, t]);
 
   // ── Gider formu ──────────────────────────────────────────────────────────────
   const [expenseForm, setExpenseForm] = useState<{ category: ExpenseCategory; amount: string; description: string }>({
@@ -173,7 +178,7 @@ export default function QuickEntryModal() {
     if (!(await handleAdGate())) return;
     const amount = parseFloat(expenseForm.amount);
     if (isNaN(amount) || amount <= 0) {
-      Alert.alert('Eksik', 'Tutar giriniz.');
+      Alert.alert(t('quickEntry.missingTitle'), t('quickEntry.missingAmountBody'));
       return;
     }
     setExpenseSaving(true);
@@ -189,15 +194,15 @@ export default function QuickEntryModal() {
         updatedAt: now,
       });
       setExpenseForm({ category: 'other', amount: '', description: '' });
-      Alert.alert('✅ Gider Eklendi', formatCurrency(amount), [
-        { text: 'Tamam', onPress: () => router.back() },
+      Alert.alert(t('quickEntry.expenseAddedTitle'), formatCurrency(amount, activeCurrency), [
+        { text: t('common.ok'), onPress: () => router.back() },
       ]);
     } catch (e) {
-      Alert.alert('Hata', String(e));
+      Alert.alert(t('common.error'), String(e));
     } finally {
       setExpenseSaving(false);
     }
-  }, [expenseForm, vehicleId, addExpense, router]);
+  }, [expenseForm, vehicleId, addExpense, router, t]);
 
   // ── Gelir formu ──────────────────────────────────────────────────────────────
   const [incomeForm, setIncomeForm] = useState({ amount: '', source: '', description: '' });
@@ -207,7 +212,7 @@ export default function QuickEntryModal() {
     if (!(await handleAdGate())) return;
     const amount = parseFloat(incomeForm.amount);
     if (isNaN(amount) || amount <= 0) {
-      Alert.alert('Eksik', 'Tutar giriniz.');
+      Alert.alert(t('quickEntry.missingTitle'), t('quickEntry.missingAmountBody'));
       return;
     }
     setIncomeSaving(true);
@@ -221,17 +226,15 @@ export default function QuickEntryModal() {
         date: now,
       });
       setIncomeForm({ amount: '', source: '', description: '' });
-      Alert.alert('✅ Gelir Eklendi', formatCurrency(amount), [
-        { text: 'Tamam', onPress: () => router.back() },
+      Alert.alert(t('quickEntry.incomeAddedTitle'), formatCurrency(amount, activeCurrency), [
+        { text: t('common.ok'), onPress: () => router.back() },
       ]);
     } catch (e) {
-      Alert.alert('Hata', String(e));
+      Alert.alert(t('common.error'), String(e));
     } finally {
       setIncomeSaving(false);
     }
-  }, [incomeForm, vehicleId, addIncomeEntry, router]);
-
-  const activeTabData = TABS.find((t) => t.id === activeTab)!;
+  }, [incomeForm, vehicleId, addIncomeEntry, router, t]);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
@@ -246,14 +249,14 @@ export default function QuickEntryModal() {
         {adBlocked && (
           <View style={styles.adGateBanner}>
             <Text style={styles.adGateText}>
-              {adLoading ? '⏳ Reklam yükleniyor...' : '📺 5 dakika doldu — kaydetmek için kısa bir reklam izle'}
+              {adLoading ? t('quickEntry.adGateLoading') : t('quickEntry.adGateMessage')}
             </Text>
           </View>
         )}
 
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Hızlı Giriş</Text>
+          <Text style={styles.headerTitle}>{t('quickEntry.title')}</Text>
           <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
             <Ionicons name="close-circle" size={28} color="#64748B" />
           </TouchableOpacity>
@@ -291,30 +294,30 @@ export default function QuickEntryModal() {
                   <View style={styles.activeTripBanner}>
                     <View style={styles.activeDot} />
                     <View style={{ flex: 1 }}>
-                      <Text style={styles.activeTripLabel}>Aktif Sefer</Text>
+                      <Text style={styles.activeTripLabel}>{t('quickEntry.activeTripLabel')}</Text>
                       <Text style={styles.activeTripRoute}>
                         {activeTrip.origin} → {activeTrip.destination}
                       </Text>
                     </View>
                   </View>
 
-                  <Text style={styles.sectionLabel}>Seferi Bitir</Text>
+                  <Text style={styles.sectionLabel}>{t('quickEntry.endTripSection')}</Text>
                   <QInput
-                    label="Mesafe (km) *"
-                    placeholder="Kaç km gittiniz?"
+                    label={t('quickEntry.distanceLabel')}
+                    placeholder={t('quickEntry.distancePlaceholder')}
                     value={endForm.distanceKm}
                     onChangeText={(v) => setEndForm((f) => ({ ...f, distanceKm: v }))}
                     keyboardType="numeric"
                   />
                   <QInput
-                    label="Kazanç (₺)"
+                    label={t('quickEntry.earningsLabel')}
                     placeholder="0.00"
                     value={endForm.earnings}
                     onChangeText={(v) => setEndForm((f) => ({ ...f, earnings: v }))}
                     keyboardType="numeric"
                   />
                   <SaveButton
-                    label="Seferi Bitir"
+                    label={t('quickEntry.endTripButton')}
                     color="#22C55E"
                     loading={tripSaving}
                     onPress={handleEndTrip}
@@ -323,23 +326,23 @@ export default function QuickEntryModal() {
               ) : (
                 /* Aktif sefer yok → başlatma formu */
                 <>
-                  <Text style={styles.sectionLabel}>Sefer Başlat</Text>
+                  <Text style={styles.sectionLabel}>{t('quickEntry.startTripSection')}</Text>
                   <QInput
-                    label="Kalkış *"
-                    placeholder="Nereden?"
+                    label={t('quickEntry.departureLabel')}
+                    placeholder={t('quickEntry.departurePlaceholder')}
                     value={tripForm.origin}
                     onChangeText={(v) => setTripForm((f) => ({ ...f, origin: v }))}
                     autoCapitalize="sentences"
                   />
                   <QInput
-                    label="Varış *"
-                    placeholder="Nereye?"
+                    label={t('quickEntry.arrivalLabel')}
+                    placeholder={t('quickEntry.arrivalPlaceholder')}
                     value={tripForm.destination}
                     onChangeText={(v) => setTripForm((f) => ({ ...f, destination: v }))}
                     autoCapitalize="sentences"
                   />
                   <SaveButton
-                    label="Seferi Başlat"
+                    label={t('quickEntry.startTripButton')}
                     color="#22C55E"
                     loading={tripSaving}
                     onPress={handleStartTrip}
@@ -352,17 +355,17 @@ export default function QuickEntryModal() {
           {/* ── YAKIT TAB ── */}
           {activeTab === 'fuel' && (
             <View style={styles.form}>
-              <Text style={styles.sectionLabel}>Yakıt Girişi</Text>
+              <Text style={styles.sectionLabel}>{t('quickEntry.fuelSection')}</Text>
               <QInput
-                label="Litre *"
-                placeholder="Kaç litre?"
+                label={t('quickEntry.litersLabel')}
+                placeholder={t('quickEntry.litersPlaceholder')}
                 value={fuelForm.liters}
                 onChangeText={(v) => setFuelForm((f) => ({ ...f, liters: v }))}
                 keyboardType="decimal-pad"
               />
               <QInput
-                label="Litre Fiyatı (₺) *"
-                placeholder="Litre başı fiyat"
+                label={t('quickEntry.priceLabel')}
+                placeholder={t('quickEntry.pricePlaceholder')}
                 value={fuelForm.pricePerLiter}
                 onChangeText={(v) => setFuelForm((f) => ({ ...f, pricePerLiter: v }))}
                 keyboardType="decimal-pad"
@@ -370,19 +373,19 @@ export default function QuickEntryModal() {
               {fuelTotal > 0 && (
                 <View style={styles.calcBadge}>
                   <Text style={styles.calcBadgeText}>
-                    Toplam: {formatCurrency(fuelTotal)}
+                    {t('quickEntry.totalLabel')}: {formatCurrency(fuelTotal, activeCurrency)}
                   </Text>
                 </View>
               )}
               <QInput
-                label="Güncel KM"
-                placeholder="İsteğe bağlı"
+                label={t('quickEntry.currentKmLabel')}
+                placeholder={t('quickEntry.currentKmPlaceholder')}
                 value={fuelForm.currentKm}
                 onChangeText={(v) => setFuelForm((f) => ({ ...f, currentKm: v }))}
                 keyboardType="numeric"
               />
               <SaveButton
-                label="Yakıt Ekle"
+                label={t('quickEntry.addFuelButton')}
                 color="#F59E0B"
                 loading={fuelSaving}
                 onPress={handleAddFuel}
@@ -393,10 +396,10 @@ export default function QuickEntryModal() {
           {/* ── GİDER TAB ── */}
           {activeTab === 'expense' && (
             <View style={styles.form}>
-              <Text style={styles.sectionLabel}>Gider Ekle</Text>
-              <Text style={styles.fieldLabel}>Kategori</Text>
+              <Text style={styles.sectionLabel}>{t('quickEntry.expenseSection')}</Text>
+              <Text style={styles.fieldLabel}>{t('quickEntry.categoryLabel')}</Text>
               <View style={styles.categoryGrid}>
-                {EXPENSE_CATEGORY_OPTIONS.map((opt) => (
+                {categoryOptions.map((opt) => (
                   <TouchableOpacity
                     key={opt.value}
                     style={[
@@ -419,20 +422,20 @@ export default function QuickEntryModal() {
                 ))}
               </View>
               <QInput
-                label="Tutar (₺) *"
-                placeholder="Ne kadar?"
+                label={t('quickEntry.amountLabelTL')}
+                placeholder={t('quickEntry.amountPlaceholder')}
                 value={expenseForm.amount}
                 onChangeText={(v) => setExpenseForm((f) => ({ ...f, amount: v }))}
                 keyboardType="decimal-pad"
               />
               <QInput
-                label="Açıklama"
-                placeholder="İsteğe bağlı"
+                label={t('quickEntry.descriptionLabel')}
+                placeholder={t('quickEntry.descriptionPlaceholder')}
                 value={expenseForm.description}
                 onChangeText={(v) => setExpenseForm((f) => ({ ...f, description: v }))}
               />
               <SaveButton
-                label="Gider Ekle"
+                label={t('quickEntry.addExpenseButton')}
                 color="#EF4444"
                 loading={expenseSaving}
                 onPress={handleAddExpense}
@@ -443,28 +446,28 @@ export default function QuickEntryModal() {
           {/* ── GELİR TAB ── */}
           {activeTab === 'income' && (
             <View style={styles.form}>
-              <Text style={styles.sectionLabel}>Gelir Ekle</Text>
+              <Text style={styles.sectionLabel}>{t('quickEntry.incomeSection')}</Text>
               <QInput
-                label="Tutar (₺) *"
-                placeholder="Ne kadar?"
+                label={t('quickEntry.amountLabelTL')}
+                placeholder={t('quickEntry.amountPlaceholder')}
                 value={incomeForm.amount}
                 onChangeText={(v) => setIncomeForm((f) => ({ ...f, amount: v }))}
                 keyboardType="decimal-pad"
               />
               <QInput
-                label="Kaynak"
-                placeholder="Sefer, bonus, vb."
+                label={t('quickEntry.sourceLabel')}
+                placeholder={t('quickEntry.sourcePlaceholder')}
                 value={incomeForm.source}
                 onChangeText={(v) => setIncomeForm((f) => ({ ...f, source: v }))}
               />
               <QInput
-                label="Not"
-                placeholder="İsteğe bağlı"
+                label={t('quickEntry.noteLabel')}
+                placeholder={t('quickEntry.notePlaceholder')}
                 value={incomeForm.description}
                 onChangeText={(v) => setIncomeForm((f) => ({ ...f, description: v }))}
               />
               <SaveButton
-                label="Gelir Ekle"
+                label={t('quickEntry.addIncomeButton')}
                 color="#3B82F6"
                 loading={incomeSaving}
                 onPress={handleAddIncome}
@@ -521,6 +524,7 @@ function SaveButton({
   loading: boolean;
   onPress: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <TouchableOpacity
       style={[styles.saveBtn, { backgroundColor: color }, loading && { opacity: 0.6 }]}
@@ -528,7 +532,7 @@ function SaveButton({
       disabled={loading}
       activeOpacity={0.85}
     >
-      <Text style={styles.saveBtnText}>{loading ? 'Kaydediliyor…' : label}</Text>
+      <Text style={styles.saveBtnText}>{loading ? t('common.saving') : label}</Text>
     </TouchableOpacity>
   );
 }

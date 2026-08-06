@@ -9,45 +9,68 @@ import {
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { TripCard } from '@components/TripCard';
 import { useTrips } from '@hooks/useTrips';
 import { useFuel } from '@hooks/useFuel';
 import { useExpenses } from '@hooks/useExpenses';
 import { useIncome } from '@hooks/useIncome';
 import { useVehicles } from '@hooks/useVehicles';
-import { formatCurrency, formatKm } from '@utils/formatters';
+import { useCurrencyStore } from '@stores/currencyStore';
+import { formatKm } from '@utils/formatters';
 import { AdBanner } from '@components/AdBanner';
-import { useAuthStore } from '@stores/authStore';
+import { CurrencyBreakdownValue } from '@components/ui/CurrencyBreakdownValue';
 
 type Period = 'today' | 'week' | 'month' | 'all';
 
-const PERIODS: { id: Period; label: string }[] = [
-  { id: 'today', label: 'Bugün' },
-  { id: 'week', label: 'Hafta' },
-  { id: 'month', label: 'Ay' },
-  { id: 'all', label: 'Tümü' },
-];
-
 export default function DashboardScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [period, setPeriod] = useState<Period>('today');
   const { vehicles, activeVehicle } = useVehicles();
   const vehicleId = activeVehicle?.id;
-  const { user } = useAuthStore();
+
+  const PERIODS: { id: Period; label: string }[] = [
+    { id: 'today', label: t('periods.today') },
+    { id: 'week', label: t('periods.week') },
+    { id: 'month', label: t('periods.month') },
+    { id: 'all', label: t('periods.all') },
+  ];
+
+  const activeCurrency = useCurrencyStore((s) => s.currency);
 
   const {
     trips,
     activeTrip,
     periodEarnings,
+    periodEarningsByCurrency,
     periodKm,
     periodCount,
   } = useTrips(vehicleId, period);
 
-  const { periodCost: fuelCost } = useFuel(vehicleId, period);
-  const { periodTotal: expenseCost } = useExpenses(vehicleId, period);
-  const { periodTotal: incomeTotal } = useIncome(vehicleId, period);
+  const { periodCost: fuelCost, periodCostByCurrency: fuelCostByCurrency } = useFuel(vehicleId, period);
+  const { periodTotal: expenseCost, periodTotalByCurrency: expenseCostByCurrency } = useExpenses(vehicleId, period);
+  const { periodTotal: incomeTotal, periodTotalByCurrency: incomeTotalByCurrency } = useIncome(vehicleId, period);
 
   const netEarnings = periodEarnings + incomeTotal - fuelCost - expenseCost;
+  const netByCurrency = useMemo(() => {
+    const currencies = new Set([
+      ...Object.keys(periodEarningsByCurrency),
+      ...Object.keys(incomeTotalByCurrency),
+      ...Object.keys(fuelCostByCurrency),
+      ...Object.keys(expenseCostByCurrency),
+    ]);
+    const result: Record<string, number> = {};
+    for (const c of currencies) {
+      result[c] =
+        (periodEarningsByCurrency[c] ?? 0) +
+        (incomeTotalByCurrency[c] ?? 0) -
+        (fuelCostByCurrency[c] ?? 0) -
+        (expenseCostByCurrency[c] ?? 0);
+    }
+    return result;
+  }, [periodEarningsByCurrency, incomeTotalByCurrency, fuelCostByCurrency, expenseCostByCurrency]);
+
   const recentTrips = trips.slice(0, 5);
 
   // ── Araç yoksa CTA ────────────────────────────────────────────────────────
@@ -56,9 +79,9 @@ export default function DashboardScreen() {
       <SafeAreaView style={styles.safe} edges={['top']}>
         <View style={styles.emptyState}>
           <Text style={styles.emptyIcon}>🚗</Text>
-          <Text style={styles.emptyTitle}>Araç bulunamadı</Text>
+          <Text style={styles.emptyTitle}>{t('dashboard.noVehicleTitle')}</Text>
           <Text style={styles.emptyText}>
-            Takip başlatmak için önce bir araç ekle.
+            {t('dashboard.noVehicleText')}
           </Text>
           <TouchableOpacity
             style={styles.addVehicleBtn}
@@ -66,7 +89,7 @@ export default function DashboardScreen() {
             activeOpacity={0.85}
           >
             <Ionicons name="add-circle" size={18} color="#FFFFFF" />
-            <Text style={styles.addVehicleBtnText}>Araç Ekle</Text>
+            <Text style={styles.addVehicleBtnText}>{t('dashboard.addVehicleButton')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -129,27 +152,46 @@ export default function DashboardScreen() {
               <View style={styles.activeTripLeft}>
                 <View style={styles.activeDot} />
                 <View>
-                  <Text style={styles.activeTripLabel}>Aktif Sefer</Text>
+                  <Text style={styles.activeTripLabel}>{t('dashboard.activeTripLabel')}</Text>
                   <Text style={styles.activeTripRoute} numberOfLines={1}>
                     {activeTrip.origin} → {activeTrip.destination}
                   </Text>
                 </View>
               </View>
               <View style={styles.endTripBtn}>
-                <Text style={styles.endTripBtnText}>Bitir →</Text>
+                <Text style={styles.endTripBtnText}>{t('dashboard.endTripButton')}</Text>
               </View>
             </TouchableOpacity>
           )}
 
           {/* ── Stats Grid ── */}
           <View style={styles.statsGrid}>
-            <StatTile icon="🚖" label="Sefer" value={String(periodCount)} color="#8B5CF6" />
-            <StatTile icon="🛣️" label="KM" value={formatKm(periodKm)} color="#F59E0B" />
-            <StatTile icon="📈" label="Kazanç" value={formatCurrency(periodEarnings)} color="#22C55E" />
+            <StatTile icon="🚖" label={t('dashboard.statTrip')} value={String(periodCount)} color="#8B5CF6" />
+            <StatTile icon="🛣️" label={t('dashboard.statKm')} value={formatKm(periodKm)} color="#F59E0B" />
+            <StatTile
+              icon="📈"
+              label={t('dashboard.statEarnings')}
+              value={
+                <CurrencyBreakdownValue
+                  amounts={periodEarningsByCurrency}
+                  activeCurrency={activeCurrency}
+                  color="#22C55E"
+                  textStyle={styles.statTileValue}
+                />
+              }
+              color="#22C55E"
+            />
             <StatTile
               icon="💰"
-              label="Net"
-              value={formatCurrency(netEarnings)}
+              label={t('dashboard.statNet')}
+              value={
+                <CurrencyBreakdownValue
+                  amounts={netByCurrency}
+                  activeCurrency={activeCurrency}
+                  colorFor={(amount) => (amount >= 0 ? '#22C55E' : '#EF4444')}
+                  textStyle={styles.statTileValue}
+                />
+              }
               color={netEarnings >= 0 ? '#22C55E' : '#EF4444'}
             />
           </View>
@@ -160,15 +202,23 @@ export default function DashboardScreen() {
               {fuelCost > 0 && (
                 <View style={styles.subStat}>
                   <Text style={styles.subStatIcon}>⛽</Text>
-                  <Text style={styles.subStatLabel}>Yakıt</Text>
-                  <Text style={styles.subStatValue}>{formatCurrency(fuelCost)}</Text>
+                  <Text style={styles.subStatLabel}>{t('dashboard.fuelLabel')}</Text>
+                  <CurrencyBreakdownValue
+                    amounts={fuelCostByCurrency}
+                    activeCurrency={activeCurrency}
+                    textStyle={styles.subStatValue}
+                  />
                 </View>
               )}
               {expenseCost > 0 && (
                 <View style={styles.subStat}>
                   <Text style={styles.subStatIcon}>💸</Text>
-                  <Text style={styles.subStatLabel}>Gider</Text>
-                  <Text style={styles.subStatValue}>{formatCurrency(expenseCost)}</Text>
+                  <Text style={styles.subStatLabel}>{t('dashboard.expenseLabel')}</Text>
+                  <CurrencyBreakdownValue
+                    amounts={expenseCostByCurrency}
+                    activeCurrency={activeCurrency}
+                    textStyle={styles.subStatValue}
+                  />
                 </View>
               )}
             </View>
@@ -178,9 +228,9 @@ export default function DashboardScreen() {
           {recentTrips.length > 0 ? (
             <>
               <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Son Seferler</Text>
+                <Text style={styles.sectionTitle}>{t('dashboard.recentTrips')}</Text>
                 <TouchableOpacity onPress={() => router.push('/(tabs)/trips')}>
-                  <Text style={styles.seeAll}>Tümü →</Text>
+                  <Text style={styles.seeAll}>{t('dashboard.seeAll')}</Text>
                 </TouchableOpacity>
               </View>
               {recentTrips.map((trip) => (
@@ -191,7 +241,7 @@ export default function DashboardScreen() {
             <View style={styles.noTrips}>
               <Text style={styles.noTripsIcon}>🚖</Text>
               <Text style={styles.noTripsText}>
-                {period === 'today' ? 'Bugün henüz sefer yok.' : 'Bu dönemde sefer yok.'}
+                {period === 'today' ? t('dashboard.noTripsToday') : t('dashboard.noTripsPeriod')}
               </Text>
             </View>
           )}
@@ -226,13 +276,13 @@ function StatTile({
 }: {
   icon: string;
   label: string;
-  value: string;
+  value: React.ReactNode;
   color: string;
 }) {
   return (
     <View style={[styles.statTile, { borderTopColor: color, borderTopWidth: 3 }]}>
       <Text style={styles.statTileIcon}>{icon}</Text>
-      <Text style={styles.statTileValue}>{value}</Text>
+      {typeof value === 'string' ? <Text style={styles.statTileValue}>{value}</Text> : value}
       <Text style={styles.statTileLabel}>{label}</Text>
     </View>
   );

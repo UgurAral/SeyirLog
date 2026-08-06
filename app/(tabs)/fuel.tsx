@@ -9,27 +9,32 @@ import {
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { FuelCard } from '@components/FuelCard';
 import { StatCard } from '@components/ui/StatCard';
 import { PeriodFilter, type Period } from '@components/ui/PeriodFilter';
 import { useFuel } from '@hooks/useFuel';
 import { useVehicles } from '@hooks/useVehicles';
-import { formatCurrency, formatLiters } from '@utils/formatters';
+import { useCurrencyStore } from '@stores/currencyStore';
+import { formatLiters } from '@utils/formatters';
+import { CurrencyBreakdownValue } from '@components/ui/CurrencyBreakdownValue';
 import type { FuelEntry } from '@/types';
 
 export default function FuelScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [period, setPeriod] = useState<Period>('all');
   const { activeVehicle } = useVehicles();
+  const activeCurrency = useCurrencyStore((s) => s.currency);
 
   const {
     filteredEntries,
     isLoading,
     totalLiters,
-    totalCost,
-    avgPricePerLiter,
+    totalCostByCurrency,
+    avgPricePerLiterByCurrency,
     periodLiters,
-    periodCost,
+    periodCostByCurrency,
   } = useFuel(activeVehicle?.id, period);
 
   const renderItem = ({ item }: { item: FuelEntry }) => (
@@ -47,7 +52,7 @@ export default function FuelScreen() {
         ListHeaderComponent={
           <>
             <View style={styles.header}>
-              <Text style={styles.title}>Yakıt</Text>
+              <Text style={styles.title}>{t('fuel.title')}</Text>
               <TouchableOpacity
                 style={styles.addBtn}
                 onPress={() => router.push('/fuel/new')}
@@ -59,21 +64,35 @@ export default function FuelScreen() {
             {/* Genel İstatistikler */}
             <View style={styles.statsRow}>
               <StatCard
-                label="Toplam Maliyet"
-                value={formatCurrency(totalCost)}
+                label={t('fuel.totalCost')}
+                value={
+                  <CurrencyBreakdownValue
+                    amounts={totalCostByCurrency}
+                    activeCurrency={activeCurrency}
+                    color="#EF4444"
+                    textStyle={styles.statCardValue}
+                  />
+                }
                 icon="💸"
                 accentColor="#EF4444"
               />
               <StatCard
-                label="Toplam Litre"
+                label={t('fuel.totalLiters')}
                 value={formatLiters(totalLiters)}
                 icon="⛽"
                 accentColor="#F59E0B"
               />
             </View>
             <StatCard
-              label="Ort. Litre Fiyatı"
-              value={formatCurrency(avgPricePerLiter)}
+              label={t('fuel.avgPrice')}
+              value={
+                <CurrencyBreakdownValue
+                  amounts={avgPricePerLiterByCurrency}
+                  activeCurrency={activeCurrency}
+                  color="#3B82F6"
+                  textStyle={styles.statCardValue}
+                />
+              }
               icon="📊"
               accentColor="#3B82F6"
               style={styles.singleStat}
@@ -86,14 +105,17 @@ export default function FuelScreen() {
             {period !== 'all' && (
               <View style={styles.periodSummary}>
                 <View style={styles.periodItem}>
-                  <Text style={styles.periodLabel}>Dönem Toplam</Text>
-                  <Text style={[styles.periodValue, { color: '#EF4444' }]}>
-                    {formatCurrency(periodCost)}
-                  </Text>
+                  <Text style={styles.periodLabel}>{t('fuel.periodTotal')}</Text>
+                  <CurrencyBreakdownValue
+                    amounts={periodCostByCurrency}
+                    activeCurrency={activeCurrency}
+                    color="#EF4444"
+                    textStyle={styles.periodValue}
+                  />
                 </View>
                 <View style={styles.periodDivider} />
                 <View style={styles.periodItem}>
-                  <Text style={styles.periodLabel}>Dönem Litre</Text>
+                  <Text style={styles.periodLabel}>{t('fuel.periodLiters')}</Text>
                   <Text style={[styles.periodValue, { color: '#F59E0B' }]}>
                     {formatLiters(periodLiters)}
                   </Text>
@@ -101,14 +123,14 @@ export default function FuelScreen() {
               </View>
             )}
 
-            <Text style={styles.sectionTitle}>Geçmiş</Text>
+            <Text style={styles.sectionTitle}>{t('fuel.history')}</Text>
           </>
         }
         ListEmptyComponent={
           isLoading ? null : (
             <View style={styles.empty}>
               <Text style={styles.emptyIcon}>⛽</Text>
-              <Text style={styles.emptyText}>Bu dönemde yakıt kaydı yok</Text>
+              <Text style={styles.emptyText}>{t('fuel.emptyText')}</Text>
             </View>
           )
         }
@@ -137,6 +159,7 @@ const styles = StyleSheet.create({
   },
   statsRow: { flexDirection: 'row', gap: 12, marginBottom: 12 },
   singleStat: { marginBottom: 12 },
+  statCardValue: { fontSize: 22, fontWeight: '700' },
   periodSummary: {
     flexDirection: 'row',
     backgroundColor: '#1E293B',

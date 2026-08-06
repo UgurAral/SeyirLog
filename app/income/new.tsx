@@ -10,19 +10,24 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { Card } from '@components/ui/Card';
 import { Input } from '@components/ui/Input';
 import { Button } from '@components/ui/Button';
 import { useIncomeStore } from '@stores/incomeStore';
 import { useVehicleStore } from '@stores/vehicleStore';
+import { useCurrencyStore, CURRENCY_SYMBOLS } from '@stores/currencyStore';
 import type { NewIncomeEntry, IncomeSource } from '@/types';
-import { INCOME_SOURCE_OPTIONS } from '@/types';
+import { useIncomeSourceOptions } from '@/i18n/options';
 import { formatCurrency } from '@utils/formatters';
 
 export default function NewIncomeScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const { addEntry } = useIncomeStore();
   const { activeVehicle } = useVehicleStore();
+  const sourceOptions = useIncomeSourceOptions();
+  const activeCurrency = useCurrencyStore((s) => s.currency);
 
   const [source, setSource] = useState<IncomeSource>('trip');
   const [form, setForm] = useState({
@@ -35,7 +40,7 @@ export default function NewIncomeScreen() {
 
   const handleSave = async () => {
     if (!form.amount || amountNum <= 0) {
-      Alert.alert('Geçersiz Tutar', 'Lütfen geçerli bir tutar girin.');
+      Alert.alert(t('incomeNew.invalidAmountTitle'), t('incomeNew.invalidAmountBody'));
       return;
     }
 
@@ -52,7 +57,7 @@ export default function NewIncomeScreen() {
       await addEntry(entry);
       router.back();
     } catch (e) {
-      Alert.alert('Hata', String(e));
+      Alert.alert(t('common.error'), String(e));
     } finally {
       setSaving(false);
     }
@@ -70,9 +75,9 @@ export default function NewIncomeScreen() {
       >
         {/* Kaynak Seçici */}
         <Card style={styles.card}>
-          <Text style={styles.sectionTitle}>Gelir Kaynağı</Text>
+          <Text style={styles.sectionTitle}>{t('incomeNew.sourceSection')}</Text>
           <View style={styles.chips}>
-            {INCOME_SOURCE_OPTIONS.map((opt) => (
+            {sourceOptions.map((opt) => (
               <Button
                 key={opt.value}
                 label={opt.label}
@@ -86,24 +91,24 @@ export default function NewIncomeScreen() {
 
         {/* Tutar */}
         <Card style={styles.card}>
-          <Text style={styles.sectionTitle}>Tutar</Text>
+          <Text style={styles.sectionTitle}>{t('incomeNew.amountSection')}</Text>
           <Input
-            label="Tutar *"
-            placeholder="Gelir miktarı"
+            label={t('incomeNew.amountLabel')}
+            placeholder={t('incomeNew.amountPlaceholder')}
             value={form.amount}
             onChangeText={(v) => setForm((f) => ({ ...f, amount: v }))}
             keyboardType="numeric"
-            suffix="₺"
+            suffix={CURRENCY_SYMBOLS[activeCurrency]}
           />
           {amountNum > 0 && (
             <View style={styles.previewRow}>
-              <Text style={styles.previewLabel}>Gelir</Text>
-              <Text style={styles.previewValue}>{formatCurrency(amountNum)}</Text>
+              <Text style={styles.previewLabel}>{t('incomeNew.incomePreviewLabel')}</Text>
+              <Text style={styles.previewValue}>{formatCurrency(amountNum, activeCurrency)}</Text>
             </View>
           )}
           <Input
-            label="Açıklama"
-            placeholder="İsteğe bağlı açıklama..."
+            label={t('incomeNew.descriptionLabel')}
+            placeholder={t('incomeNew.descriptionPlaceholder')}
             value={form.description}
             onChangeText={(v) => setForm((f) => ({ ...f, description: v }))}
             multiline
@@ -115,7 +120,7 @@ export default function NewIncomeScreen() {
         {activeVehicle && (
           <View style={styles.vehicleInfo}>
             <Text style={styles.vehicleInfoText}>
-              🚗 {activeVehicle.brand} {activeVehicle.model} — {activeVehicle.plate ?? 'Plakasız'}
+              🚗 {activeVehicle.brand} {activeVehicle.model} — {activeVehicle.plate ?? t('incomeNew.noPlate')}
             </Text>
           </View>
         )}
@@ -123,13 +128,13 @@ export default function NewIncomeScreen() {
         {/* Aksiyon Butonları */}
         <View style={styles.actions}>
           <Button
-            label="İptal"
+            label={t('common.cancel')}
             onPress={() => router.back()}
             variant="ghost"
             style={styles.actionBtn}
           />
           <Button
-            label="💵 Geliri Kaydet"
+            label={t('incomeNew.saveButton')}
             onPress={handleSave}
             loading={saving}
             style={styles.actionBtn}

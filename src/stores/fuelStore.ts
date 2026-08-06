@@ -3,6 +3,7 @@ import { eq, desc } from 'drizzle-orm';
 import { db } from '@db/index';
 import { fuelEntries } from '@db/schema';
 import { syncUpsert, syncDelete } from '@services/firestore';
+import { useCurrencyStore } from '@stores/currencyStore';
 import type { FuelEntry, NewFuelEntry } from '@/types';
 
 interface FuelStore {
@@ -14,7 +15,7 @@ interface FuelStore {
   addFuelEntry: (entry: NewFuelEntry) => Promise<FuelEntry>;
   updateFuelEntry: (id: number, data: Partial<NewFuelEntry>) => Promise<void>;
   deleteFuelEntry: (id: number) => Promise<void>;
-  getTotalFuelCost: (vehicleId?: number) => number;
+  getTotalFuelCost: (vehicleId?: number, currency?: string) => number;
 }
 
 export const useFuelStore = create<FuelStore>((set, get) => ({
@@ -40,7 +41,12 @@ export const useFuelStore = create<FuelStore>((set, get) => ({
 
   addFuelEntry: async (entry: NewFuelEntry) => {
     const now = Math.floor(Date.now() / 1000);
-    const newEntry = { ...entry, createdAt: now, updatedAt: now };
+    const newEntry = {
+      ...entry,
+      currency: useCurrencyStore.getState().currency,
+      createdAt: now,
+      updatedAt: now,
+    };
     const result = await db.insert(fuelEntries).values(newEntry).returning();
     const inserted = result[0];
     set((state) => ({ fuelEntries: [inserted, ...state.fuelEntries] }));
@@ -70,10 +76,11 @@ export const useFuelStore = create<FuelStore>((set, get) => ({
     syncDelete('fuel_entries', id);
   },
 
-  getTotalFuelCost: (vehicleId?: number) => {
-    const entries = vehicleId
+  getTotalFuelCost: (vehicleId?: number, currency?: string) => {
+    let entries = vehicleId
       ? get().fuelEntries.filter((f) => f.vehicleId === vehicleId)
       : get().fuelEntries;
+    if (currency) entries = entries.filter((f) => f.currency === currency);
     return entries.reduce((sum, f) => sum + f.totalCost, 0);
   },
 }));

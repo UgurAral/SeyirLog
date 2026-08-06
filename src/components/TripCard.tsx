@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { Card } from './ui/Card';
 import { formatCurrency, formatKm, formatDuration, formatDateTime } from '@utils/formatters';
 import type { Trip } from '@/types';
@@ -16,14 +17,9 @@ const STATUS_COLORS: Record<string, string> = {
   cancelled: '#EF4444',
 };
 
-const STATUS_LABELS: Record<string, string> = {
-  active: 'Aktif',
-  completed: 'Tamamlandı',
-  cancelled: 'İptal',
-};
-
 export function TripCard({ trip, onPress }: TripCardProps) {
   const router = useRouter();
+  const { t, i18n } = useTranslation();
   const statusColor = STATUS_COLORS[trip.status] ?? '#94A3B8';
 
   const handlePress = () => {
@@ -50,7 +46,7 @@ export function TripCard({ trip, onPress }: TripCardProps) {
           </View>
           <View style={[styles.statusBadge, { backgroundColor: statusColor + '20' }]}>
             <Text style={[styles.statusText, { color: statusColor }]}>
-              {STATUS_LABELS[trip.status]}
+              {t(`tripStatus.${trip.status}`)}
             </Text>
           </View>
         </View>
@@ -58,22 +54,22 @@ export function TripCard({ trip, onPress }: TripCardProps) {
         {/* Details */}
         <View style={styles.details}>
           <DetailItem
-            label="Başlangıç"
-            value={formatDateTime(trip.startTime)}
+            label={t('tripDetail.start')}
+            value={formatDateTime(trip.startTime, i18n.language)}
           />
           {trip.distanceKm != null && (
-            <DetailItem label="Mesafe" value={formatKm(trip.distanceKm)} />
+            <DetailItem label={t('tripDetail.distance')} value={formatKm(trip.distanceKm)} />
           )}
           {trip.durationMinutes != null && (
             <DetailItem
-              label="Süre"
-              value={formatDuration(trip.durationMinutes)}
+              label={t('tripDetail.duration')}
+              value={formatDuration(trip.durationMinutes, i18n.language)}
             />
           )}
           {trip.earnings != null && (
             <DetailItem
-              label="Kazanç"
-              value={formatCurrency(trip.earnings)}
+              label={t('tripDetail.earnings')}
+              value={formatCurrency(trip.earnings, trip.currency)}
               valueColor="#22C55E"
             />
           )}

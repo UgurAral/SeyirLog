@@ -10,12 +10,13 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { Card } from '@components/ui/Card';
 import { Input } from '@components/ui/Input';
 import { Button } from '@components/ui/Button';
 import { useVehicleStore } from '@stores/vehicleStore';
 import type { NewVehicle, VehicleType, FuelType } from '@/types';
-import { VEHICLE_TYPE_OPTIONS, FUEL_TYPE_OPTIONS } from '@/types';
+import { useVehicleTypeOptions, useFuelTypeOptions } from '@/i18n/options';
 
 const DEFAULT_FORM: Omit<NewVehicle, 'createdAt' | 'updatedAt'> = {
   brand: '',
@@ -29,18 +30,21 @@ const DEFAULT_FORM: Omit<NewVehicle, 'createdAt' | 'updatedAt'> = {
 
 export default function NewVehicleScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const { addVehicle } = useVehicleStore();
+  const vehicleTypeOptions = useVehicleTypeOptions();
+  const fuelTypeOptions = useFuelTypeOptions();
 
   const [form, setForm] = useState(DEFAULT_FORM);
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
     if (!form.brand.trim()) {
-      Alert.alert('Eksik Bilgi', 'Araç markası zorunludur.');
+      Alert.alert(t('vehicleNew.missingBrandTitle'), t('vehicleNew.missingBrandBody'));
       return;
     }
     if (!form.model.trim()) {
-      Alert.alert('Eksik Bilgi', 'Araç modeli zorunludur.');
+      Alert.alert(t('vehicleNew.missingModelTitle'), t('vehicleNew.missingModelBody'));
       return;
     }
 
@@ -52,11 +56,11 @@ export default function NewVehicleScreen() {
         model: form.model.trim(),
         plate: form.plate?.trim() || undefined,
       });
-      Alert.alert('Başarılı', 'Araç eklendi!', [
-        { text: 'Tamam', onPress: () => router.back() },
+      Alert.alert(t('vehicleNew.successTitle'), t('vehicleNew.successBody'), [
+        { text: t('common.ok'), onPress: () => router.back() },
       ]);
     } catch (e) {
-      Alert.alert('Hata', String(e));
+      Alert.alert(t('common.error'), String(e));
     } finally {
       setSaving(false);
     }
@@ -74,24 +78,24 @@ export default function NewVehicleScreen() {
       >
         {/* Temel Bilgiler */}
         <Card style={styles.card}>
-          <Text style={styles.sectionTitle}>Araç Bilgileri</Text>
+          <Text style={styles.sectionTitle}>{t('vehicleNew.infoSection')}</Text>
           <Input
-            label="Marka *"
-            placeholder="Toyota, Ford, Renault..."
+            label={t('vehicleNew.brandLabel')}
+            placeholder={t('vehicleNew.brandPlaceholder')}
             value={form.brand}
             onChangeText={(v) => setForm((f) => ({ ...f, brand: v }))}
             autoCapitalize="words"
           />
           <Input
-            label="Model *"
-            placeholder="Corolla, Focus, Megane..."
+            label={t('vehicleNew.modelLabel')}
+            placeholder={t('vehicleNew.modelPlaceholder')}
             value={form.model}
             onChangeText={(v) => setForm((f) => ({ ...f, model: v }))}
             autoCapitalize="words"
           />
           <Input
-            label="Plaka"
-            placeholder="34 ABC 1234"
+            label={t('vehicleNew.plateLabel')}
+            placeholder={t('vehicleNew.platePlaceholder')}
             value={form.plate ?? ''}
             onChangeText={(v) =>
               setForm((f) => ({ ...f, plate: v.toUpperCase() }))
@@ -99,8 +103,8 @@ export default function NewVehicleScreen() {
             autoCapitalize="characters"
           />
           <Input
-            label="Yıl"
-            placeholder="2024"
+            label={t('vehicleNew.yearLabel')}
+            placeholder={t('vehicleNew.yearPlaceholder')}
             value={form.year ? String(form.year) : ''}
             onChangeText={(v) =>
               setForm((f) => ({
@@ -115,9 +119,9 @@ export default function NewVehicleScreen() {
 
         {/* Araç Tipi */}
         <Card style={styles.card}>
-          <Text style={styles.sectionTitle}>Araç Tipi</Text>
+          <Text style={styles.sectionTitle}>{t('vehicleNew.typeSection')}</Text>
           <View style={styles.chips}>
-            {VEHICLE_TYPE_OPTIONS.map((opt) => (
+            {vehicleTypeOptions.map((opt) => (
               <Button
                 key={opt.value}
                 label={opt.label}
@@ -133,9 +137,9 @@ export default function NewVehicleScreen() {
 
         {/* Yakıt Tipi */}
         <Card style={styles.card}>
-          <Text style={styles.sectionTitle}>Yakıt Tipi</Text>
+          <Text style={styles.sectionTitle}>{t('vehicleNew.fuelTypeSection')}</Text>
           <View style={styles.chips}>
-            {FUEL_TYPE_OPTIONS.map((opt) => (
+            {fuelTypeOptions.map((opt) => (
               <Button
                 key={opt.value}
                 label={opt.label}
@@ -152,13 +156,13 @@ export default function NewVehicleScreen() {
         {/* Aksiyon Butonları */}
         <View style={styles.actions}>
           <Button
-            label="İptal"
+            label={t('common.cancel')}
             onPress={() => router.back()}
             variant="ghost"
             style={styles.actionBtn}
           />
           <Button
-            label="🚗 Aracı Ekle"
+            label={t('vehicleNew.addButton')}
             onPress={handleSave}
             loading={saving}
             style={styles.actionBtn}
