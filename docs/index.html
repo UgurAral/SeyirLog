@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SeyirLog — Gizlilik Politikası</title>
+  <title>SeyirLog — Sürücüler için Sefer, Yakıt ve Gider Takip Uygulaması</title>
+  <meta name="description" content="SeyirLog, taksi ve şoförler için sefer, yakıt, gider ve gelir takibi yapan çevrimdışı çalışan bir mobil uygulamadır."/>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -15,11 +16,12 @@
     header {
       background: #0f2060;
       color: white;
-      padding: 40px 24px;
+      padding: 56px 24px;
       text-align: center;
     }
-    header h1 { font-size: 2rem; font-weight: 800; }
-    header p  { opacity: 0.75; margin-top: 6px; font-size: 0.95rem; }
+    header .icon { font-size: 3rem; }
+    header h1 { font-size: 2.25rem; font-weight: 800; margin-top: 8px; }
+    header p  { opacity: 0.85; margin-top: 10px; font-size: 1.05rem; max-width: 480px; margin-left: auto; margin-right: auto; }
     main {
       max-width: 720px;
       margin: 40px auto;
@@ -29,6 +31,7 @@
       display: flex;
       gap: 10px;
       margin-bottom: 32px;
+      justify-content: center;
     }
     .lang-switch button {
       padding: 8px 20px;
@@ -46,34 +49,43 @@
     }
     section { display: none; }
     section.active { display: block; }
-    h2 {
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: #0f2060;
-      margin: 28px 0 10px;
-      padding-bottom: 6px;
-      border-bottom: 2px solid #e2e8f0;
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin: 28px 0;
     }
-    h3 { font-size: 1rem; font-weight: 700; margin: 18px 0 6px; }
-    p, li { font-size: 0.97rem; color: #334155; margin-bottom: 8px; }
-    ul { padding-left: 20px; }
-    .badge {
+    .feature {
+      background: white;
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    .feature .emoji { font-size: 1.75rem; margin-bottom: 8px; }
+    .feature h3 { font-size: 1rem; font-weight: 700; color: #0f2060; margin-bottom: 6px; }
+    .feature p { font-size: 0.9rem; color: #475569; margin: 0; }
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 32px;
+    }
+    .links a {
       display: inline-block;
-      background: #e0f2fe;
-      color: #0369a1;
-      border-radius: 6px;
-      padding: 2px 10px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      margin-bottom: 20px;
+      padding: 12px 22px;
+      border-radius: 10px;
+      background: #0f2060;
+      color: white;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 0.9rem;
     }
-    .highlight {
-      background: #f0fdf4;
-      border-left: 4px solid #22c55e;
-      padding: 14px 18px;
-      border-radius: 0 8px 8px 0;
-      margin: 16px 0;
+    .links a.secondary {
+      background: white;
+      color: #0f2060;
+      border: 2px solid #0f2060;
     }
+    p { font-size: 0.97rem; color: #334155; margin-bottom: 8px; }
     footer {
       text-align: center;
       color: #94a3b8;
@@ -81,13 +93,15 @@
       padding: 24px;
       border-top: 1px solid #e2e8f0;
     }
+    footer a { color: #64748b; }
   </style>
 </head>
 <body>
 
 <header>
-  <h1>🚖 SeyirLog</h1>
-  <p>Gizlilik Politikası / Privacy Policy</p>
+  <div class="icon">🚖</div>
+  <h1>SeyirLog</h1>
+  <p>Sürücüler için sefer, yakıt, gider ve gelir takibi — çevrimdışı çalışır, verileriniz önce cihazınızda kalır.</p>
 </header>
 
 <main>
@@ -98,97 +112,85 @@
 
   <!-- TÜRKÇE -->
   <section id="tr" class="active">
-    <span class="badge">Son güncelleme: 25 Temmuz 2026</span>
+    <p>
+      <strong>SeyirLog</strong>, taksi şoförleri ve profesyonel sürücüler için tasarlanmış bir seyir defteri
+      uygulamasıdır. Seferlerinizi, yakıt masraflarınızı, giderlerinizi ve gelirlerinizi tek bir yerden takip
+      edin — internet bağlantısı olmadan da çalışır, hesabınızla giriş yaptığınızda verileriniz otomatik olarak
+      yedeklenir ve cihazlar arasında senkronize edilir.
+    </p>
 
-    <div class="highlight">
-      SeyirLog verilerinizi önce cihazınızda saklar; hesabınızla giriş yaptığınızda yedekleme ve cihazlar arası senkronizasyon için Google Firebase sunucularına da gönderilir.
+    <div class="features">
+      <div class="feature">
+        <div class="emoji">🚖</div>
+        <h3>Sefer Takibi</h3>
+        <p>Başlangıç/varış, mesafe, süre ve kazanç kaydı</p>
+      </div>
+      <div class="feature">
+        <div class="emoji">⛽</div>
+        <h3>Yakıt Takibi</h3>
+        <p>Litre, fiyat ve maliyet analizi</p>
+      </div>
+      <div class="feature">
+        <div class="emoji">💰</div>
+        <h3>Gelir &amp; Gider</h3>
+        <p>Kategori bazlı gider ve gelir kayıtları</p>
+      </div>
+      <div class="feature">
+        <div class="emoji">📊</div>
+        <h3>Net Kazanç Özeti</h3>
+        <p>Günlük, haftalık ve aylık raporlar</p>
+      </div>
     </div>
 
-    <h2>1. Toplanan Veriler</h2>
-    <p>SeyirLog aşağıdaki verileri toplar:</p>
-    <ul>
-      <li>Hesap bilgileri: e-posta adresi (Firebase Authentication ile giriş için)</li>
-      <li>Araç bilgileri (marka, model, plaka, yıl, yakıt türü)</li>
-      <li>Sefer kayıtları (kalkış/varış noktası, kilometre, kazanç, süre)</li>
-      <li>Yakıt girişleri (litre, fiyat, tarih, istasyon)</li>
-      <li>Gider kayıtları (kategori, tutar, açıklama, tarih)</li>
-      <li>Gelir kayıtları (tutar, kaynak, not, tarih)</li>
-    </ul>
-
-    <h2>2. Verilerinizin Saklanması</h2>
-    <p>Veriler önce cihazınızdaki <strong>yerel SQLite veritabanında</strong> tutulur — uygulama internet olmadan da çalışır. Hesabınızla giriş yaptığınızda verileriniz, yedekleme ve cihazlar arası senkronizasyon amacıyla <strong>Google Firebase (Firestore)</strong> sunucularına da gönderilir ve hesabınıza özel olarak orada saklanır.</p>
-    <ul>
-      <li>Konum verisi toplanmaz</li>
-    </ul>
-
-    <h2>3. Reklamlar</h2>
-    <p>Uygulama <strong>Google AdMob</strong> reklam ağını kullanır. AdMob, reklam sunmak amacıyla reklam tanımlayıcısı (Advertising ID) toplayabilir. Kişiselleştirilmemiş reklam modu aktiftir — konum veya hassas kişisel veri paylaşılmaz.</p>
-    <p>Google'ın gizlilik politikası: <a href="https://policies.google.com/privacy">policies.google.com/privacy</a></p>
-
-    <h2>4. Yedekleme ve Veri Paylaşımı</h2>
-    <p>Verileriniz hesabınıza özel olarak Google Firebase altyapısında saklanır ve başka kullanıcılarla ya da üçüncü taraflarla paylaşılmaz. Ayrıca sizin başlattığınız <strong>"Yedekle"</strong> işlemiyle tüm verileriniz bir JSON dosyasına aktarılabilir; bu dosyayı nereye kaydettiğiniz tamamen sizin kontrolünüzdedir (WhatsApp, e-posta, Google Drive vb.).</p>
-
-    <h2>5. Hesap Silme</h2>
-    <p>Hesabınızı ve tüm verilerinizi silmek isterseniz, <a href="./delete-account.html">bu sayfadan</a> talepte bulunabilirsiniz.</p>
-
-    <h2>6. Çocukların Gizliliği</h2>
-    <p>Uygulama 13 yaş altı kullanıcılara yönelik değildir. Bu yaş grubundan bilerek veri toplanmaz.</p>
-
-    <h2>7. Değişiklikler</h2>
-    <p>Bu politika gerektiğinde güncellenebilir. Önemli değişiklikler bu sayfada duyurulur.</p>
-
-    <h2>8. İletişim</h2>
-    <p>Sorularınız için: <a href="mailto:info.erdoral@gmail.com">info.erdoral@gmail.com</a></p>
+    <div class="links">
+      <a href="./privacy-policy.html">Gizlilik Politikası</a>
+      <a href="./support.html" class="secondary">Destek</a>
+      <a href="./delete-account.html" class="secondary">Hesap Sil</a>
+    </div>
   </section>
 
   <!-- ENGLISH -->
   <section id="en">
-    <span class="badge">Last updated: July 25, 2026</span>
+    <p>
+      <strong>SeyirLog</strong> is a trip logbook app built for taxi drivers and professional drivers. Track your
+      trips, fuel costs, expenses, and income all in one place — it works fully offline, and once you sign in,
+      your data is automatically backed up and synced across your devices.
+    </p>
 
-    <div class="highlight">
-      SeyirLog stores your data locally on your device first; once you sign in, it is also sent to Google Firebase servers for backup and cross-device sync.
+    <div class="features">
+      <div class="feature">
+        <div class="emoji">🚖</div>
+        <h3>Trip Tracking</h3>
+        <p>Origin/destination, distance, duration, and earnings</p>
+      </div>
+      <div class="feature">
+        <div class="emoji">⛽</div>
+        <h3>Fuel Tracking</h3>
+        <p>Liters, price, and cost analysis</p>
+      </div>
+      <div class="feature">
+        <div class="emoji">💰</div>
+        <h3>Income &amp; Expenses</h3>
+        <p>Category-based expense and income records</p>
+      </div>
+      <div class="feature">
+        <div class="emoji">📊</div>
+        <h3>Net Earnings Summary</h3>
+        <p>Daily, weekly, and monthly reports</p>
+      </div>
     </div>
 
-    <h2>1. Data Collected</h2>
-    <p>SeyirLog collects the following data:</p>
-    <ul>
-      <li>Account information: email address (for sign-in via Firebase Authentication)</li>
-      <li>Vehicle information (brand, model, plate, year, fuel type)</li>
-      <li>Trip records (origin/destination, kilometers, earnings, duration)</li>
-      <li>Fuel entries (liters, price, date, station)</li>
-      <li>Expense records (category, amount, description, date)</li>
-      <li>Income records (amount, source, notes, date)</li>
-    </ul>
-
-    <h2>2. Data Storage</h2>
-    <p>Data is stored first in a <strong>local SQLite database on your device</strong> — the app keeps working without an internet connection. Once you sign in, your data is also sent to <strong>Google Firebase (Firestore)</strong> for backup and cross-device sync, and stored there under your account.</p>
-    <ul>
-      <li>No location data is collected</li>
-    </ul>
-
-    <h2>3. Advertising</h2>
-    <p>The app uses <strong>Google AdMob</strong> for advertising. AdMob may collect the Advertising ID to serve ads. Non-personalized ad mode is enabled — no location or sensitive personal data is shared.</p>
-    <p>Google Privacy Policy: <a href="https://policies.google.com/privacy">policies.google.com/privacy</a></p>
-
-    <h2>4. Backup &amp; Data Sharing</h2>
-    <p>Your data is stored under your own account on Google Firebase and is not shared with other users or third parties. You can also export all of your data to a JSON file at any time using the <strong>"Backup"</strong> function; you control where this file is saved (WhatsApp, email, Google Drive, etc.).</p>
-
-    <h2>5. Account Deletion</h2>
-    <p>To delete your account and all associated data, <a href="./delete-account.html">request deletion here</a>.</p>
-
-    <h2>6. Children's Privacy</h2>
-    <p>The app is not directed to users under 13. We do not knowingly collect data from such users.</p>
-
-    <h2>7. Changes</h2>
-    <p>This policy may be updated as needed. Significant changes will be announced on this page.</p>
-
-    <h2>8. Contact</h2>
-    <p>For questions: <a href="mailto:info.erdoral@gmail.com">info.erdoral@gmail.com</a></p>
+    <div class="links">
+      <a href="./privacy-policy.html">Privacy Policy</a>
+      <a href="./support.html" class="secondary">Support</a>
+      <a href="./delete-account.html" class="secondary">Delete Account</a>
+    </div>
   </section>
 </main>
 
 <footer>
-  © 2026 SeyirLog · Tüm hakları saklıdır / All rights reserved
+  © 2026 SeyirLog · Tüm hakları saklıdır / All rights reserved ·
+  <a href="mailto:info.erdoral@gmail.com">info.erdoral@gmail.com</a>
 </footer>
 
 <script>
