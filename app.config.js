@@ -3,7 +3,7 @@ module.exports = {
   expo: {
     name: 'SeyirLog',
     slug: 'seyirlog',
-    version: '1.1.0',
+    version: '1.1.1',
     orientation: 'portrait',
     icon: './assets/icon.png',
     userInterfaceStyle: 'automatic',
@@ -11,7 +11,7 @@ module.exports = {
       supportsTablet: false,
       bundleIdentifier: 'com.seyirlog.app',
       googleServicesFile: './GoogleService-Info.plist',
-      buildNumber: '3',
+      buildNumber: '4',
       usesAppleSignIn: true,
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
@@ -23,7 +23,7 @@ module.exports = {
       },
       package: 'com.seyirlog.app',
       "googleServicesFile": "./google-services.json",
-      versionCode: 3,
+      versionCode: 4,
     },
 
     plugins: [

@@ -5,7 +5,7 @@
  * {
  *   version: 1,
  *   exportedAt: <unix timestamp>,
- *   appVersion: "1.1.0",
+ *   appVersion: "1.1.1",
  *   data: { vehicles, trips, fuelEntries, expenses, incomeEntries }
  * }
  */
@@ -24,7 +24,7 @@ import {
 import i18n from '@/i18n';
 
 const BACKUP_VERSION = 1;
-const APP_VERSION = '1.1.0';
+const APP_VERSION = '1.1.1';
 
 export interface BackupData {
   version: number;
