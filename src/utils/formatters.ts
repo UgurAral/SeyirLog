@@ -102,6 +102,20 @@ export function formatDateTime(timestamp: number, lang?: string): string {
 }
 
 /**
+ * Unix timestamp'i sadece saat formatına çevirir.
+ * @param timestamp - Unix timestamp (saniye)
+ * @param lang - Uygulama dili kodu ('tr' | 'en' | 'es' | 'de'), varsayılan 'tr'
+ * @returns Biçimlendirilmiş saat, örn. "14:30"
+ */
+export function formatTime(timestamp: number, lang?: string): string {
+  return new Intl.DateTimeFormat(toIntlLocale(lang), {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'Europe/Istanbul',
+  }).format(new Date(timestamp * 1000));
+}
+
+/**
  * Litre değerini biçimlendirir.
  * @param liters - Litre değeri
  * @returns Biçimlendirilmiş litre metni, örn. "45,5 L"

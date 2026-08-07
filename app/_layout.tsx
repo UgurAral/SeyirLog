@@ -11,6 +11,8 @@ import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { initAuthListener, useAuthStore } from '@stores/authStore';
 import { useCurrencyStore } from '@stores/currencyStore';
+import { useDayTrackingStore } from '@stores/dayTrackingStore';
+import { useOnboardingStore } from '@stores/onboardingStore';
 import { startRealtimeSync, stopRealtimeSync } from '@services/realtime';
 import { initI18n } from '@/i18n';
 
@@ -20,6 +22,8 @@ export default function RootLayout() {
   const { user, initialized } = useAuthStore();
   const [i18nReady, setI18nReady] = useState(false);
   const { initCurrency, initialized: currencyReady } = useCurrencyStore();
+  const { initDayTracking } = useDayTrackingStore();
+  const { seen: onboardingSeen, initialized: onboardingReady, initOnboarding } = useOnboardingStore();
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -32,22 +36,35 @@ export default function RootLayout() {
   }, []);
 
   useEffect(() => {
+    initDayTracking();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    initOnboarding();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
     const unsub = initAuthListener();
     return unsub;
   }, []);
 
   useEffect(() => {
-    if (!initialized || !success) return;
+    if (!initialized || !success || !onboardingReady) return;
     if (!user) {
       stopRealtimeSync();
       router.replace('/auth');
     } else if (!user.emailVerified) {
       stopRealtimeSync();
       router.replace('/verify-email');
+    } else if (!onboardingSeen) {
+      startRealtimeSync();
+      router.replace('/onboarding');
     } else {
       startRealtimeSync();
     }
-  }, [user, initialized, success]);
+  }, [user, initialized, success, onboardingReady, onboardingSeen]);
 
   if (error) {
     return (
@@ -57,7 +74,7 @@ export default function RootLayout() {
     );
   }
 
-  if (!success || !i18nReady || !currencyReady) {
+  if (!success || !i18nReady || !currencyReady || !onboardingReady) {
     return (
       <View style={styles.center}>
         <ActivityIndicator color="#3B82F6" size="large" />
@@ -115,6 +132,10 @@ export default function RootLayout() {
           <Stack.Screen
             name="day-summary"
             options={{ presentation: 'modal', headerShown: false }}
+          />
+          <Stack.Screen
+            name="onboarding"
+            options={{ headerShown: false }}
           />
           <Stack.Screen
             name="auth"

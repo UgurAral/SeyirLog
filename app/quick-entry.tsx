@@ -106,14 +106,16 @@ export default function QuickEntryModal() {
   }, [activeTrip, endForm, completeTrip, router, t, activeCurrency]);
 
   // ── Yakıt formu ──────────────────────────────────────────────────────────────
-  const [fuelForm, setFuelForm] = useState({ liters: '', pricePerLiter: '', currentKm: '' });
+  const [fuelForm, setFuelForm] = useState({ totalPaid: '', liters: '', pricePerLiter: '', currentKm: '' });
   const [fuelSaving, setFuelSaving] = useState(false);
-  const fuelTotal = (parseFloat(fuelForm.liters) || 0) * (parseFloat(fuelForm.pricePerLiter) || 0);
+  const fuelTotalPaid = parseFloat(fuelForm.totalPaid) || 0;
+  const fuelComputedFromLiters = (parseFloat(fuelForm.liters) || 0) * (parseFloat(fuelForm.pricePerLiter) || 0);
+  const fuelTotal = fuelTotalPaid > 0 ? fuelTotalPaid : fuelComputedFromLiters;
 
   const handleAddFuel = useCallback(async () => {
-    const liters = parseFloat(fuelForm.liters);
-    const price = parseFloat(fuelForm.pricePerLiter);
-    if (isNaN(liters) || liters <= 0 || isNaN(price) || price <= 0) {
+    const liters = parseFloat(fuelForm.liters) || 0;
+    const price = parseFloat(fuelForm.pricePerLiter) || 0;
+    if (fuelTotalPaid <= 0 && (liters <= 0 || price <= 0)) {
       Alert.alert(t('quickEntry.missingTitle'), t('quickEntry.missingFuelBody'));
       return;
     }
@@ -130,8 +132,8 @@ export default function QuickEntryModal() {
         createdAt: now,
         updatedAt: now,
       });
-      setFuelForm({ liters: '', pricePerLiter: '', currentKm: '' });
-      Alert.alert(t('quickEntry.fuelAddedTitle'), `${liters}L · ${formatCurrency(fuelTotal, activeCurrency)}`, [
+      setFuelForm({ totalPaid: '', liters: '', pricePerLiter: '', currentKm: '' });
+      Alert.alert(t('quickEntry.fuelAddedTitle'), formatCurrency(fuelTotal, activeCurrency), [
         { text: t('common.ok'), onPress: () => router.back() },
       ]);
     } catch (e) {
@@ -139,7 +141,7 @@ export default function QuickEntryModal() {
     } finally {
       setFuelSaving(false);
     }
-  }, [fuelForm, fuelTotal, vehicleId, addFuelEntry, router, t]);
+  }, [fuelForm, fuelTotal, fuelTotalPaid, vehicleId, addFuelEntry, router, t, activeCurrency]);
 
   // ── Gider formu ──────────────────────────────────────────────────────────────
   const [expenseForm, setExpenseForm] = useState<{ category: ExpenseCategory; amount: string; description: string }>({
@@ -321,6 +323,21 @@ export default function QuickEntryModal() {
             <View style={styles.form}>
               <Text style={styles.sectionLabel}>{t('quickEntry.fuelSection')}</Text>
               <QInput
+                label={t('fuelNew.totalPaidLabel')}
+                placeholder={t('fuelNew.totalPaidPlaceholder')}
+                value={fuelForm.totalPaid}
+                onChangeText={(v) => setFuelForm((f) => ({ ...f, totalPaid: v }))}
+                keyboardType="decimal-pad"
+              />
+              {fuelTotal > 0 && (
+                <View style={styles.calcBadge}>
+                  <Text style={styles.calcBadgeText}>
+                    {t('quickEntry.totalLabel')}: {formatCurrency(fuelTotal, activeCurrency)}
+                  </Text>
+                </View>
+              )}
+              <Text style={styles.fieldLabel}>{t('fuelNew.detailSection')}</Text>
+              <QInput
                 label={t('quickEntry.litersLabel')}
                 placeholder={t('quickEntry.litersPlaceholder')}
                 value={fuelForm.liters}
@@ -334,13 +351,6 @@ export default function QuickEntryModal() {
                 onChangeText={(v) => setFuelForm((f) => ({ ...f, pricePerLiter: v }))}
                 keyboardType="decimal-pad"
               />
-              {fuelTotal > 0 && (
-                <View style={styles.calcBadge}>
-                  <Text style={styles.calcBadgeText}>
-                    {t('quickEntry.totalLabel')}: {formatCurrency(fuelTotal, activeCurrency)}
-                  </Text>
-                </View>
-              )}
               <QInput
                 label={t('quickEntry.currentKmLabel')}
                 placeholder={t('quickEntry.currentKmPlaceholder')}

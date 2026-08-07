@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   ScrollView,
   View,
@@ -19,7 +19,8 @@ import { useExpenses } from '@hooks/useExpenses';
 import { useIncome } from '@hooks/useIncome';
 import { useVehicles } from '@hooks/useVehicles';
 import { useCurrencyStore } from '@stores/currencyStore';
-import { formatKm } from '@utils/formatters';
+import { useDayTrackingStore } from '@stores/dayTrackingStore';
+import { formatKm, formatTime } from '@utils/formatters';
 import { AdBanner } from '@components/AdBanner';
 import { CurrencyBreakdownValue } from '@components/ui/CurrencyBreakdownValue';
 import { showRewardedAd } from '@utils/ads';
@@ -28,19 +29,28 @@ type Period = 'today' | 'week' | 'month' | 'all';
 
 export default function DashboardScreen() {
   const router = useRouter();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [period, setPeriod] = useState<Period>('today');
-  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [endDayLoading, setEndDayLoading] = useState(false);
   const { vehicles, activeVehicle } = useVehicles();
   const vehicleId = activeVehicle?.id;
+  const { dayStartedAt, startDay, endDay } = useDayTrackingStore();
 
-  const handleOpenDaySummary = async () => {
-    setSummaryLoading(true);
-    // Günün özeti, ödüllü reklam karşılığında açılan bir içerik — reklam ağı
+  const handleStartDay = async () => {
+    await startDay();
+  };
+
+  const handleEndDay = async () => {
+    if (dayStartedAt === null) return;
+    setEndDayLoading(true);
+    const rangeStart = dayStartedAt;
+    const rangeEnd = Math.floor(Date.now() / 1000);
+    // Gün özeti, ödüllü reklam karşılığında açılan bir içerik — reklam ağı
     // NO_FILL/hata dönse bile showRewardedAd her zaman devam etmeye izin verir.
     await showRewardedAd();
-    setSummaryLoading(false);
-    router.push('/day-summary');
+    await endDay();
+    setEndDayLoading(false);
+    router.push({ pathname: '/day-summary', params: { start: String(rangeStart), end: String(rangeEnd) } });
   };
 
   const PERIODS: { id: Period; label: string }[] = [
@@ -53,13 +63,25 @@ export default function DashboardScreen() {
   const activeCurrency = useCurrencyStore((s) => s.currency);
 
   const {
-    trips,
+    filteredTrips,
     activeTrip,
     periodEarnings,
     periodEarningsByCurrency,
     periodKm,
     periodCount,
   } = useTrips(vehicleId, period);
+
+  // Aktif sefer varsa (uygulama yeni açıldığında ya da bir sefer başlatıldığında)
+  // otomatik olarak sefer ekranına geç — ama kullanıcı manuel olarak Dashboard'a
+  // dönerse tekrar zorla yönlendirme yapma.
+  const prevActiveTripIdRef = useRef<number | null>(null);
+  useEffect(() => {
+    const currentId = activeTrip?.id ?? null;
+    if (currentId !== null && prevActiveTripIdRef.current === null) {
+      router.push('/quick-entry');
+    }
+    prevActiveTripIdRef.current = currentId;
+  }, [activeTrip, router]);
 
   const { periodCost: fuelCost, periodCostByCurrency: fuelCostByCurrency } = useFuel(vehicleId, period);
   const { periodTotal: expenseCost, periodTotalByCurrency: expenseCostByCurrency } = useExpenses(vehicleId, period);
@@ -84,7 +106,7 @@ export default function DashboardScreen() {
     return result;
   }, [periodEarningsByCurrency, incomeTotalByCurrency, fuelCostByCurrency, expenseCostByCurrency]);
 
-  const recentTrips = trips.slice(0, 5);
+  const recentTrips = filteredTrips;
 
   // ── Araç yoksa CTA ────────────────────────────────────────────────────────
   if (vehicles.length === 0) {
@@ -158,18 +180,39 @@ export default function DashboardScreen() {
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
         >
-          {/* ── Günün Özeti butonu ── */}
-          <TouchableOpacity
-            style={[styles.daySummaryBtn, summaryLoading && { opacity: 0.7 }]}
-            onPress={handleOpenDaySummary}
-            disabled={summaryLoading}
-            activeOpacity={0.85}
-          >
-            {summaryLoading
-              ? <ActivityIndicator color="#fff" />
-              : <Text style={styles.daySummaryBtnText}>{t('dashboard.daySummaryButton')}</Text>
-            }
-          </TouchableOpacity>
+          {/* ── Günü Başlat / Bitir ── */}
+          {dayStartedAt === null ? (
+            <TouchableOpacity
+              style={styles.daySummaryBtn}
+              onPress={handleStartDay}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.daySummaryBtnText}>{t('dashboard.startDayButton')}</Text>
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.dayActiveCard}>
+              <View style={styles.dayActiveLeft}>
+                <View style={styles.activeDot} />
+                <View>
+                  <Text style={styles.activeTripLabel}>{t('dashboard.dayActiveLabel')}</Text>
+                  <Text style={styles.dayActiveSince}>
+                    {t('dashboard.dayStartedAt', { time: formatTime(dayStartedAt, i18n.language) })}
+                  </Text>
+                </View>
+              </View>
+              <TouchableOpacity
+                style={[styles.endDayBtn, endDayLoading && { opacity: 0.7 }]}
+                onPress={handleEndDay}
+                disabled={endDayLoading}
+                activeOpacity={0.85}
+              >
+                {endDayLoading
+                  ? <ActivityIndicator color="#fff" size="small" />
+                  : <Text style={styles.endTripBtnText}>{t('dashboard.endDayButton')}</Text>
+                }
+              </TouchableOpacity>
+            </View>
+          )}
 
           {/* ── Aktif Sefer Banner ── */}
           {activeTrip && (
@@ -393,6 +436,27 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   daySummaryBtnText: { color: '#FFFFFF', fontWeight: '700', fontSize: 15 },
+
+  dayActiveCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#3B82F615',
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#3B82F640',
+  },
+  dayActiveLeft: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
+  dayActiveSince: { color: '#F1F5F9', fontWeight: '700', fontSize: 14, marginTop: 1 },
+  endDayBtn: {
+    backgroundColor: '#3B82F6',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    minWidth: 64,
+    alignItems: 'center',
+  },
 
   activeTripCard: {
     flexDirection: 'row',

@@ -52,16 +52,20 @@ export function FuelCard({ entry }: FuelCardProps) {
       </View>
 
       <View style={styles.details}>
-        <DetailItem
-          icon="⛽"
-          label={t('card.amount')}
-          value={formatLiters(entry.liters)}
-        />
-        <DetailItem
-          icon="💰"
-          label={t('card.literPrice')}
-          value={formatCurrency(entry.pricePerLiter, entry.currency)}
-        />
+        {entry.liters > 0 && (
+          <DetailItem
+            icon="⛽"
+            label={t('card.amount')}
+            value={formatLiters(entry.liters)}
+          />
+        )}
+        {entry.pricePerLiter > 0 && (
+          <DetailItem
+            icon="💰"
+            label={t('card.literPrice')}
+            value={formatCurrency(entry.pricePerLiter, entry.currency)}
+          />
+        )}
         {entry.currentKm != null && (
           <DetailItem
             icon="🛣️"

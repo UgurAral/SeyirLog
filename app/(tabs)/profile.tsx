@@ -10,6 +10,9 @@ import {
   Modal,
   Pressable,
   FlatList,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import Constants from 'expo-constants';
@@ -25,6 +28,7 @@ import { LANGUAGE_OPTIONS, changeLanguage, type SupportedLanguage } from '@/i18n
 import { useCurrencyStore, type SupportedCurrency } from '@stores/currencyStore';
 import { useCurrencyOptions } from '@/i18n/options';
 import { AdBanner } from '@components/AdBanner';
+import { submitFeedback } from '@services/firestore';
 import type { Vehicle } from '@/types';
 
 export default function ProfileScreen() {
@@ -36,6 +40,9 @@ export default function ProfileScreen() {
   const [restoreLoading, setRestoreLoading] = useState(false);
   const [languagePickerVisible, setLanguagePickerVisible] = useState(false);
   const [currencyPickerVisible, setCurrencyPickerVisible] = useState(false);
+  const [feedbackVisible, setFeedbackVisible] = useState(false);
+  const [feedbackText, setFeedbackText] = useState('');
+  const [feedbackSending, setFeedbackSending] = useState(false);
   const currentLanguage = LANGUAGE_OPTIONS.find((o) => o.code === i18n.language) ?? LANGUAGE_OPTIONS[0];
   const { currency, setCurrency } = useCurrencyStore();
   const currencyOptions = useCurrencyOptions();
@@ -78,6 +85,22 @@ export default function ProfileScreen() {
         },
       ],
     );
+  };
+
+  const handleSendFeedback = async () => {
+    const trimmed = feedbackText.trim();
+    if (!trimmed) return;
+    setFeedbackSending(true);
+    try {
+      await submitFeedback(trimmed);
+      setFeedbackText('');
+      setFeedbackVisible(false);
+      Alert.alert(t('profile.feedbackSentTitle'), t('profile.feedbackSentBody'));
+    } catch (e) {
+      Alert.alert(t('common.error'), String(e));
+    } finally {
+      setFeedbackSending(false);
+    }
   };
 
   return (
@@ -179,6 +202,54 @@ export default function ProfileScreen() {
             </TouchableOpacity>
           </View>
         </View>
+
+        {/* Geri Bildirim */}
+        <View style={styles.backupSection}>
+          <Text style={styles.sectionTitle}>{t('profile.feedbackSection')}</Text>
+          <Text style={styles.sectionDesc}>{t('profile.feedbackSectionDesc')}</Text>
+          <TouchableOpacity
+            style={styles.feedbackBtn}
+            onPress={() => setFeedbackVisible(true)}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.feedbackBtnIcon}>💬</Text>
+            <Text style={styles.backupBtnText}>{t('profile.feedbackButton')}</Text>
+          </TouchableOpacity>
+        </View>
+
+        <Modal
+          visible={feedbackVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setFeedbackVisible(false)}
+        >
+          <KeyboardAvoidingView
+            style={styles.overlay}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          >
+          <Pressable style={styles.overlay} onPress={() => setFeedbackVisible(false)}>
+            <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
+              <Text style={styles.sheetTitle}>{t('profile.feedbackSection')}</Text>
+              <TextInput
+                style={styles.feedbackInput}
+                placeholder={t('profile.feedbackPlaceholder')}
+                placeholderTextColor="#64748B"
+                value={feedbackText}
+                onChangeText={setFeedbackText}
+                multiline
+                numberOfLines={5}
+                textAlignVertical="top"
+              />
+              <Button
+                label={feedbackSending ? t('profile.feedbackSending') : t('profile.feedbackSubmit')}
+                onPress={handleSendFeedback}
+                loading={feedbackSending}
+                disabled={!feedbackText.trim()}
+              />
+            </Pressable>
+          </Pressable>
+          </KeyboardAvoidingView>
+        </Modal>
 
         {/* Dil Seçimi */}
         <View style={styles.languageSection}>
@@ -496,6 +567,28 @@ const styles = StyleSheet.create({
   btnDisabled: { opacity: 0.55 },
   backupBtnIcon: { fontSize: 16 },
   backupBtnText: { color: '#FFFFFF', fontWeight: '700', fontSize: 14 },
+
+  feedbackBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderRadius: 11,
+    paddingVertical: 13,
+    backgroundColor: '#6366F1',
+  },
+  feedbackBtnIcon: { fontSize: 16 },
+  feedbackInput: {
+    backgroundColor: '#0F172A',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#334155',
+    color: '#F1F5F9',
+    fontSize: 14,
+    padding: 12,
+    minHeight: 110,
+    marginBottom: 4,
+  },
 
   languageSection: {
     backgroundColor: '#1E293B',

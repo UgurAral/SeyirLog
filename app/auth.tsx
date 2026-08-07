@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+import { Ionicons } from '@expo/vector-icons';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { signIn, signUp, resetPassword, signInWithGoogle, signInWithApple, firebaseAuth } from '@services/auth';
 import { onLoginSync } from '@services/sync';
@@ -17,6 +18,7 @@ export default function AuthScreen() {
   const [mode, setMode] = useState<Mode>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [appleLoading, setAppleLoading] = useState(false);
@@ -142,14 +144,23 @@ export default function AuthScreen() {
         />
 
         {mode !== 'reset' && (
-          <TextInput
-            style={styles.input}
-            placeholder={t('auth.password')}
-            placeholderTextColor="#475569"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-          />
+          <View style={styles.passwordWrap}>
+            <TextInput
+              style={styles.passwordInput}
+              placeholder={t('auth.password')}
+              placeholderTextColor="#475569"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
+            />
+            <TouchableOpacity
+              onPress={() => setShowPassword((v) => !v)}
+              hitSlop={8}
+              style={styles.passwordToggle}
+            >
+              <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={20} color="#64748B" />
+            </TouchableOpacity>
+          </View>
         )}
 
         <TouchableOpacity
@@ -236,6 +247,15 @@ const styles = StyleSheet.create({
     backgroundColor: '#0F172A', borderRadius: 10, paddingHorizontal: 14,
     paddingVertical: 12, color: '#F1F5F9', fontSize: 15, borderWidth: 1, borderColor: '#334155',
   },
+  passwordWrap: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: '#0F172A', borderRadius: 10, borderWidth: 1, borderColor: '#334155',
+    paddingRight: 6,
+  },
+  passwordInput: {
+    flex: 1, paddingHorizontal: 14, paddingVertical: 12, color: '#F1F5F9', fontSize: 15,
+  },
+  passwordToggle: { padding: 8 },
   btn: { backgroundColor: '#3B82F6', borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
   btnText: { color: '#fff', fontWeight: '700', fontSize: 16 },
   links: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 },

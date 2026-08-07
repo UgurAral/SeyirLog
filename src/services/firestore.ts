@@ -10,6 +10,8 @@
  */
 
 import firestore from '@react-native-firebase/firestore';
+import Constants from 'expo-constants';
+import { Platform } from 'react-native';
 import { getCurrentUser } from '@services/auth';
 
 const db = firestore();
@@ -70,6 +72,20 @@ export async function pushLocalToFirestore(
     );
   }
   await batch.commit();
+}
+
+// ── Uygulama içi geri bildirim ───────────────────────────────────────────────
+
+export async function submitFeedback(message: string): Promise<void> {
+  const user = getCurrentUser();
+  if (!user) throw new Error('Kullanıcı girişi yapılmamış');
+  await db.collection('users').doc(user.uid).collection('feedback').add({
+    email: user.email ?? null,
+    message,
+    appVersion: Constants.expoConfig?.version ?? null,
+    platform: Platform.OS,
+    createdAt: firestore.FieldValue.serverTimestamp(),
+  });
 }
 
 // ── Gerçek zamanlı dinleyici ─────────────────────────────────────────────────

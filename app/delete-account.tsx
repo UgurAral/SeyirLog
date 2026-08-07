@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+import { Ionicons } from '@expo/vector-icons';
 import { deleteAccountWithPassword, deleteAccountWithGoogle, deleteAccountWithApple } from '@services/accountDeletion';
 import { firebaseAuth } from '@services/auth';
 
@@ -14,6 +15,7 @@ export default function DeleteAccountScreen() {
   const router = useRouter();
   const { t } = useTranslation();
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   // Google/Apple ile giriş yapmış kullanıcıların şifresi yok — sağlayıcıya
@@ -76,15 +78,24 @@ export default function DeleteAccountScreen() {
         <Text style={styles.warning}>{t('deleteAccount.warning')}</Text>
 
         {provider === 'password' && (
-          <TextInput
-            style={styles.input}
-            placeholder={t('deleteAccount.passwordPlaceholder')}
-            placeholderTextColor="#475569"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            autoCapitalize="none"
-          />
+          <View style={styles.passwordWrap}>
+            <TextInput
+              style={styles.passwordInput}
+              placeholder={t('deleteAccount.passwordPlaceholder')}
+              placeholderTextColor="#475569"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
+              autoCapitalize="none"
+            />
+            <TouchableOpacity
+              onPress={() => setShowPassword((v) => !v)}
+              hitSlop={8}
+              style={styles.passwordToggle}
+            >
+              <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={20} color="#64748B" />
+            </TouchableOpacity>
+          </View>
         )}
 
         <TouchableOpacity
@@ -123,6 +134,15 @@ const styles = StyleSheet.create({
     backgroundColor: '#0F172A', borderRadius: 10, paddingHorizontal: 14,
     paddingVertical: 12, color: '#F1F5F9', fontSize: 15, borderWidth: 1, borderColor: '#334155',
   },
+  passwordWrap: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: '#0F172A', borderRadius: 10, borderWidth: 1, borderColor: '#334155',
+    paddingRight: 6,
+  },
+  passwordInput: {
+    flex: 1, paddingHorizontal: 14, paddingVertical: 12, color: '#F1F5F9', fontSize: 15,
+  },
+  passwordToggle: { padding: 8 },
   deleteBtn: { backgroundColor: '#EF4444', borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
   deleteBtnText: { color: '#fff', fontWeight: '700', fontSize: 15 },
   cancelLink: { color: '#94A3B8', fontSize: 14, textAlign: 'center', marginTop: 2 },

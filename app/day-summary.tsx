@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
@@ -10,7 +10,8 @@ import { useExpenses } from '@hooks/useExpenses';
 import { useIncome } from '@hooks/useIncome';
 import { useVehicles } from '@hooks/useVehicles';
 import { useCurrencyStore, type SupportedCurrency } from '@stores/currencyStore';
-import { formatKm, formatCurrency } from '@utils/formatters';
+import { sumByCurrency } from '@utils/calculations';
+import { formatKm, formatCurrency, formatTime } from '@utils/formatters';
 import { TripCard } from '@components/TripCard';
 import { CurrencyBreakdownValue } from '@components/ui/CurrencyBreakdownValue';
 import { AdBanner } from '@components/AdBanner';
@@ -18,15 +19,63 @@ import { AdBanner } from '@components/AdBanner';
 export default function DaySummaryScreen() {
   const router = useRouter();
   const { t, i18n } = useTranslation();
+  const { start, end } = useLocalSearchParams<{ start?: string; end?: string }>();
   const { activeVehicle } = useVehicles();
   const vehicleId = activeVehicle?.id;
   const activeCurrency = useCurrencyStore((s) => s.currency);
 
-  const { filteredTrips, periodEarnings, periodEarningsByCurrency, periodKm, periodCount } =
-    useTrips(vehicleId, 'last24h');
-  const { periodCost: fuelCost, periodCostByCurrency: fuelCostByCurrency } = useFuel(vehicleId, 'last24h');
-  const { periodTotal: expenseCost, periodTotalByCurrency: expenseCostByCurrency } = useExpenses(vehicleId, 'last24h');
-  const { periodTotal: incomeTotal, periodTotalByCurrency: incomeTotalByCurrency } = useIncome(vehicleId, 'last24h');
+  const startTs = start ? parseInt(start, 10) : null;
+  const endTs = end ? parseInt(end, 10) : null;
+  const hasRange = startTs !== null && endTs !== null;
+  // Aralık yoksa (beklenmedik doğrudan navigasyon) filtreler her zaman boş
+  // sonuç dönsün diye ters çevrilmiş, boş bir aralık kullanılır.
+  const rangeStart = startTs ?? 0;
+  const rangeEnd = endTs ?? 0;
+
+  const { trips } = useTrips(vehicleId, 'all');
+  const { fuelEntries } = useFuel(vehicleId, 'all');
+  const { expenses } = useExpenses(vehicleId, 'all');
+  const { entries: incomeEntries } = useIncome(vehicleId, 'all');
+
+  const rangeTrips = useMemo(
+    () => trips.filter((tr) => tr.startTime >= rangeStart && tr.startTime < rangeEnd),
+    [trips, rangeStart, rangeEnd],
+  );
+  const rangeCompletedTrips = useMemo(
+    () => rangeTrips.filter((tr) => tr.status === 'completed'),
+    [rangeTrips],
+  );
+  const periodEarningsByCurrency = useMemo(
+    () => sumByCurrency(rangeCompletedTrips, (tr) => tr.earnings ?? 0),
+    [rangeCompletedTrips],
+  );
+  const periodEarnings = periodEarningsByCurrency[activeCurrency] ?? 0;
+  const periodKm = useMemo(
+    () => rangeCompletedTrips.reduce((sum, tr) => sum + (tr.distanceKm ?? 0), 0),
+    [rangeCompletedTrips],
+  );
+  const periodCount = rangeTrips.length;
+
+  const rangeFuel = useMemo(
+    () => fuelEntries.filter((f) => f.date >= rangeStart && f.date < rangeEnd),
+    [fuelEntries, rangeStart, rangeEnd],
+  );
+  const fuelCostByCurrency = useMemo(() => sumByCurrency(rangeFuel, (f) => f.totalCost), [rangeFuel]);
+  const fuelCost = fuelCostByCurrency[activeCurrency] ?? 0;
+
+  const rangeExpenses = useMemo(
+    () => expenses.filter((e) => e.date >= rangeStart && e.date < rangeEnd),
+    [expenses, rangeStart, rangeEnd],
+  );
+  const expenseCostByCurrency = useMemo(() => sumByCurrency(rangeExpenses, (e) => e.amount), [rangeExpenses]);
+  const expenseCost = expenseCostByCurrency[activeCurrency] ?? 0;
+
+  const rangeIncome = useMemo(
+    () => incomeEntries.filter((e) => e.date >= rangeStart && e.date < rangeEnd),
+    [incomeEntries, rangeStart, rangeEnd],
+  );
+  const incomeTotalByCurrency = useMemo(() => sumByCurrency(rangeIncome, (e) => e.amount), [rangeIncome]);
+  const incomeTotal = incomeTotalByCurrency[activeCurrency] ?? 0;
 
   const totalIn = periodEarnings + incomeTotal;
   const totalOut = fuelCost + expenseCost;
@@ -46,7 +95,18 @@ export default function DaySummaryScreen() {
 
       <AdBanner position="top" />
 
+      {!hasRange ? (
+        <View style={styles.emptyState}>
+          <Text style={styles.emptyIcon}>⏱️</Text>
+          <Text style={styles.emptyText}>{t('daySummary.noRange')}</Text>
+        </View>
+      ) : (
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {/* ── Gün Aralığı ── */}
+        <Text style={styles.rangeLabel}>
+          {formatTime(rangeStart, i18n.language)} → {formatTime(rangeEnd, i18n.language)}
+        </Text>
+
         {/* ── Net Kart ── */}
         <View style={[styles.netCard, { borderColor: net >= 0 ? '#22C55E40' : '#EF444440' }]}>
           <Text style={styles.netLabel}>{t('daySummary.netLabel')}</Text>
@@ -95,12 +155,12 @@ export default function DaySummaryScreen() {
               <BreakdownRow icon="💸" color="#EF4444" label={t('daySummary.expenseLabel')} amounts={expenseCostByCurrency} activeCurrency={activeCurrency} />
             </View>
 
-            {/* ── Bugünün Seferleri ── */}
-            {filteredTrips.length > 0 && (
+            {/* ── Seferler ── */}
+            {rangeTrips.length > 0 && (
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>{t('daySummary.tripsSection')}</Text>
                 <View style={{ gap: 10 }}>
-                  {filteredTrips.map((trip) => (
+                  {rangeTrips.map((trip) => (
                     <TripCard key={trip.id} trip={trip} />
                   ))}
                 </View>
@@ -111,6 +171,7 @@ export default function DaySummaryScreen() {
 
         <View style={{ height: 24 }} />
       </ScrollView>
+      )}
     </SafeAreaView>
   );
 }
@@ -174,6 +235,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: { color: '#F1F5F9', fontSize: 17, fontWeight: '700' },
   content: { padding: 16, gap: 16 },
+  rangeLabel: { color: '#64748B', fontSize: 13, fontWeight: '600', textAlign: 'center' },
 
   netCard: {
     backgroundColor: '#1E293B',

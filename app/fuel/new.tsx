@@ -29,6 +29,7 @@ export default function NewFuelScreen() {
   const activeCurrency = useCurrencyStore((s) => s.currency);
 
   const [form, setForm] = useState({
+    totalPaid: '',
     liters: '',
     pricePerLiter: '',
     currentKm: '',
@@ -37,17 +38,15 @@ export default function NewFuelScreen() {
   });
   const [saving, setSaving] = useState(false);
 
+  const totalPaidNum = parseFloat(form.totalPaid) || 0;
   const litersNum = parseFloat(form.liters) || 0;
   const priceNum = parseFloat(form.pricePerLiter) || 0;
-  const totalCost = litersNum * priceNum;
+  const computedFromLiters = litersNum * priceNum;
+  const totalCost = totalPaidNum > 0 ? totalPaidNum : computedFromLiters;
 
   const handleSave = async () => {
-    if (!form.liters || !form.pricePerLiter) {
+    if (totalPaidNum <= 0 && (litersNum <= 0 || priceNum <= 0)) {
       Alert.alert(t('fuelNew.missingInfoTitle'), t('fuelNew.missingInfoBody'));
-      return;
-    }
-    if (litersNum <= 0 || priceNum <= 0) {
-      Alert.alert(t('fuelNew.invalidValueTitle'), t('fuelNew.invalidValueBody'));
       return;
     }
 
@@ -89,6 +88,25 @@ export default function NewFuelScreen() {
         <Card style={styles.card}>
           <Text style={styles.sectionTitle}>{t('fuelNew.fuelInfo')}</Text>
           <Input
+            label={t('fuelNew.totalPaidLabel')}
+            placeholder={t('fuelNew.totalPaidPlaceholder')}
+            value={form.totalPaid}
+            onChangeText={(v) => setForm((f) => ({ ...f, totalPaid: v }))}
+            keyboardType="numeric"
+            suffix={CURRENCY_SYMBOLS[activeCurrency]}
+          />
+          {totalCost > 0 && (
+            <View style={styles.totalRow}>
+              <Text style={styles.totalLabel}>{t('fuelNew.totalCostLabel')}</Text>
+              <Text style={styles.totalValue}>{formatCurrency(totalCost, activeCurrency)}</Text>
+            </View>
+          )}
+        </Card>
+
+        <Card style={styles.card}>
+          <Text style={styles.sectionTitle}>{t('fuelNew.detailSection')}</Text>
+          <Text style={styles.sectionDesc}>{t('fuelNew.detailSectionDesc')}</Text>
+          <Input
             label={t('fuelNew.litersLabel')}
             placeholder={t('fuelNew.litersPlaceholder')}
             value={form.liters}
@@ -104,12 +122,6 @@ export default function NewFuelScreen() {
             keyboardType="numeric"
             suffix={`${CURRENCY_SYMBOLS[activeCurrency]}/L`}
           />
-          {totalCost > 0 && (
-            <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>{t('fuelNew.totalCostLabel')}</Text>
-              <Text style={styles.totalValue}>{formatCurrency(totalCost, activeCurrency)}</Text>
-            </View>
-          )}
         </Card>
 
         <Card style={styles.card}>
@@ -164,6 +176,7 @@ const styles = StyleSheet.create({
   content: { padding: 16, gap: 16, paddingBottom: 40 },
   card: { gap: 12 },
   sectionTitle: { color: '#F1F5F9', fontSize: 15, fontWeight: '700' },
+  sectionDesc: { color: '#64748B', fontSize: 12, marginTop: -6 },
   totalRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
