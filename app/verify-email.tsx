@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator,
 } from 'react-native';
@@ -15,6 +15,7 @@ export default function VerifyEmailScreen() {
   const { user, setUser } = useAuthStore();
   const [checking, setChecking] = useState(false);
   const [resending, setResending] = useState(false);
+  const resendInFlight = useRef(false);
 
   const handleCheck = async () => {
     setChecking(true);
@@ -36,6 +37,8 @@ export default function VerifyEmailScreen() {
   };
 
   const handleResend = async () => {
+    if (resendInFlight.current) return;
+    resendInFlight.current = true;
     setResending(true);
     try {
       await sendVerificationEmail();
@@ -46,6 +49,7 @@ export default function VerifyEmailScreen() {
         : String(e.message ?? e);
       Alert.alert(t('common.error'), msg);
     } finally {
+      resendInFlight.current = false;
       setResending(false);
     }
   };

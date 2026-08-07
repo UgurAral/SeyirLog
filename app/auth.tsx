@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
   StyleSheet, KeyboardAvoidingView, Platform, Alert, ActivityIndicator,
@@ -21,6 +21,13 @@ export default function AuthScreen() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [appleLoading, setAppleLoading] = useState(false);
   const [appleAvailable, setAppleAvailable] = useState(false);
+  // disabled prop bir sonraki render'a kadar devreye girmiyor — hızlı çift
+  // dokunuşta iki istek birden gidip örn. doğrulama e-postasının iki kez
+  // gönderilmesine yol açabiliyor. Senkron ref kilidi bunu render'ı
+  // beklemeden anında engelliyor.
+  const submitInFlight = useRef(false);
+  const googleInFlight = useRef(false);
+  const appleInFlight = useRef(false);
 
   useEffect(() => {
     if (Platform.OS === 'ios') {
@@ -29,6 +36,8 @@ export default function AuthScreen() {
   }, []);
 
   const handleGoogleSignIn = async () => {
+    if (googleInFlight.current) return;
+    googleInFlight.current = true;
     setGoogleLoading(true);
     try {
       const result = await signInWithGoogle();
@@ -43,11 +52,14 @@ export default function AuthScreen() {
         Alert.alert(t('common.error'), e.message);
       }
     } finally {
+      googleInFlight.current = false;
       setGoogleLoading(false);
     }
   };
 
   const handleAppleSignIn = async () => {
+    if (appleInFlight.current) return;
+    appleInFlight.current = true;
     setAppleLoading(true);
     try {
       const result = await signInWithApple();
@@ -59,14 +71,17 @@ export default function AuthScreen() {
         Alert.alert(t('common.error'), e.message);
       }
     } finally {
+      appleInFlight.current = false;
       setAppleLoading(false);
     }
   };
 
   const handleSubmit = async () => {
+    if (submitInFlight.current) return;
     if (!email.trim()) return Alert.alert(t('common.error'), t('auth.emailRequired'));
     if (mode !== 'reset' && !password) return Alert.alert(t('common.error'), t('auth.passwordRequired'));
 
+    submitInFlight.current = true;
     setLoading(true);
     try {
       if (mode === 'login') {
@@ -98,6 +113,7 @@ export default function AuthScreen() {
       };
       Alert.alert(t('common.error'), msg[e.code] ?? e.message);
     } finally {
+      submitInFlight.current = false;
       setLoading(false);
     }
   };
