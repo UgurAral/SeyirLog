@@ -12,7 +12,28 @@
           "package_name": "com.seyirlog.app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "868038587921-1gebpcn7b2ogpmhfei5ebus2pbg8j3or.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.seyirlog.app",
+            "certificate_hash": "aad59ab94453049498fb5b25182b67db546dc981"
+          }
+        },
+        {
+          "client_id": "868038587921-ljb7v4oee23arl7cr50gemd9ungnrroe.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.seyirlog.app",
+            "certificate_hash": "80c20e300d07b7490076c17dc5bdf4659ef8a052"
+          }
+        },
+        {
+          "client_id": "868038587921-l5ijhnii3h8v87vg8dit4gik896v9td2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCl-tfJSv6YiqnDWeFU0mm3l72pAdmsWyE"
@@ -20,7 +41,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "868038587921-l5ijhnii3h8v87vg8dit4gik896v9td2.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "868038587921-c1qd9b5j1e4p4m8fggpqlcnsar22a0tf.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.seyirlog.app"
+              }
+            }
+          ]
         }
       }
     }
