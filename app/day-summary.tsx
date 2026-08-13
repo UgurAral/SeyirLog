@@ -10,15 +10,19 @@ import { useExpenses } from '@hooks/useExpenses';
 import { useIncome } from '@hooks/useIncome';
 import { useVehicles } from '@hooks/useVehicles';
 import { useCurrencyStore, type SupportedCurrency } from '@stores/currencyStore';
-import { sumByCurrency } from '@utils/calculations';
-import { formatKm, formatCurrency, formatTime } from '@utils/formatters';
+import { sumByCurrency, resolveTripDurationMinutes } from '@utils/calculations';
+import { formatKm, formatCurrency, formatTime, formatDuration } from '@utils/formatters';
 import { TripCard } from '@components/TripCard';
 import { CurrencyBreakdownValue } from '@components/ui/CurrencyBreakdownValue';
 import { AdBanner } from '@components/AdBanner';
+import { useTheme } from '@/theme/useTheme';
+import type { ColorTokens } from '@/theme/colors';
 
 export default function DaySummaryScreen() {
   const router = useRouter();
   const { t, i18n } = useTranslation();
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   const { start, end } = useLocalSearchParams<{ start?: string; end?: string }>();
   const { activeVehicle } = useVehicles();
   const vehicleId = activeVehicle?.id;
@@ -55,6 +59,10 @@ export default function DaySummaryScreen() {
     [rangeCompletedTrips],
   );
   const periodCount = rangeTrips.length;
+  const periodDurationMinutes = useMemo(
+    () => rangeTrips.reduce((sum, tr) => sum + (resolveTripDurationMinutes(tr) ?? 0), 0),
+    [rangeTrips],
+  );
 
   const rangeFuel = useMemo(
     () => fuelEntries.filter((f) => f.date >= rangeStart && f.date < rangeEnd),
@@ -87,7 +95,7 @@ export default function DaySummaryScreen() {
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
-          <Ionicons name="arrow-back" size={24} color="#F1F5F9" />
+          <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('daySummary.pageTitle')}</Text>
         <View style={{ width: 24 }} />
@@ -108,9 +116,9 @@ export default function DaySummaryScreen() {
         </Text>
 
         {/* ── Net Kart ── */}
-        <View style={[styles.netCard, { borderColor: net >= 0 ? '#22C55E40' : '#EF444440' }]}>
+        <View style={[styles.netCard, { borderColor: (net >= 0 ? colors.success : colors.danger) + '40' }]}>
           <Text style={styles.netLabel}>{t('daySummary.netLabel')}</Text>
-          <Text style={[styles.netValue, { color: net >= 0 ? '#22C55E' : '#EF4444' }]}>
+          <Text style={[styles.netValue, { color: net >= 0 ? colors.success : colors.danger }]}>
             {formatCurrency(net, activeCurrency)}
           </Text>
         </View>
@@ -119,6 +127,7 @@ export default function DaySummaryScreen() {
         <View style={styles.statsRow}>
           <QuickStat icon="🚖" label={t('daySummary.statTrip')} value={String(periodCount)} />
           <QuickStat icon="🛣️" label={t('daySummary.statKm')} value={formatKm(periodKm)} />
+          <QuickStat icon="⏱️" label={t('daySummary.statDuration')} value={formatDuration(periodDurationMinutes, i18n.language)} />
           <QuickStat icon="📈" label={t('daySummary.statPerKm')} value={`${formatCurrency(perKm, activeCurrency)}/km`} />
         </View>
 
@@ -134,12 +143,12 @@ export default function DaySummaryScreen() {
               <Text style={styles.sectionTitle}>{t('daySummary.incomeSection')}</Text>
               <CompositionBar
                 segments={[
-                  { value: periodEarnings, color: '#22C55E' },
-                  { value: incomeTotal, color: '#3B82F6' },
+                  { value: periodEarnings, color: colors.success },
+                  { value: incomeTotal, color: colors.accent },
                 ]}
               />
-              <BreakdownRow icon="🚖" color="#22C55E" label={t('daySummary.tripEarningsLabel')} amounts={periodEarningsByCurrency} activeCurrency={activeCurrency} />
-              <BreakdownRow icon="💰" color="#3B82F6" label={t('daySummary.extraIncomeLabel')} amounts={incomeTotalByCurrency} activeCurrency={activeCurrency} />
+              <BreakdownRow icon="🚖" color={colors.success} label={t('daySummary.tripEarningsLabel')} amounts={periodEarningsByCurrency} activeCurrency={activeCurrency} />
+              <BreakdownRow icon="💰" color={colors.accent} label={t('daySummary.extraIncomeLabel')} amounts={incomeTotalByCurrency} activeCurrency={activeCurrency} />
             </View>
 
             {/* ── Giderler ── */}
@@ -147,12 +156,12 @@ export default function DaySummaryScreen() {
               <Text style={styles.sectionTitle}>{t('daySummary.outcomeSection')}</Text>
               <CompositionBar
                 segments={[
-                  { value: fuelCost, color: '#F59E0B' },
-                  { value: expenseCost, color: '#EF4444' },
+                  { value: fuelCost, color: colors.warning },
+                  { value: expenseCost, color: colors.danger },
                 ]}
               />
-              <BreakdownRow icon="⛽" color="#F59E0B" label={t('daySummary.fuelLabel')} amounts={fuelCostByCurrency} activeCurrency={activeCurrency} />
-              <BreakdownRow icon="💸" color="#EF4444" label={t('daySummary.expenseLabel')} amounts={expenseCostByCurrency} activeCurrency={activeCurrency} />
+              <BreakdownRow icon="⛽" color={colors.warning} label={t('daySummary.fuelLabel')} amounts={fuelCostByCurrency} activeCurrency={activeCurrency} />
+              <BreakdownRow icon="💸" color={colors.danger} label={t('daySummary.expenseLabel')} amounts={expenseCostByCurrency} activeCurrency={activeCurrency} />
             </View>
 
             {/* ── Seferler ── */}
@@ -177,6 +186,8 @@ export default function DaySummaryScreen() {
 }
 
 function QuickStat({ icon, label, value }: { icon: string; label: string; value: string }) {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   return (
     <View style={styles.quickStat}>
       <Text style={styles.quickStatIcon}>{icon}</Text>
@@ -187,6 +198,8 @@ function QuickStat({ icon, label, value }: { icon: string; label: string; value:
 }
 
 function CompositionBar({ segments }: { segments: { value: number; color: string }[] }) {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   const total = segments.reduce((sum, s) => sum + s.value, 0);
   return (
     <View style={styles.barTrack}>
@@ -194,7 +207,7 @@ function CompositionBar({ segments }: { segments: { value: number; color: string
         ? segments.map((s, i) =>
             s.value > 0 ? <View key={i} style={{ flex: s.value, backgroundColor: s.color }} /> : null,
           )
-        : <View style={{ flex: 1, backgroundColor: '#334155' }} />}
+        : <View style={{ flex: 1, backgroundColor: colors.border }} />}
     </View>
   );
 }
@@ -212,6 +225,8 @@ function BreakdownRow({
   amounts: Record<string, number>;
   activeCurrency: SupportedCurrency;
 }) {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   return (
     <View style={styles.breakdownRow}>
       <View style={[styles.breakdownDot, { backgroundColor: color }]} />
@@ -222,68 +237,70 @@ function BreakdownRow({
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#0F172A' },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: '#1E293B',
-  },
-  headerTitle: { color: '#F1F5F9', fontSize: 17, fontWeight: '700' },
-  content: { padding: 16, gap: 16 },
-  rangeLabel: { color: '#64748B', fontSize: 13, fontWeight: '600', textAlign: 'center' },
+function createStyles(colors: ColorTokens) {
+  return StyleSheet.create({
+    safe: { flex: 1, backgroundColor: colors.background },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.surface,
+    },
+    headerTitle: { color: colors.textPrimary, fontSize: 17, fontWeight: '700' },
+    content: { padding: 16, gap: 16 },
+    rangeLabel: { color: colors.textMuted, fontSize: 13, fontWeight: '600', textAlign: 'center' },
 
-  netCard: {
-    backgroundColor: '#1E293B',
-    borderRadius: 16,
-    borderWidth: 1.5,
-    padding: 20,
-    alignItems: 'center',
-    gap: 6,
-  },
-  netLabel: { color: '#94A3B8', fontSize: 13, fontWeight: '600' },
-  netValue: { fontSize: 32, fontWeight: '800' },
+    netCard: {
+      backgroundColor: colors.surface,
+      borderRadius: 16,
+      borderWidth: 1.5,
+      padding: 20,
+      alignItems: 'center',
+      gap: 6,
+    },
+    netLabel: { color: colors.textSecondary, fontSize: 13, fontWeight: '600' },
+    netValue: { fontSize: 32, fontWeight: '800' },
 
-  statsRow: { flexDirection: 'row', gap: 8 },
-  quickStat: {
-    flex: 1,
-    backgroundColor: '#1E293B',
-    borderRadius: 12,
-    padding: 12,
-    alignItems: 'center',
-    gap: 4,
-  },
-  quickStatIcon: { fontSize: 18 },
-  quickStatValue: { color: '#F1F5F9', fontSize: 13, fontWeight: '800' },
-  quickStatLabel: { color: '#64748B', fontSize: 10, fontWeight: '500' },
+    statsRow: { flexDirection: 'row', gap: 8 },
+    quickStat: {
+      flex: 1,
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      padding: 12,
+      alignItems: 'center',
+      gap: 4,
+    },
+    quickStatIcon: { fontSize: 18 },
+    quickStatValue: { color: colors.textPrimary, fontSize: 13, fontWeight: '800' },
+    quickStatLabel: { color: colors.textMuted, fontSize: 10, fontWeight: '500' },
 
-  emptyState: { alignItems: 'center', paddingVertical: 48, gap: 10 },
-  emptyIcon: { fontSize: 42 },
-  emptyText: { color: '#64748B', fontSize: 14, textAlign: 'center', paddingHorizontal: 24 },
+    emptyState: { alignItems: 'center', paddingVertical: 48, gap: 10 },
+    emptyIcon: { fontSize: 42 },
+    emptyText: { color: colors.textMuted, fontSize: 14, textAlign: 'center', paddingHorizontal: 24 },
 
-  section: {
-    backgroundColor: '#1E293B',
-    borderRadius: 14,
-    padding: 16,
-    gap: 12,
-  },
-  sectionTitle: { color: '#F1F5F9', fontSize: 15, fontWeight: '700' },
+    section: {
+      backgroundColor: colors.surface,
+      borderRadius: 14,
+      padding: 16,
+      gap: 12,
+    },
+    sectionTitle: { color: colors.textPrimary, fontSize: 15, fontWeight: '700' },
 
-  barTrack: {
-    flexDirection: 'row',
-    height: 12,
-    borderRadius: 6,
-    overflow: 'hidden',
-    backgroundColor: '#0F172A',
-  },
+    barTrack: {
+      flexDirection: 'row',
+      height: 12,
+      borderRadius: 6,
+      overflow: 'hidden',
+      backgroundColor: colors.background,
+    },
 
-  breakdownRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  breakdownDot: { width: 8, height: 8, borderRadius: 4 },
-  breakdownIcon: { fontSize: 14 },
-  breakdownLabel: { color: '#94A3B8', fontSize: 13, flex: 1 },
-  breakdownValue: { fontSize: 13, fontWeight: '700' },
-});
+    breakdownRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    breakdownDot: { width: 8, height: 8, borderRadius: 4 },
+    breakdownIcon: { fontSize: 14 },
+    breakdownLabel: { color: colors.textSecondary, fontSize: 13, flex: 1 },
+    breakdownValue: { fontSize: 13, fontWeight: '700' },
+  });
+}

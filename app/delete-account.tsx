@@ -8,12 +8,16 @@ import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { deleteAccountWithPassword, deleteAccountWithGoogle, deleteAccountWithApple } from '@services/accountDeletion';
 import { firebaseAuth } from '@services/auth';
+import { useTheme } from '@/theme/useTheme';
+import type { ColorTokens } from '@/theme/colors';
 
 type ReauthProvider = 'password' | 'google' | 'apple';
 
 export default function DeleteAccountScreen() {
   const router = useRouter();
   const { t } = useTranslation();
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -82,7 +86,7 @@ export default function DeleteAccountScreen() {
             <TextInput
               style={styles.passwordInput}
               placeholder={t('deleteAccount.passwordPlaceholder')}
-              placeholderTextColor="#475569"
+              placeholderTextColor={colors.textMuted}
               value={password}
               onChangeText={setPassword}
               secureTextEntry={!showPassword}
@@ -93,7 +97,7 @@ export default function DeleteAccountScreen() {
               hitSlop={8}
               style={styles.passwordToggle}
             >
-              <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={20} color="#64748B" />
+              <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={20} color={colors.textMuted} />
             </TouchableOpacity>
           </View>
         )}
@@ -105,7 +109,7 @@ export default function DeleteAccountScreen() {
           activeOpacity={0.85}
         >
           {loading
-            ? <ActivityIndicator color="#fff" />
+            ? <ActivityIndicator color={colors.onAccent} />
             : <Text style={styles.deleteBtnText}>
                 {provider === 'password'
                   ? t('deleteAccount.deleteButton')
@@ -124,26 +128,24 @@ export default function DeleteAccountScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#0F172A', justifyContent: 'center' },
-  card: { margin: 24, backgroundColor: '#1E293B', borderRadius: 20, padding: 28, gap: 14 },
-  icon: { fontSize: 40, textAlign: 'center' },
-  title: { color: '#F1F5F9', fontSize: 22, fontWeight: '800', textAlign: 'center' },
-  warning: { color: '#FCA5A5', fontSize: 13.5, lineHeight: 20, textAlign: 'center' },
-  input: {
-    backgroundColor: '#0F172A', borderRadius: 10, paddingHorizontal: 14,
-    paddingVertical: 12, color: '#F1F5F9', fontSize: 15, borderWidth: 1, borderColor: '#334155',
-  },
-  passwordWrap: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#0F172A', borderRadius: 10, borderWidth: 1, borderColor: '#334155',
-    paddingRight: 6,
-  },
-  passwordInput: {
-    flex: 1, paddingHorizontal: 14, paddingVertical: 12, color: '#F1F5F9', fontSize: 15,
-  },
-  passwordToggle: { padding: 8 },
-  deleteBtn: { backgroundColor: '#EF4444', borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
-  deleteBtnText: { color: '#fff', fontWeight: '700', fontSize: 15 },
-  cancelLink: { color: '#94A3B8', fontSize: 14, textAlign: 'center', marginTop: 2 },
-});
+function createStyles(colors: ColorTokens) {
+  return StyleSheet.create({
+    root: { flex: 1, backgroundColor: colors.background, justifyContent: 'center' },
+    card: { margin: 24, backgroundColor: colors.surface, borderRadius: 20, padding: 28, gap: 14 },
+    icon: { fontSize: 40, textAlign: 'center' },
+    title: { color: colors.textPrimary, fontSize: 22, fontWeight: '800', textAlign: 'center' },
+    warning: { color: colors.dangerSoftText, fontSize: 13.5, lineHeight: 20, textAlign: 'center' },
+    passwordWrap: {
+      flexDirection: 'row', alignItems: 'center',
+      backgroundColor: colors.background, borderRadius: 10, borderWidth: 1, borderColor: colors.border,
+      paddingRight: 6,
+    },
+    passwordInput: {
+      flex: 1, paddingHorizontal: 14, paddingVertical: 12, color: colors.textPrimary, fontSize: 15,
+    },
+    passwordToggle: { padding: 8 },
+    deleteBtn: { backgroundColor: colors.danger, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
+    deleteBtnText: { color: colors.onAccent, fontWeight: '700', fontSize: 15 },
+    cancelLink: { color: colors.textSecondary, fontSize: 14, textAlign: 'center', marginTop: 2 },
+  });
+}

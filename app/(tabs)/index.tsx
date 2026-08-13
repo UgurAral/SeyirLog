@@ -24,12 +24,18 @@ import { formatKm, formatTime } from '@utils/formatters';
 import { AdBanner } from '@components/AdBanner';
 import { CurrencyBreakdownValue } from '@components/ui/CurrencyBreakdownValue';
 import { showRewardedAd } from '@utils/ads';
+import { useTabTitle } from '@hooks/useTabTitle';
+import { useTheme } from '@/theme/useTheme';
+import type { ColorTokens } from '@/theme/colors';
 
 type Period = 'today' | 'week' | 'month' | 'all';
 
 export default function DashboardScreen() {
   const router = useRouter();
   const { t, i18n } = useTranslation();
+  useTabTitle(t('tabs.home'));
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   const [period, setPeriod] = useState<Period>('today');
   const [endDayLoading, setEndDayLoading] = useState(false);
   const { vehicles, activeVehicle } = useVehicles();
@@ -123,7 +129,7 @@ export default function DashboardScreen() {
             onPress={() => router.push('/vehicle/new')}
             activeOpacity={0.85}
           >
-            <Ionicons name="add-circle" size={18} color="#FFFFFF" />
+            <Ionicons name="add-circle" size={18} color={colors.onAccent} />
             <Text style={styles.addVehicleBtnText}>{t('dashboard.addVehicleButton')}</Text>
           </TouchableOpacity>
         </View>
@@ -154,7 +160,7 @@ export default function DashboardScreen() {
             hitSlop={8}
           >
             <View style={styles.profileBtn}>
-              <Ionicons name="settings-outline" size={18} color="#64748B" />
+              <Ionicons name="settings-outline" size={18} color={colors.textMuted} />
             </View>
           </TouchableOpacity>
         </View>
@@ -207,7 +213,7 @@ export default function DashboardScreen() {
                 activeOpacity={0.85}
               >
                 {endDayLoading
-                  ? <ActivityIndicator color="#fff" size="small" />
+                  ? <ActivityIndicator color={colors.onAccent} size="small" />
                   : <Text style={styles.endTripBtnText}>{t('dashboard.endDayButton')}</Text>
                 }
               </TouchableOpacity>
@@ -238,8 +244,8 @@ export default function DashboardScreen() {
 
           {/* ── Stats Grid ── */}
           <View style={styles.statsGrid}>
-            <StatTile icon="🚖" label={t('dashboard.statTrip')} value={String(periodCount)} color="#8B5CF6" />
-            <StatTile icon="🛣️" label={t('dashboard.statKm')} value={formatKm(periodKm)} color="#F59E0B" />
+            <StatTile icon="🚖" label={t('dashboard.statTrip')} value={String(periodCount)} color={colors.accentTertiary} />
+            <StatTile icon="🛣️" label={t('dashboard.statKm')} value={formatKm(periodKm)} color={colors.warning} />
             <StatTile
               icon="📈"
               label={t('dashboard.statEarnings')}
@@ -247,11 +253,11 @@ export default function DashboardScreen() {
                 <CurrencyBreakdownValue
                   amounts={periodEarningsByCurrency}
                   activeCurrency={activeCurrency}
-                  color="#22C55E"
+                  color={colors.success}
                   textStyle={styles.statTileValue}
                 />
               }
-              color="#22C55E"
+              color={colors.success}
             />
             <StatTile
               icon="💰"
@@ -260,11 +266,11 @@ export default function DashboardScreen() {
                 <CurrencyBreakdownValue
                   amounts={netByCurrency}
                   activeCurrency={activeCurrency}
-                  colorFor={(amount) => (amount >= 0 ? '#22C55E' : '#EF4444')}
+                  colorFor={(amount) => (amount >= 0 ? colors.success : colors.danger)}
                   textStyle={styles.statTileValue}
                 />
               }
-              color={netEarnings >= 0 ? '#22C55E' : '#EF4444'}
+              color={netEarnings >= 0 ? colors.success : colors.danger}
             />
           </View>
 
@@ -333,7 +339,7 @@ export default function DashboardScreen() {
           onPress={() => router.push('/quick-entry')}
           activeOpacity={0.85}
         >
-          <Ionicons name="add" size={30} color="#FFFFFF" />
+          <Ionicons name="add" size={30} color={colors.onAccent} />
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -351,6 +357,8 @@ function StatTile({
   value: React.ReactNode;
   color: string;
 }) {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   return (
     <View style={[styles.statTile, { borderTopColor: color, borderTopWidth: 3 }]}>
       <Text style={styles.statTileIcon}>{icon}</Text>
@@ -360,194 +368,196 @@ function StatTile({
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#0F172A' },
-  root: { flex: 1 },
+function createStyles(colors: ColorTokens) {
+  return StyleSheet.create({
+    safe: { flex: 1, backgroundColor: colors.background },
+    root: { flex: 1 },
 
-  emptyState: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 32,
-    gap: 16,
-  },
-  emptyIcon: { fontSize: 64 },
-  emptyTitle: { color: '#F1F5F9', fontSize: 22, fontWeight: '800' },
-  emptyText: { color: '#64748B', fontSize: 14, textAlign: 'center', lineHeight: 22 },
-  addVehicleBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: '#3B82F6',
-    borderRadius: 12,
-    paddingHorizontal: 24,
-    paddingVertical: 14,
-    marginTop: 8,
-  },
-  addVehicleBtnText: { color: '#FFFFFF', fontWeight: '700', fontSize: 15 },
+    emptyState: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 32,
+      gap: 16,
+    },
+    emptyIcon: { fontSize: 64 },
+    emptyTitle: { color: colors.textPrimary, fontSize: 22, fontWeight: '800' },
+    emptyText: { color: colors.textMuted, fontSize: 14, textAlign: 'center', lineHeight: 22 },
+    addVehicleBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      backgroundColor: colors.accent,
+      borderRadius: 12,
+      paddingHorizontal: 24,
+      paddingVertical: 14,
+      marginTop: 8,
+    },
+    addVehicleBtnText: { color: colors.onAccent, fontWeight: '700', fontSize: 15 },
 
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 8,
-  },
-  appNameRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  appLogo: { width: 36, height: 36, borderRadius: 10 },
-  appName: { color: '#F1F5F9', fontSize: 24, fontWeight: '800' },
-  vehicleName: { color: '#64748B', fontSize: 12, marginTop: 1 },
-  profileBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: '#1E293B',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingTop: 12,
+      paddingBottom: 8,
+    },
+    appNameRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+    appLogo: { width: 36, height: 36, borderRadius: 10 },
+    appName: { color: colors.textPrimary, fontSize: 24, fontWeight: '800' },
+    vehicleName: { color: colors.textMuted, fontSize: 12, marginTop: 1 },
+    profileBtn: {
+      width: 36,
+      height: 36,
+      borderRadius: 10,
+      backgroundColor: colors.surface,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
 
-  periodBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-evenly',
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-  },
-  periodChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 7,
-    borderRadius: 20,
-    backgroundColor: '#1E293B',
-    borderWidth: 1,
-    borderColor: '#334155',
-  },
-  periodChipActive: { backgroundColor: '#3B82F6', borderColor: '#3B82F6' },
-  periodChipText: { color: '#64748B', fontSize: 13, fontWeight: '600' },
-  periodChipTextActive: { color: '#FFFFFF' },
+    periodBar: {
+      flexDirection: 'row',
+      justifyContent: 'space-evenly',
+      paddingHorizontal: 16,
+      paddingBottom: 12,
+    },
+    periodChip: {
+      paddingHorizontal: 16,
+      paddingVertical: 7,
+      borderRadius: 20,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    periodChipActive: { backgroundColor: colors.accent, borderColor: colors.accent },
+    periodChipText: { color: colors.textMuted, fontSize: 13, fontWeight: '600' },
+    periodChipTextActive: { color: colors.onAccent },
 
-  scroll: { flex: 1 },
-  content: { paddingHorizontal: 16, gap: 12, paddingBottom: 16 },
+    scroll: { flex: 1 },
+    content: { paddingHorizontal: 16, gap: 12, paddingBottom: 16 },
 
-  daySummaryBtn: {
-    backgroundColor: '#3B82F6',
-    borderRadius: 14,
-    paddingVertical: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  daySummaryBtnText: { color: '#FFFFFF', fontWeight: '700', fontSize: 15 },
+    daySummaryBtn: {
+      backgroundColor: colors.accent,
+      borderRadius: 14,
+      paddingVertical: 14,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    daySummaryBtnText: { color: colors.onAccent, fontWeight: '700', fontSize: 15 },
 
-  dayActiveCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#3B82F615',
-    borderRadius: 14,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: '#3B82F640',
-  },
-  dayActiveLeft: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
-  dayActiveSince: { color: '#F1F5F9', fontWeight: '700', fontSize: 14, marginTop: 1 },
-  endDayBtn: {
-    backgroundColor: '#3B82F6',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    minWidth: 64,
-    alignItems: 'center',
-  },
+    dayActiveCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      backgroundColor: colors.accent + '15',
+      borderRadius: 14,
+      padding: 14,
+      borderWidth: 1,
+      borderColor: colors.accent + '40',
+    },
+    dayActiveLeft: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
+    dayActiveSince: { color: colors.textPrimary, fontWeight: '700', fontSize: 14, marginTop: 1 },
+    endDayBtn: {
+      backgroundColor: colors.accent,
+      borderRadius: 8,
+      paddingHorizontal: 12,
+      paddingVertical: 7,
+      minWidth: 64,
+      alignItems: 'center',
+    },
 
-  activeTripCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#22C55E15',
-    borderRadius: 14,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: '#22C55E40',
-  },
-  activeTripLeft: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
-  activeDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#22C55E' },
-  activeTripLabel: { color: '#22C55E', fontSize: 11, fontWeight: '600' },
-  activeTripRoute: { color: '#F1F5F9', fontWeight: '700', fontSize: 14, marginTop: 1 },
-  endTripBtn: {
-    backgroundColor: '#22C55E',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-  },
-  endTripBtnText: { color: '#FFFFFF', fontWeight: '700', fontSize: 12 },
+    activeTripCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      backgroundColor: colors.success + '15',
+      borderRadius: 14,
+      padding: 14,
+      borderWidth: 1,
+      borderColor: colors.success + '40',
+    },
+    activeTripLeft: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
+    activeDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.success },
+    activeTripLabel: { color: colors.success, fontSize: 11, fontWeight: '600' },
+    activeTripRoute: { color: colors.textPrimary, fontWeight: '700', fontSize: 14, marginTop: 1 },
+    endTripBtn: {
+      backgroundColor: colors.success,
+      borderRadius: 8,
+      paddingHorizontal: 12,
+      paddingVertical: 7,
+    },
+    endTripBtnText: { color: colors.onAccent, fontWeight: '700', fontSize: 12 },
 
-  statsGrid: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  statTile: {
-    flex: 1,
-    backgroundColor: '#1E293B',
-    borderRadius: 12,
-    padding: 12,
-    alignItems: 'center',
-    gap: 4,
-  },
-  statTileIcon: { fontSize: 20 },
-  statTileValue: { color: '#F1F5F9', fontSize: 13, fontWeight: '800', textAlign: 'center' },
-  statTileLabel: { color: '#64748B', fontSize: 10, fontWeight: '500' },
+    statsGrid: {
+      flexDirection: 'row',
+      gap: 8,
+    },
+    statTile: {
+      flex: 1,
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      padding: 12,
+      alignItems: 'center',
+      gap: 4,
+    },
+    statTileIcon: { fontSize: 20 },
+    statTileValue: { color: colors.textPrimary, fontSize: 13, fontWeight: '800', textAlign: 'center' },
+    statTileLabel: { color: colors.textMuted, fontSize: 10, fontWeight: '500' },
 
-  subStats: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  subStat: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#1E293B',
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    gap: 6,
-  },
-  subStatIcon: { fontSize: 14 },
-  subStatLabel: { color: '#64748B', fontSize: 12, flex: 1 },
-  subStatValue: { color: '#94A3B8', fontSize: 13, fontWeight: '600' },
+    subStats: {
+      flexDirection: 'row',
+      gap: 8,
+    },
+    subStat: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.surface,
+      borderRadius: 10,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      gap: 6,
+    },
+    subStatIcon: { fontSize: 14 },
+    subStatLabel: { color: colors.textMuted, fontSize: 12, flex: 1 },
+    subStatValue: { color: colors.textSecondary, fontSize: 13, fontWeight: '600' },
 
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  sectionTitle: { color: '#F1F5F9', fontSize: 16, fontWeight: '700' },
-  seeAll: { color: '#3B82F6', fontSize: 13 },
+    sectionHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginTop: 4,
+    },
+    sectionTitle: { color: colors.textPrimary, fontSize: 16, fontWeight: '700' },
+    seeAll: { color: colors.accent, fontSize: 13 },
 
-  noTrips: { alignItems: 'center', paddingVertical: 40, gap: 8 },
-  noTripsIcon: { fontSize: 40 },
-  noTripsText: { color: '#64748B', fontSize: 14 },
+    noTrips: { alignItems: 'center', paddingVertical: 40, gap: 8 },
+    noTripsIcon: { fontSize: 40 },
+    noTripsText: { color: colors.textMuted, fontSize: 14 },
 
-  bottomBannerWrap: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-  },
-  fab: {
-    position: 'absolute',
-    bottom: 100,
-    right: 20,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#3B82F6',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#3B82F6',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 8,
-    zIndex: 20,
-  },
-});
+    bottomBannerWrap: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+    },
+    fab: {
+      position: 'absolute',
+      bottom: 100,
+      right: 20,
+      width: 60,
+      height: 60,
+      borderRadius: 30,
+      backgroundColor: colors.accent,
+      alignItems: 'center',
+      justifyContent: 'center',
+      shadowColor: colors.accent,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.4,
+      shadowRadius: 8,
+      elevation: 8,
+      zIndex: 20,
+    },
+  });
+}

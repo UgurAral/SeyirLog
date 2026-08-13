@@ -7,12 +7,15 @@
  *   users/{uid}/fuel_entries/{id}
  *   users/{uid}/expenses/{id}
  *   users/{uid}/income_entries/{id}
+ *   demand_signals/{id}         — anonim, kullanıcı kimliği taşımaz (bkz. submitDemandSignal)
  */
 
 import firestore from '@react-native-firebase/firestore';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import { getCurrentUser } from '@services/auth';
+import { getIstanbulDateParts } from '@utils/dateHelpers';
+import { snapToGrid } from '@utils/location';
 
 const db = firestore();
 
@@ -86,6 +89,31 @@ export async function submitFeedback(message: string): Promise<void> {
     platform: Platform.OS,
     createdAt: firestore.FieldValue.serverTimestamp(),
   });
+}
+
+// ── Anonim talep sinyali (Faz 2 ısı haritası için veri toplama) ─────────────
+//
+// `demand_signals` diğer koleksiyonların aksine `users/{uid}/...` altında
+// DEĞİL, en üst seviyede ve kullanıcı kimliği taşımadan tutulur — kimin
+// gönderdiği belirlenemesin diye. Konum kaba bir ızgaraya yuvarlanır.
+// Hata sessizce yutulur: bu arka plan sinyali asla sefer oluşturma akışını
+// etkilememeli/bloklamamalı.
+
+export function submitDemandSignal(lat: number, lng: number, timestampSeconds: number): void {
+  const { lat: gridLat, lng: gridLng } = snapToGrid(lat, lng);
+  const { date, hour, dayOfWeek } = getIstanbulDateParts(timestampSeconds);
+  db.collection('demand_signals')
+    .add({
+      lat: gridLat,
+      lng: gridLng,
+      date,
+      hour,
+      dayOfWeek,
+      createdAt: firestore.FieldValue.serverTimestamp(),
+    })
+    .catch((e) => {
+      console.warn('Talep sinyali gönderilemedi:', e);
+    });
 }
 
 // ── Gerçek zamanlı dinleyici ─────────────────────────────────────────────────

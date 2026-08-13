@@ -25,6 +25,9 @@ import { sumByCurrency } from '@utils/calculations';
 import { formatCurrency, formatDate } from '@utils/formatters';
 import { CurrencyBreakdownValue } from '@components/ui/CurrencyBreakdownValue';
 import { AdBanner } from '@components/AdBanner';
+import { useTabTitle } from '@hooks/useTabTitle';
+import { useTheme } from '@/theme/useTheme';
+import type { ColorTokens } from '@/theme/colors';
 import type { IncomeEntry, IncomeSource, Expense, ExpenseCategory } from '@/types';
 
 type Mode = 'income' | 'expense';
@@ -38,6 +41,9 @@ const SOURCE_ICONS: Record<IncomeSource, string> = {
 export default function FinansScreen() {
   const router = useRouter();
   const { t } = useTranslation();
+  useTabTitle(t('tabs.finans'));
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   const [mode, setMode] = useState<Mode>('income');
 
   return (
@@ -49,7 +55,7 @@ export default function FinansScreen() {
           style={[styles.addBtn, mode === 'expense' && styles.addBtnExpense]}
           onPress={() => router.push(mode === 'income' ? '/income/new' : '/expense/new')}
         >
-          <Ionicons name="add" size={22} color="#FFFFFF" />
+          <Ionicons name="add" size={22} color={colors.onAccent} />
         </TouchableOpacity>
       </View>
 
@@ -86,6 +92,8 @@ export default function FinansScreen() {
 
 function IncomeCard({ entry }: { entry: IncomeEntry }) {
   const { t, i18n } = useTranslation();
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   const { deleteEntry } = useIncomeStore();
   const source: IncomeSource = (entry.source as IncomeSource) ?? 'other';
   const sourceLabel = t(`incomeSources.${source}`);
@@ -123,7 +131,7 @@ function IncomeCard({ entry }: { entry: IncomeEntry }) {
             style={styles.deleteBtn}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <Ionicons name="trash-outline" size={15} color="#EF4444" />
+            <Ionicons name="trash-outline" size={15} color={colors.danger} />
           </TouchableOpacity>
         </View>
       </View>
@@ -133,6 +141,8 @@ function IncomeCard({ entry }: { entry: IncomeEntry }) {
 
 function IncomeSection() {
   const { t } = useTranslation();
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   const [period, setPeriod] = useState<Period>('all');
   const { activeVehicle } = useVehicles();
   const activeCurrency = useCurrencyStore((s) => s.currency);
@@ -165,12 +175,12 @@ function IncomeSection() {
               <CurrencyBreakdownValue
                 amounts={totalAmountByCurrency}
                 activeCurrency={activeCurrency}
-                color="#22C55E"
+                color={colors.success}
                 textStyle={styles.statCardValue}
               />
             }
             icon="💵"
-            accentColor="#22C55E"
+            accentColor={colors.success}
             style={styles.totalCard}
           />
           <PeriodFilter selected={period} onChange={setPeriod} />
@@ -180,7 +190,7 @@ function IncomeSection() {
               <CurrencyBreakdownValue
                 amounts={periodTotalByCurrency}
                 activeCurrency={activeCurrency}
-                color="#22C55E"
+                color={colors.success}
                 textStyle={styles.incomePeriodValue}
               />
             </View>
@@ -204,6 +214,8 @@ function IncomeSection() {
 
 function ExpenseSection() {
   const { t } = useTranslation();
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   const [period, setPeriod] = useState<Period>('all');
   const [showCategories, setShowCategories] = useState(false);
   const { activeVehicle } = useVehicles();
@@ -244,12 +256,12 @@ function ExpenseSection() {
                 <CurrencyBreakdownValue
                   amounts={totalAmountByCurrency}
                   activeCurrency={activeCurrency}
-                  color="#EF4444"
+                  color={colors.danger}
                   textStyle={styles.statCardValue}
                 />
               }
               icon="💸"
-              accentColor="#EF4444"
+              accentColor={colors.danger}
             />
             {topCategory && topCategory[1] > 0 ? (
               <StatCard
@@ -257,7 +269,7 @@ function ExpenseSection() {
                 value={formatCurrency(topCategory[1], activeCurrency)}
                 subValue={t(`expenseCategories.${topCategory[0]}`)}
                 icon="📊"
-                accentColor="#F59E0B"
+                accentColor={colors.warning}
               />
             ) : null}
           </View>
@@ -270,7 +282,7 @@ function ExpenseSection() {
               <CurrencyBreakdownValue
                 amounts={periodTotalByCurrency}
                 activeCurrency={activeCurrency}
-                color="#EF4444"
+                color={colors.danger}
                 textStyle={styles.expensePeriodValue}
               />
             </View>
@@ -312,93 +324,95 @@ function ExpenseSection() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#0F172A' },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 8,
-  },
-  title: { color: '#F1F5F9', fontSize: 26, fontWeight: '800' },
-  addBtn: {
-    backgroundColor: '#22C55E',
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  addBtnExpense: { backgroundColor: '#EF4444' },
+function createStyles(colors: ColorTokens) {
+  return StyleSheet.create({
+    safe: { flex: 1, backgroundColor: colors.background },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingTop: 8,
+    },
+    title: { color: colors.textPrimary, fontSize: 26, fontWeight: '800' },
+    addBtn: {
+      backgroundColor: colors.success,
+      width: 40,
+      height: 40,
+      borderRadius: 12,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    addBtnExpense: { backgroundColor: colors.danger },
 
-  modeToggle: {
-    flexDirection: 'row',
-    backgroundColor: '#1E293B',
-    borderRadius: 12,
-    padding: 4,
-    marginHorizontal: 16,
-    marginTop: 12,
-    marginBottom: 4,
-  },
-  modeTab: { flex: 1, paddingVertical: 9, alignItems: 'center', borderRadius: 10 },
-  modeTabActive: { backgroundColor: '#22C55E' },
-  modeTabActiveExpense: { backgroundColor: '#EF4444' },
-  modeTabText: { color: '#64748B', fontSize: 13, fontWeight: '700' },
-  modeTabTextActive: { color: '#FFFFFF' },
+    modeToggle: {
+      flexDirection: 'row',
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      padding: 4,
+      marginHorizontal: 16,
+      marginTop: 12,
+      marginBottom: 4,
+    },
+    modeTab: { flex: 1, paddingVertical: 9, alignItems: 'center', borderRadius: 10 },
+    modeTabActive: { backgroundColor: colors.success },
+    modeTabActiveExpense: { backgroundColor: colors.danger },
+    modeTabText: { color: colors.textMuted, fontSize: 13, fontWeight: '700' },
+    modeTabTextActive: { color: colors.onAccent },
 
-  list: { padding: 16, paddingBottom: 90 },
-  bottomBannerWrap: { position: 'absolute', bottom: 0, left: 0, right: 0 },
-  statCardValue: { fontSize: 22, fontWeight: '700' },
-  totalCard: { marginBottom: 12 },
-  statsRow: { flexDirection: 'row', gap: 12, marginBottom: 12 },
-  periodSummary: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#1E293B',
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 12,
-  },
-  periodLabel: { color: '#64748B', fontSize: 13 },
-  incomePeriodValue: { color: '#22C55E', fontWeight: '700', fontSize: 16 },
-  expensePeriodValue: { color: '#EF4444', fontWeight: '700', fontSize: 16 },
-  categoryToggle: { paddingVertical: 8, marginBottom: 4 },
-  categoryToggleText: { color: '#3B82F6', fontSize: 13, fontWeight: '600' },
-  categoryList: {
-    backgroundColor: '#1E293B',
-    borderRadius: 12,
-    padding: 12,
-    gap: 10,
-    marginBottom: 12,
-  },
-  categoryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  categoryName: { color: '#CBD5E1', fontSize: 13 },
-  categoryAmount: { color: '#F1F5F9', fontWeight: '600', fontSize: 13 },
-  sectionTitle: { color: '#F1F5F9', fontSize: 17, fontWeight: '700', marginBottom: 12 },
-  separator: { height: 12 },
-  empty: { alignItems: 'center', paddingVertical: 60, gap: 12 },
-  emptyIcon: { fontSize: 48 },
-  emptyText: { color: '#64748B', fontSize: 15 },
+    list: { padding: 16, paddingBottom: 90 },
+    bottomBannerWrap: { position: 'absolute', bottom: 0, left: 0, right: 0 },
+    statCardValue: { fontSize: 22, fontWeight: '700' },
+    totalCard: { marginBottom: 12 },
+    statsRow: { flexDirection: 'row', gap: 12, marginBottom: 12 },
+    periodSummary: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      padding: 14,
+      marginBottom: 12,
+    },
+    periodLabel: { color: colors.textMuted, fontSize: 13 },
+    incomePeriodValue: { color: colors.success, fontWeight: '700', fontSize: 16 },
+    expensePeriodValue: { color: colors.danger, fontWeight: '700', fontSize: 16 },
+    categoryToggle: { paddingVertical: 8, marginBottom: 4 },
+    categoryToggleText: { color: colors.accent, fontSize: 13, fontWeight: '600' },
+    categoryList: {
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      padding: 12,
+      gap: 10,
+      marginBottom: 12,
+    },
+    categoryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+    categoryName: { color: colors.textPrimary, fontSize: 13 },
+    categoryAmount: { color: colors.textPrimary, fontWeight: '600', fontSize: 13 },
+    sectionTitle: { color: colors.textPrimary, fontSize: 17, fontWeight: '700', marginBottom: 12 },
+    separator: { height: 12 },
+    empty: { alignItems: 'center', paddingVertical: 60, gap: 12 },
+    emptyIcon: { fontSize: 48 },
+    emptyText: { color: colors.textMuted, fontSize: 15 },
 
-  // IncomeCard
-  card: {},
-  cardRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  iconWrapper: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: '#0F172A',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cardIcon: { fontSize: 20 },
-  cardInfo: { flex: 1, gap: 2 },
-  cardSource: { color: '#F1F5F9', fontWeight: '600', fontSize: 14 },
-  cardDescription: { color: '#94A3B8', fontSize: 12 },
-  cardDate: { color: '#64748B', fontSize: 11 },
-  cardRight: { alignItems: 'flex-end', gap: 6 },
-  incomeAmount: { color: '#22C55E', fontWeight: '700', fontSize: 16 },
-  deleteBtn: { padding: 2 },
-});
+    // IncomeCard
+    card: {},
+    cardRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+    iconWrapper: {
+      width: 44,
+      height: 44,
+      borderRadius: 12,
+      backgroundColor: colors.background,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    cardIcon: { fontSize: 20 },
+    cardInfo: { flex: 1, gap: 2 },
+    cardSource: { color: colors.textPrimary, fontWeight: '600', fontSize: 14 },
+    cardDescription: { color: colors.textSecondary, fontSize: 12 },
+    cardDate: { color: colors.textMuted, fontSize: 11 },
+    cardRight: { alignItems: 'flex-end', gap: 6 },
+    incomeAmount: { color: colors.success, fontWeight: '700', fontSize: 16 },
+    deleteBtn: { padding: 2 },
+  });
+}

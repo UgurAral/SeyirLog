@@ -3,6 +3,8 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import { Input } from '@components/ui/Input';
 import { VEHICLE_BRANDS, VEHICLE_BRAND_NAMES } from '@/data/vehicleBrands';
+import { useTheme } from '@/theme/useTheme';
+import type { ColorTokens } from '@/theme/colors';
 
 interface BrandModelFieldsProps {
   brand: string;
@@ -33,6 +35,8 @@ export function BrandModelFields({
 }: BrandModelFieldsProps) {
   const [brandFocused, setBrandFocused] = useState(false);
   const [modelFocused, setModelFocused] = useState(false);
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
 
   useEffect(() => {
     onDropdownVisibleChange?.(brandFocused || modelFocused);
@@ -126,27 +130,29 @@ export function BrandModelFields({
   );
 }
 
-const styles = StyleSheet.create({
-  fieldWrap: { position: 'relative', zIndex: 10 },
-  dropdown: {
-    position: 'absolute',
-    top: '100%',
-    left: 0,
-    right: 0,
-    backgroundColor: '#1E293B',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#334155',
-    marginTop: 4,
-    maxHeight: DROPDOWN_MAX_HEIGHT,
-    zIndex: 20,
-    elevation: 8,
-  },
-  dropdownItem: {
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#334155',
-  },
-  dropdownItemText: { color: '#F1F5F9', fontSize: 14 },
-});
+function createStyles(colors: ColorTokens) {
+  return StyleSheet.create({
+    fieldWrap: { position: 'relative', zIndex: 10 },
+    dropdown: {
+      position: 'absolute',
+      top: '100%',
+      left: 0,
+      right: 0,
+      backgroundColor: colors.surface,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: colors.border,
+      marginTop: 4,
+      maxHeight: DROPDOWN_MAX_HEIGHT,
+      zIndex: 20,
+      elevation: 8,
+    },
+    dropdownItem: {
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    dropdownItemText: { color: colors.textPrimary, fontSize: 14 },
+  });
+}

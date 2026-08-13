@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -23,6 +23,10 @@ import { formatCurrency } from '@utils/formatters';
 import { useCurrencyStore, CURRENCY_SYMBOLS } from '@stores/currencyStore';
 import { AdBanner } from '@components/AdBanner';
 import { useExpenseCategoryOptions } from '@/i18n/options';
+import { getCurrentCoords, reverseGeocodeLabel } from '@utils/location';
+import { submitDemandSignal } from '@services/firestore';
+import { useTheme } from '@/theme/useTheme';
+import type { ColorTokens } from '@/theme/colors';
 import type { ExpenseCategory } from '@/types';
 
 type Tab = 'trip' | 'fuel' | 'expense' | 'income';
@@ -30,6 +34,8 @@ type Tab = 'trip' | 'fuel' | 'expense' | 'income';
 export default function QuickEntryModal() {
   const router = useRouter();
   const { t } = useTranslation();
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   const [activeTab, setActiveTab] = useState<Tab>('trip');
   const { activeVehicle } = useVehicles();
   const { activeTrip, addTrip, completeTrip } = useTripStore();
@@ -40,22 +46,39 @@ export default function QuickEntryModal() {
   const activeCurrency = useCurrencyStore((s) => s.currency);
 
   const TABS: { id: Tab; label: string; icon: string; color: string }[] = [
-    { id: 'trip', label: t('quickEntry.tabTrip'), icon: '🚖', color: '#22C55E' },
-    { id: 'fuel', label: t('quickEntry.tabFuel'), icon: '⛽', color: '#F59E0B' },
-    { id: 'expense', label: t('quickEntry.tabExpense'), icon: '💸', color: '#EF4444' },
-    { id: 'income', label: t('quickEntry.tabIncome'), icon: '💰', color: '#3B82F6' },
+    { id: 'trip', label: t('quickEntry.tabTrip'), icon: '🚖', color: colors.success },
+    { id: 'fuel', label: t('quickEntry.tabFuel'), icon: '⛽', color: colors.warning },
+    { id: 'expense', label: t('quickEntry.tabExpense'), icon: '💸', color: colors.danger },
+    { id: 'income', label: t('quickEntry.tabIncome'), icon: '💰', color: colors.accent },
   ];
 
   const vehicleId = activeVehicle?.id;
 
   // ── Sefer formu ──────────────────────────────────────────────────────────────
   const [tripForm, setTripForm] = useState({ origin: 'A', destination: 'B' });
-  const [endForm, setEndForm] = useState({ distanceKm: '', earnings: '' });
+  const [endForm, setEndForm] = useState({ distanceKm: '', earnings: '', durationMinutes: '' });
   const [tripSaving, setTripSaving] = useState(false);
+  const tripSavedRef = useRef(false);
+
+  // Ekran açılır açılmaz, arka planda "Nereden" alanını konumdan otomatik doldurmayı dene.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const coords = await getCurrentCoords();
+      if (!coords || cancelled) return;
+      const label = await reverseGeocodeLabel(coords.lat, coords.lng);
+      if (!label || cancelled || tripSavedRef.current) return;
+      setTripForm((f) => (f.origin === 'A' ? { ...f, origin: label } : f));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleStartTrip = useCallback(async () => {
     const origin = tripForm.origin.trim() || 'A';
     const destination = tripForm.destination.trim() || 'B';
+    tripSavedRef.current = true;
     setTripSaving(true);
     try {
       const now = Math.floor(Date.now() / 1000);
@@ -68,6 +91,12 @@ export default function QuickEntryModal() {
         createdAt: now,
         updatedAt: now,
       });
+      // "Sefer Başlat" anında GPS'i taze ölçüp anonim talep sinyali gönder — sefer
+      // oluşturmayı ve navigasyonu bloklamadan, tamamen arka planda.
+      (async () => {
+        const coords = await getCurrentCoords();
+        if (coords) submitDemandSignal(coords.lat, coords.lng, now);
+      })();
       setTripForm({ origin: 'A', destination: 'B' });
       Alert.alert(t('quickEntry.tripStartedTitle'), `${origin} → ${destination}`, [
         { text: t('common.ok'), onPress: () => router.back() },
@@ -81,21 +110,33 @@ export default function QuickEntryModal() {
 
   const handleEndTrip = useCallback(async () => {
     if (!activeTrip) return;
-    const distanceKm = parseFloat(endForm.distanceKm);
-    const earnings = parseFloat(endForm.earnings) || 0;
-    if (isNaN(distanceKm) || distanceKm <= 0) {
+    const earnings = parseFloat(endForm.earnings);
+    if (isNaN(earnings) || earnings < 0) {
+      Alert.alert(t('quickEntry.invalidEarningsTitle'), t('quickEntry.invalidEarningsBody'));
+      return;
+    }
+    const distanceKmNum = parseFloat(endForm.distanceKm);
+    if (endForm.distanceKm.trim() && (isNaN(distanceKmNum) || distanceKmNum < 0)) {
       Alert.alert(t('quickEntry.invalidDistanceTitle'), t('quickEntry.invalidDistanceBody'));
       return;
     }
+    const durationNum = parseFloat(endForm.durationMinutes);
+    if (endForm.durationMinutes.trim() && (isNaN(durationNum) || durationNum < 0)) {
+      Alert.alert(t('tripDetail.invalidDurationTitle'), t('tripDetail.invalidDurationBody'));
+      return;
+    }
+    const distanceKm = endForm.distanceKm.trim() ? distanceKmNum : null;
+    const durationOverride = endForm.durationMinutes.trim() ? durationNum : undefined;
     setTripSaving(true);
     try {
       const now = Math.floor(Date.now() / 1000);
-      await completeTrip(activeTrip.id, distanceKm, now, earnings);
-      setEndForm({ distanceKm: '', earnings: '' });
-      const perKm = distanceKm > 0 ? earnings / distanceKm : 0;
+      await completeTrip(activeTrip.id, distanceKm, now, earnings, durationOverride);
+      setEndForm({ distanceKm: '', earnings: '', durationMinutes: '' });
+      const perKm = distanceKm && distanceKm > 0 ? earnings / distanceKm : null;
       Alert.alert(
         t('quickEntry.tripCompletedTitle'),
-        `${distanceKm.toFixed(0)} km · ${formatCurrency(earnings, activeCurrency)}\n${t('quickEntry.perKmLabel')}: ${formatCurrency(perKm, activeCurrency)}/km`,
+        `${distanceKm != null ? `${distanceKm.toFixed(0)} km · ` : ''}${formatCurrency(earnings, activeCurrency)}` +
+          (perKm != null ? `\n${t('quickEntry.perKmLabel')}: ${formatCurrency(perKm, activeCurrency)}/km` : ''),
         [{ text: t('common.ok'), onPress: () => router.back() }],
       );
     } catch (e) {
@@ -224,7 +265,7 @@ export default function QuickEntryModal() {
         <View style={styles.header}>
           <Text style={styles.headerTitle}>{t('quickEntry.title')}</Text>
           <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
-            <Ionicons name="close-circle" size={28} color="#64748B" />
+            <Ionicons name="close-circle" size={28} color={colors.textMuted} />
           </TouchableOpacity>
         </View>
 
@@ -269,6 +310,13 @@ export default function QuickEntryModal() {
 
                   <Text style={styles.sectionLabel}>{t('quickEntry.endTripSection')}</Text>
                   <QInput
+                    label={t('quickEntry.earningsLabel')}
+                    placeholder="0.00"
+                    value={endForm.earnings}
+                    onChangeText={(v) => setEndForm((f) => ({ ...f, earnings: v }))}
+                    keyboardType="numeric"
+                  />
+                  <QInput
                     label={t('quickEntry.distanceLabel')}
                     placeholder={t('quickEntry.distancePlaceholder')}
                     value={endForm.distanceKm}
@@ -276,15 +324,15 @@ export default function QuickEntryModal() {
                     keyboardType="numeric"
                   />
                   <QInput
-                    label={t('quickEntry.earningsLabel')}
-                    placeholder="0.00"
-                    value={endForm.earnings}
-                    onChangeText={(v) => setEndForm((f) => ({ ...f, earnings: v }))}
+                    label={t('quickEntry.durationLabel')}
+                    placeholder={t('quickEntry.durationPlaceholder')}
+                    value={endForm.durationMinutes}
+                    onChangeText={(v) => setEndForm((f) => ({ ...f, durationMinutes: v }))}
                     keyboardType="numeric"
                   />
                   <SaveButton
                     label={t('quickEntry.endTripButton')}
-                    color="#22C55E"
+                    color={colors.success}
                     loading={tripSaving}
                     onPress={handleEndTrip}
                   />
@@ -295,7 +343,7 @@ export default function QuickEntryModal() {
                   <Text style={styles.sectionLabel}>{t('quickEntry.startTripSection')}</Text>
                   <SaveButton
                     label={t('quickEntry.startTripButton')}
-                    color="#22C55E"
+                    color={colors.success}
                     loading={tripSaving}
                     onPress={handleStartTrip}
                   />
@@ -360,7 +408,7 @@ export default function QuickEntryModal() {
               />
               <SaveButton
                 label={t('quickEntry.addFuelButton')}
-                color="#F59E0B"
+                color={colors.warning}
                 loading={fuelSaving}
                 onPress={handleAddFuel}
               />
@@ -410,7 +458,7 @@ export default function QuickEntryModal() {
               />
               <SaveButton
                 label={t('quickEntry.addExpenseButton')}
-                color="#EF4444"
+                color={colors.danger}
                 loading={expenseSaving}
                 onPress={handleAddExpense}
               />
@@ -442,7 +490,7 @@ export default function QuickEntryModal() {
               />
               <SaveButton
                 label={t('quickEntry.addIncomeButton')}
-                color="#3B82F6"
+                color={colors.accent}
                 loading={incomeSaving}
                 onPress={handleAddIncome}
               />
@@ -471,13 +519,15 @@ function QInput({
   keyboardType?: 'default' | 'numeric' | 'decimal-pad';
   autoCapitalize?: 'none' | 'sentences';
 }) {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   return (
     <View style={styles.inputGroup}>
       <Text style={styles.fieldLabel}>{label}</Text>
       <TextInput
         style={styles.input}
         placeholder={placeholder}
-        placeholderTextColor="#475569"
+        placeholderTextColor={colors.textMuted}
         value={value}
         onChangeText={onChangeText}
         keyboardType={keyboardType}
@@ -499,6 +549,8 @@ function SaveButton({
   onPress: () => void;
 }) {
   const { t } = useTranslation();
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   return (
     <TouchableOpacity
       style={[styles.saveBtn, { backgroundColor: color }, loading && { opacity: 0.6 }]}
@@ -513,130 +565,132 @@ function SaveButton({
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#0F172A' },
+function createStyles(colors: ColorTokens) {
+  return StyleSheet.create({
+    safe: { flex: 1, backgroundColor: colors.background },
 
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: '#1E293B',
-  },
-  headerTitle: { color: '#F1F5F9', fontSize: 18, fontWeight: '700' },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 20,
+      paddingVertical: 14,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.surface,
+    },
+    headerTitle: { color: colors.textPrimary, fontSize: 18, fontWeight: '700' },
 
-  tabBar: {
-    flexDirection: 'row',
-    backgroundColor: '#0F172A',
-    borderBottomWidth: 1,
-    borderBottomColor: '#1E293B',
-  },
-  tab: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 10,
-    gap: 2,
-    borderBottomWidth: 2.5,
-    borderBottomColor: 'transparent',
-  },
-  tabIcon: { fontSize: 18 },
-  tabLabel: { color: '#64748B', fontSize: 11, fontWeight: '600' },
+    tabBar: {
+      flexDirection: 'row',
+      backgroundColor: colors.background,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.surface,
+    },
+    tab: {
+      flex: 1,
+      alignItems: 'center',
+      paddingVertical: 10,
+      gap: 2,
+      borderBottomWidth: 2.5,
+      borderBottomColor: 'transparent',
+    },
+    tabIcon: { fontSize: 18 },
+    tabLabel: { color: colors.textMuted, fontSize: 11, fontWeight: '600' },
 
-  body: { flex: 1 },
-  bodyContent: { padding: 20, gap: 0 },
+    body: { flex: 1 },
+    bodyContent: { padding: 20, gap: 0 },
 
-  form: { gap: 12 },
+    form: { gap: 12 },
 
-  sectionLabel: {
-    color: '#94A3B8',
-    fontSize: 12,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    marginBottom: 4,
-  },
+    sectionLabel: {
+      color: colors.textSecondary,
+      fontSize: 12,
+      fontWeight: '600',
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+      marginBottom: 4,
+    },
 
-  activeTripBanner: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: '#22C55E15',
-    borderRadius: 12,
-    padding: 14,
-    gap: 10,
-    borderWidth: 1,
-    borderColor: '#22C55E30',
-    marginBottom: 8,
-  },
-  activeDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#22C55E',
-    marginTop: 4,
-  },
-  activeTripLabel: { color: '#22C55E', fontSize: 11, fontWeight: '600' },
-  activeTripRoute: { color: '#F1F5F9', fontSize: 15, fontWeight: '700', marginTop: 2 },
-  activeTripKm: { color: '#64748B', fontSize: 12, marginTop: 2 },
+    activeTripBanner: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      backgroundColor: colors.success + '15',
+      borderRadius: 12,
+      padding: 14,
+      gap: 10,
+      borderWidth: 1,
+      borderColor: colors.success + '30',
+      marginBottom: 8,
+    },
+    activeDot: {
+      width: 10,
+      height: 10,
+      borderRadius: 5,
+      backgroundColor: colors.success,
+      marginTop: 4,
+    },
+    activeTripLabel: { color: colors.success, fontSize: 11, fontWeight: '600' },
+    activeTripRoute: { color: colors.textPrimary, fontSize: 15, fontWeight: '700', marginTop: 2 },
+    activeTripKm: { color: colors.textMuted, fontSize: 12, marginTop: 2 },
 
-  inputGroup: { gap: 6 },
-  fieldLabel: { color: '#94A3B8', fontSize: 13, fontWeight: '500' },
-  input: {
-    backgroundColor: '#1E293B',
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    color: '#F1F5F9',
-    fontSize: 15,
-    borderWidth: 1,
-    borderColor: '#334155',
-  },
+    inputGroup: { gap: 6 },
+    fieldLabel: { color: colors.textSecondary, fontSize: 13, fontWeight: '500' },
+    input: {
+      backgroundColor: colors.surface,
+      borderRadius: 10,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      color: colors.textPrimary,
+      fontSize: 15,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
 
-  calcHint: {
-    color: '#22C55E',
-    fontSize: 13,
-    fontWeight: '600',
-    textAlign: 'right',
-    marginTop: -4,
-  },
-  calcBadge: {
-    backgroundColor: '#F59E0B20',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    alignSelf: 'flex-start',
-    borderWidth: 1,
-    borderColor: '#F59E0B40',
-  },
-  calcBadgeText: { color: '#F59E0B', fontWeight: '700', fontSize: 14 },
+    calcHint: {
+      color: colors.success,
+      fontSize: 13,
+      fontWeight: '600',
+      textAlign: 'right',
+      marginTop: -4,
+    },
+    calcBadge: {
+      backgroundColor: colors.warning + '20',
+      borderRadius: 8,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      alignSelf: 'flex-start',
+      borderWidth: 1,
+      borderColor: colors.warning + '40',
+    },
+    calcBadgeText: { color: colors.warning, fontWeight: '700', fontSize: 14 },
 
-  categoryGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 4,
-  },
-  categoryChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 8,
-    backgroundColor: '#1E293B',
-    borderWidth: 1,
-    borderColor: '#334155',
-  },
-  categoryChipActive: {
-    backgroundColor: '#EF444420',
-    borderColor: '#EF4444',
-  },
-  categoryChipText: { color: '#94A3B8', fontSize: 12, fontWeight: '500' },
-  categoryChipTextActive: { color: '#EF4444', fontWeight: '700' },
+    categoryGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
+      marginBottom: 4,
+    },
+    categoryChip: {
+      paddingHorizontal: 12,
+      paddingVertical: 7,
+      borderRadius: 8,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    categoryChipActive: {
+      backgroundColor: colors.danger + '20',
+      borderColor: colors.danger,
+    },
+    categoryChipText: { color: colors.textSecondary, fontSize: 12, fontWeight: '500' },
+    categoryChipTextActive: { color: colors.danger, fontWeight: '700' },
 
-  saveBtn: {
-    borderRadius: 12,
-    paddingVertical: 15,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  saveBtnText: { color: '#FFFFFF', fontWeight: '700', fontSize: 16 },
-});
+    saveBtn: {
+      borderRadius: 12,
+      paddingVertical: 15,
+      alignItems: 'center',
+      marginTop: 8,
+    },
+    saveBtnText: { color: colors.onAccent, fontWeight: '700', fontSize: 16 },
+  });
+}

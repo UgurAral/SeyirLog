@@ -13,7 +13,11 @@ import { initAuthListener, useAuthStore } from '@stores/authStore';
 import { useCurrencyStore } from '@stores/currencyStore';
 import { useDayTrackingStore } from '@stores/dayTrackingStore';
 import { useOnboardingStore } from '@stores/onboardingStore';
+import { useThemeStore } from '@stores/themeStore';
 import { startRealtimeSync, stopRealtimeSync } from '@services/realtime';
+import { requestLocationPermissionOnce } from '@utils/location';
+import { initAds } from '@utils/ads';
+import { useTheme } from '@/theme/useTheme';
 import { initI18n } from '@/i18n';
 
 export default function RootLayout() {
@@ -24,10 +28,17 @@ export default function RootLayout() {
   const { initCurrency, initialized: currencyReady } = useCurrencyStore();
   const { initDayTracking } = useDayTrackingStore();
   const { seen: onboardingSeen, initialized: onboardingReady, initOnboarding } = useOnboardingStore();
+  const { initialized: themeReady, initTheme } = useThemeStore();
+  const { colors, isDark } = useTheme();
   const { t } = useTranslation();
 
   useEffect(() => {
     initI18n().then(() => setI18nReady(true));
+  }, []);
+
+  useEffect(() => {
+    initTheme();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -46,12 +57,16 @@ export default function RootLayout() {
   }, []);
 
   useEffect(() => {
+    initAds();
+  }, []);
+
+  useEffect(() => {
     const unsub = initAuthListener();
     return unsub;
   }, []);
 
   useEffect(() => {
-    if (!initialized || !success || !onboardingReady) return;
+    if (!initialized || !success || !onboardingReady || !themeReady) return;
     if (!user) {
       stopRealtimeSync();
       router.replace('/auth');
@@ -63,22 +78,28 @@ export default function RootLayout() {
       router.replace('/onboarding');
     } else {
       startRealtimeSync();
+      requestLocationPermissionOnce({
+        title: t('locationPermission.title'),
+        message: t('locationPermission.message'),
+        allow: t('locationPermission.allow'),
+        later: t('locationPermission.later'),
+      });
     }
-  }, [user, initialized, success, onboardingReady, onboardingSeen]);
+  }, [user, initialized, success, onboardingReady, onboardingSeen, themeReady, t]);
 
   if (error) {
     return (
-      <View style={styles.center}>
-        <Text style={styles.errorText}>DB Hatası: {error.message}</Text>
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <Text style={[styles.errorText, { color: colors.danger }]}>DB Hatası: {error.message}</Text>
       </View>
     );
   }
 
-  if (!success || !i18nReady || !currencyReady || !onboardingReady) {
+  if (!success || !i18nReady || !currencyReady || !onboardingReady || !themeReady) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator color="#3B82F6" size="large" />
-        <Text style={styles.loadingText}>{i18nReady ? t('common.loading') : ''}</Text>
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <ActivityIndicator color={colors.accent} size="large" />
+        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>{i18nReady ? t('common.loading') : ''}</Text>
       </View>
     );
   }
@@ -86,17 +107,17 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
     <SafeAreaProvider>
-      <View style={styles.root}>
-        <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
+      <View style={[styles.root, { backgroundColor: colors.background }]}>
+        <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.background} />
         <Stack
           screenOptions={{
-            headerStyle: { backgroundColor: '#1a1a2e' },
-            headerTintColor: '#F1F5F9',
+            headerStyle: { backgroundColor: colors.surface },
+            headerTintColor: colors.textPrimary,
             headerTitleStyle: { fontWeight: '700' },
-            contentStyle: { backgroundColor: '#0F172A' },
+            contentStyle: { backgroundColor: colors.background },
           }}
         >
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="(tabs)" options={{ headerShown: false, title: t('tabs.home') }} />
           <Stack.Screen
             name="trip/new"
             options={{ title: t('tripNew.pageTitle'), presentation: 'modal' }}
@@ -131,7 +152,7 @@ export default function RootLayout() {
           />
           <Stack.Screen
             name="day-summary"
-            options={{ presentation: 'modal', headerShown: false }}
+            options={{ title: t('daySummary.pageTitle'), presentation: 'modal', headerShown: false }}
           />
           <Stack.Screen
             name="onboarding"
@@ -157,14 +178,13 @@ export default function RootLayout() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#0F172A' },
+  root: { flex: 1 },
   center: {
     flex: 1,
-    backgroundColor: '#0F172A',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 12,
   },
-  errorText: { color: '#EF4444', fontSize: 14 },
-  loadingText: { color: '#94A3B8', fontSize: 14 },
+  errorText: { fontSize: 14 },
+  loadingText: { fontSize: 14 },
 });

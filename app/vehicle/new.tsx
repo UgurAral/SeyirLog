@@ -19,6 +19,8 @@ import { useVehicleStore } from '@stores/vehicleStore';
 import type { NewVehicle, VehicleType, FuelType } from '@/types';
 import { useVehicleTypeOptions, useFuelTypeOptions } from '@/i18n/options';
 import { AdBanner } from '@components/AdBanner';
+import { useTheme } from '@/theme/useTheme';
+import type { ColorTokens } from '@/theme/colors';
 
 const DEFAULT_FORM: Omit<NewVehicle, 'createdAt' | 'updatedAt'> = {
   brand: '',
@@ -33,6 +35,8 @@ const DEFAULT_FORM: Omit<NewVehicle, 'createdAt' | 'updatedAt'> = {
 export default function NewVehicleScreen() {
   const router = useRouter();
   const { t } = useTranslation();
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   const { addVehicle } = useVehicleStore();
   const vehicleTypeOptions = useVehicleTypeOptions();
   const fuelTypeOptions = useFuelTypeOptions();
@@ -175,13 +179,15 @@ export default function NewVehicleScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#0F172A' },
-  content: { padding: 16, gap: 16, paddingBottom: 40 },
-  card: { gap: 12 },
-  cardRaised: { zIndex: 50, elevation: 50 },
-  sectionTitle: { color: '#F1F5F9', fontSize: 15, fontWeight: '700' },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  actions: { flexDirection: 'row', gap: 12 },
-  actionBtn: { flex: 1 },
-});
+function createStyles(colors: ColorTokens) {
+  return StyleSheet.create({
+    safe: { flex: 1, backgroundColor: colors.background },
+    content: { padding: 16, gap: 16, paddingBottom: 40 },
+    card: { gap: 12 },
+    cardRaised: { zIndex: 50, elevation: 50 },
+    sectionTitle: { color: colors.textPrimary, fontSize: 15, fontWeight: '700' },
+    chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+    actions: { flexDirection: 'row', gap: 12 },
+    actionBtn: { flex: 1 },
+  });
+}

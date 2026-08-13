@@ -4,8 +4,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Modal,
-  Pressable,
   FlatList,
   type TextStyle,
   type StyleProp,
@@ -14,6 +12,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { formatCurrency } from '@utils/formatters';
 import { SUPPORTED_CURRENCIES, type SupportedCurrency } from '@stores/currencyStore';
+import { BottomSheet, BottomSheetDivider } from './BottomSheet';
+import { useTheme } from '@/theme/useTheme';
+import type { ColorTokens } from '@/theme/colors';
 
 interface CurrencyBreakdownValueProps {
   /** Para birimi koduna göre toplamlar, örn. { TRY: 100, USD: 20 } */
@@ -44,6 +45,8 @@ export function CurrencyBreakdownValue({
   const { t } = useTranslation();
   const [selected, setSelected] = useState<SupportedCurrency>(activeCurrency);
   const [visible, setVisible] = useState(false);
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
 
   useEffect(() => {
     setSelected(activeCurrency);
@@ -68,76 +71,52 @@ export function CurrencyBreakdownValue({
           {formatCurrency(amount, selected)}
         </Text>
         {hasOtherCurrencies && (
-          <Ionicons name="chevron-down" size={11} color="#64748B" style={styles.chevron} />
+          <Ionicons name="chevron-down" size={11} color={colors.textMuted} style={styles.chevron} />
         )}
       </TouchableOpacity>
 
-      <Modal visible={visible} transparent animationType="fade" onRequestClose={() => setVisible(false)}>
-        <Pressable style={styles.overlay} onPress={() => setVisible(false)}>
-          <View style={styles.sheet}>
-            <Text style={styles.sheetTitle}>{t('currency.otherCurrencies')}</Text>
-            <FlatList
-              data={SUPPORTED_CURRENCIES}
-              keyExtractor={(item) => item}
-              ItemSeparatorComponent={() => <View style={styles.divider} />}
-              renderItem={({ item }) => {
-                const isSelected = selected === item;
-                return (
-                  <TouchableOpacity
-                    style={styles.optionRow}
-                    onPress={() => {
-                      setSelected(item);
-                      setVisible(false);
-                    }}
-                    activeOpacity={0.75}
-                  >
-                    <Text style={[styles.optionCode, isSelected && styles.optionActive]}>{item}</Text>
-                    <Text style={[styles.optionValue, isSelected && styles.optionActive]}>
-                      {formatCurrency(amounts[item] ?? 0, item)}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              }}
-            />
-          </View>
-        </Pressable>
-      </Modal>
+      <BottomSheet visible={visible} onClose={() => setVisible(false)} title={t('currency.otherCurrencies')}>
+        <FlatList
+          data={SUPPORTED_CURRENCIES}
+          keyExtractor={(item) => item}
+          ItemSeparatorComponent={BottomSheetDivider}
+          renderItem={({ item }) => {
+            const isSelected = selected === item;
+            return (
+              <TouchableOpacity
+                style={styles.optionRow}
+                onPress={() => {
+                  setSelected(item);
+                  setVisible(false);
+                }}
+                activeOpacity={0.75}
+              >
+                <Text style={[styles.optionCode, isSelected && styles.optionActive]}>{item}</Text>
+                <Text style={[styles.optionValue, isSelected && styles.optionActive]}>
+                  {formatCurrency(amounts[item] ?? 0, item)}
+                </Text>
+              </TouchableOpacity>
+            );
+          }}
+        />
+      </BottomSheet>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', gap: 3 },
-  chevron: { marginTop: 1 },
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    justifyContent: 'flex-end',
-  },
-  sheet: {
-    backgroundColor: '#1E293B',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 16,
-    paddingBottom: 32,
-    gap: 12,
-  },
-  sheetTitle: {
-    color: '#F1F5F9',
-    fontSize: 16,
-    fontWeight: '700',
-    textAlign: 'center',
-    marginBottom: 4,
-  },
-  divider: { height: 1, backgroundColor: '#334155' },
-  optionRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 4,
-  },
-  optionCode: { color: '#94A3B8', fontSize: 14, fontWeight: '700' },
-  optionValue: { color: '#CBD5E1', fontSize: 15, fontWeight: '600' },
-  optionActive: { color: '#3B82F6' },
-});
+function createStyles(colors: ColorTokens) {
+  return StyleSheet.create({
+    row: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+    chevron: { marginTop: 1 },
+    optionRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: 14,
+      paddingHorizontal: 4,
+    },
+    optionCode: { color: colors.textSecondary, fontSize: 14, fontWeight: '700' },
+    optionValue: { color: colors.textPrimary, fontSize: 15, fontWeight: '600' },
+    optionActive: { color: colors.accent },
+  });
+}

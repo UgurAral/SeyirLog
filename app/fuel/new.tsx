@@ -20,10 +20,14 @@ import { useCurrencyStore, CURRENCY_SYMBOLS } from '@stores/currencyStore';
 import type { NewFuelEntry } from '@/types';
 import { formatCurrency } from '@utils/formatters';
 import { AdBanner } from '@components/AdBanner';
+import { useTheme } from '@/theme/useTheme';
+import type { ColorTokens } from '@/theme/colors';
 
 export default function NewFuelScreen() {
   const router = useRouter();
   const { t } = useTranslation();
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   const { addFuelEntry } = useFuelStore();
   const { activeVehicle } = useVehicleStore();
   const activeCurrency = useCurrencyStore((s) => s.currency);
@@ -171,22 +175,24 @@ export default function NewFuelScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#0F172A' },
-  content: { padding: 16, gap: 16, paddingBottom: 40 },
-  card: { gap: 12 },
-  sectionTitle: { color: '#F1F5F9', fontSize: 15, fontWeight: '700' },
-  sectionDesc: { color: '#64748B', fontSize: 12, marginTop: -6 },
-  totalRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#0F172A',
-    borderRadius: 10,
-    padding: 12,
-  },
-  totalLabel: { color: '#94A3B8', fontSize: 14 },
-  totalValue: { color: '#EF4444', fontWeight: '700', fontSize: 18 },
-  actions: { flexDirection: 'row', gap: 12 },
-  actionBtn: { flex: 1 },
-});
+function createStyles(colors: ColorTokens) {
+  return StyleSheet.create({
+    safe: { flex: 1, backgroundColor: colors.background },
+    content: { padding: 16, gap: 16, paddingBottom: 40 },
+    card: { gap: 12 },
+    sectionTitle: { color: colors.textPrimary, fontSize: 15, fontWeight: '700' },
+    sectionDesc: { color: colors.textMuted, fontSize: 12, marginTop: -6 },
+    totalRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      backgroundColor: colors.background,
+      borderRadius: 10,
+      padding: 12,
+    },
+    totalLabel: { color: colors.textSecondary, fontSize: 14 },
+    totalValue: { color: colors.danger, fontWeight: '700', fontSize: 18 },
+    actions: { flexDirection: 'row', gap: 12 },
+    actionBtn: { flex: 1 },
+  });
+}

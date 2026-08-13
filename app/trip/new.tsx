@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ScrollView,
   View,
@@ -17,11 +17,17 @@ import { Button } from '@components/ui/Button';
 import { useTripStore } from '@stores/tripStore';
 import { useVehicleStore } from '@stores/vehicleStore';
 import { AdBanner } from '@components/AdBanner';
+import { getCurrentCoords, reverseGeocodeLabel } from '@utils/location';
+import { submitDemandSignal } from '@services/firestore';
+import { useTheme } from '@/theme/useTheme';
+import type { ColorTokens } from '@/theme/colors';
 import type { NewTrip } from '@/types';
 
 export default function NewTripScreen() {
   const router = useRouter();
   const { t } = useTranslation();
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   const { addTrip } = useTripStore();
   const { activeVehicle } = useVehicleStore();
 
@@ -31,8 +37,25 @@ export default function NewTripScreen() {
     notes: '',
   });
   const [saving, setSaving] = useState(false);
+  const savedRef = useRef(false);
+
+  // Ekran açılır açılmaz, arka planda "Nereden" alanını konumdan otomatik doldurmayı dene.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const coords = await getCurrentCoords();
+      if (!coords || cancelled) return;
+      const label = await reverseGeocodeLabel(coords.lat, coords.lng);
+      if (!label || cancelled || savedRef.current) return;
+      setForm((f) => (f.origin === 'A' ? { ...f, origin: label } : f));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleSave = async () => {
+    savedRef.current = true;
     setSaving(true);
     try {
       const now = Math.floor(Date.now() / 1000);
@@ -47,6 +70,12 @@ export default function NewTripScreen() {
         updatedAt: now,
       };
       await addTrip(newTrip);
+      // "Sefer Başlat" anında GPS'i taze ölçüp anonim talep sinyali gönder — sefer
+      // oluşturmayı ve navigasyonu bloklamadan, tamamen arka planda.
+      (async () => {
+        const coords = await getCurrentCoords();
+        if (coords) submitDemandSignal(coords.lat, coords.lng, now);
+      })();
       router.back();
     } catch (e) {
       Alert.alert(t('common.error'), String(e));
@@ -116,11 +145,13 @@ export default function NewTripScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#0F172A' },
-  content: { padding: 16, gap: 16, paddingBottom: 40 },
-  card: { gap: 12 },
-  sectionTitle: { color: '#F1F5F9', fontSize: 15, fontWeight: '700' },
-  actions: { flexDirection: 'row', gap: 12 },
-  actionBtn: { flex: 1 },
-});
+function createStyles(colors: ColorTokens) {
+  return StyleSheet.create({
+    safe: { flex: 1, backgroundColor: colors.background },
+    content: { padding: 16, gap: 16, paddingBottom: 40 },
+    card: { gap: 12 },
+    sectionTitle: { color: colors.textPrimary, fontSize: 15, fontWeight: '700' },
+    actions: { flexDirection: 'row', gap: 12 },
+    actionBtn: { flex: 1 },
+  });
+}

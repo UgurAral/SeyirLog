@@ -18,11 +18,17 @@ import { useCurrencyStore } from '@stores/currencyStore';
 import { formatKm } from '@utils/formatters';
 import { CurrencyBreakdownValue } from '@components/ui/CurrencyBreakdownValue';
 import { AdBanner } from '@components/AdBanner';
+import { useTabTitle } from '@hooks/useTabTitle';
+import { useTheme } from '@/theme/useTheme';
+import type { ColorTokens } from '@/theme/colors';
 import type { Trip } from '@/types';
 
 export default function TripsScreen() {
   const router = useRouter();
   const { t } = useTranslation();
+  useTabTitle(t('tabs.trips'));
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   const [period, setPeriod] = useState<Period>('all');
   const { activeVehicle } = useVehicles();
   const activeCurrency = useCurrencyStore((s) => s.currency);
@@ -56,7 +62,7 @@ export default function TripsScreen() {
                 style={styles.addBtn}
                 onPress={() => router.push('/trip/new')}
               >
-                <Ionicons name="add" size={22} color="#FFFFFF" />
+                <Ionicons name="add" size={22} color={colors.onAccent} />
               </TouchableOpacity>
             </View>
 
@@ -74,13 +80,13 @@ export default function TripsScreen() {
                     <CurrencyBreakdownValue
                       amounts={periodEarningsByCurrency}
                       activeCurrency={activeCurrency}
-                      color="#22C55E"
+                      color={colors.success}
                       textStyle={styles.summaryValue}
                     />
                   }
                 />
                 <View style={styles.summaryDivider} />
-                <SummaryItem label={t('trips.summaryDistance')} value={formatKm(periodKm)} color="#F59E0B" />
+                <SummaryItem label={t('trips.summaryDistance')} value={formatKm(periodKm)} color={colors.warning} />
               </View>
             )}
           </View>
@@ -104,17 +110,19 @@ export default function TripsScreen() {
 function SummaryItem({
   label,
   value,
-  color = '#F1F5F9',
+  color,
 }: {
   label: string;
   value: React.ReactNode;
   color?: string;
 }) {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   return (
     <View style={styles.summaryItem}>
       <Text style={styles.summaryLabel}>{label}</Text>
       {typeof value === 'string' ? (
-        <Text style={[styles.summaryValue, { color }]}>{value}</Text>
+        <Text style={[styles.summaryValue, { color: color ?? colors.textPrimary }]}>{value}</Text>
       ) : (
         value
       )}
@@ -122,40 +130,42 @@ function SummaryItem({
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#0F172A' },
-  list: { padding: 16, paddingBottom: 90 },
-  bottomBannerWrap: { position: 'absolute', bottom: 0, left: 0, right: 0 },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  title: { color: '#F1F5F9', fontSize: 26, fontWeight: '800' },
-  addBtn: {
-    backgroundColor: '#3B82F6',
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  summaryBar: {
-    flexDirection: 'row',
-    backgroundColor: '#1E293B',
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 16,
-    alignItems: 'center',
-    justifyContent: 'space-around',
-  },
-  summaryItem: { alignItems: 'center', gap: 4, flex: 1 },
-  summaryLabel: { color: '#64748B', fontSize: 11, fontWeight: '500' },
-  summaryValue: { fontSize: 14, fontWeight: '700' },
-  summaryDivider: { width: 1, height: 32, backgroundColor: '#334155' },
-  separator: { height: 12 },
-  empty: { alignItems: 'center', paddingVertical: 60, gap: 12 },
-  emptyIcon: { fontSize: 48 },
-  emptyText: { color: '#64748B', fontSize: 15 },
-});
+function createStyles(colors: ColorTokens) {
+  return StyleSheet.create({
+    safe: { flex: 1, backgroundColor: colors.background },
+    list: { padding: 16, paddingBottom: 90 },
+    bottomBannerWrap: { position: 'absolute', bottom: 0, left: 0, right: 0 },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 16,
+    },
+    title: { color: colors.textPrimary, fontSize: 26, fontWeight: '800' },
+    addBtn: {
+      backgroundColor: colors.accent,
+      width: 40,
+      height: 40,
+      borderRadius: 12,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    summaryBar: {
+      flexDirection: 'row',
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      padding: 14,
+      marginBottom: 16,
+      alignItems: 'center',
+      justifyContent: 'space-around',
+    },
+    summaryItem: { alignItems: 'center', gap: 4, flex: 1 },
+    summaryLabel: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
+    summaryValue: { fontSize: 14, fontWeight: '700' },
+    summaryDivider: { width: 1, height: 32, backgroundColor: colors.border },
+    separator: { height: 12 },
+    empty: { alignItems: 'center', paddingVertical: 60, gap: 12 },
+    emptyIcon: { fontSize: 48 },
+    emptyText: { color: colors.textMuted, fontSize: 15 },
+  });
+}

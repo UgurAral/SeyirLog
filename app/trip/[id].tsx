@@ -16,15 +16,19 @@ import { Button } from '@components/ui/Button';
 import { Input } from '@components/ui/Input';
 import { useTripStore } from '@stores/tripStore';
 import { useCurrencyStore, CURRENCY_SYMBOLS } from '@stores/currencyStore';
-import { formatCurrency, formatKm, formatDateTime } from '@utils/formatters';
-import { calculateTripDuration } from '@utils/calculations';
+import { formatCurrency, formatKm, formatDateTime, formatDuration } from '@utils/formatters';
+import { resolveTripDurationMinutes } from '@utils/calculations';
 import { AdBanner } from '@components/AdBanner';
+import { useTheme } from '@/theme/useTheme';
+import type { ColorTokens } from '@/theme/colors';
 
 export default function TripDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { t, i18n } = useTranslation();
-  const { trips, completeTrip, cancelTrip, deleteTrip } = useTripStore();
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
+  const { trips, completeTrip, updateTrip, cancelTrip, deleteTrip } = useTripStore();
   const activeCurrency = useCurrencyStore((s) => s.currency);
 
   const tripId = parseInt(id, 10);
@@ -35,7 +39,12 @@ export default function TripDetailScreen() {
 
   const [distanceKm, setDistanceKm] = useState('');
   const [earnings, setEarnings] = useState('');
+  const [durationMinutesInput, setDurationMinutesInput] = useState('');
   const [completing, setCompleting] = useState(false);
+
+  const [editing, setEditing] = useState(false);
+  const [editForm, setEditForm] = useState({ origin: '', destination: '', distanceKm: '', earnings: '', durationMinutes: '' });
+  const [savingEdit, setSavingEdit] = useState(false);
 
   if (!trip) {
     return (
@@ -49,35 +58,86 @@ export default function TripDetailScreen() {
   }
 
   const isActive = trip.status === 'active';
-  const duration =
-    trip.startTime && trip.endTime
-      ? calculateTripDuration(trip.startTime, trip.endTime, i18n.language)
-      : null;
+  const durationMinutes = resolveTripDurationMinutes(trip);
 
   const handleComplete = async () => {
-    const distanceNum = parseFloat(distanceKm);
     const earningsNum = parseFloat(earnings);
-    if (isNaN(distanceNum) || distanceNum <= 0) {
-      Alert.alert(t('tripDetail.invalidDistanceTitle'), t('tripDetail.invalidDistanceBody'));
-      return;
-    }
     if (isNaN(earningsNum) || earningsNum < 0) {
       Alert.alert(t('tripDetail.invalidEarningsTitle'), t('tripDetail.invalidEarningsBody'));
       return;
     }
+    const distanceNum = parseFloat(distanceKm);
+    if (distanceKm.trim() && (isNaN(distanceNum) || distanceNum < 0)) {
+      Alert.alert(t('tripDetail.invalidDistanceTitle'), t('tripDetail.invalidDistanceBody'));
+      return;
+    }
+    const durationNum = parseFloat(durationMinutesInput);
+    if (durationMinutesInput.trim() && (isNaN(durationNum) || durationNum < 0)) {
+      Alert.alert(t('tripDetail.invalidDurationTitle'), t('tripDetail.invalidDurationBody'));
+      return;
+    }
+    const distanceValue = distanceKm.trim() ? distanceNum : null;
+    const durationOverride = durationMinutesInput.trim() ? durationNum : undefined;
     setCompleting(true);
     try {
       const now = Math.floor(Date.now() / 1000);
-      await completeTrip(tripId, distanceNum, now, earningsNum);
-      const perKm = distanceNum > 0 ? earningsNum / distanceNum : 0;
+      await completeTrip(tripId, distanceValue, now, earningsNum, durationOverride);
+      const perKm = distanceValue && distanceValue > 0 ? earningsNum / distanceValue : null;
       Alert.alert(
         t('tripDetail.completedTitle'),
-        `${t('tripDetail.completedBody')}\n${t('tripDetail.perKmLabel')}: ${formatCurrency(perKm, activeCurrency)}/km`,
+        perKm != null
+          ? `${t('tripDetail.completedBody')}\n${t('tripDetail.perKmLabel')}: ${formatCurrency(perKm, activeCurrency)}/km`
+          : t('tripDetail.completedBody'),
       );
     } catch (e) {
       Alert.alert(t('common.error'), String(e));
     } finally {
       setCompleting(false);
+    }
+  };
+
+  const handleStartEdit = () => {
+    if (!trip) return;
+    setEditForm({
+      origin: trip.origin,
+      destination: trip.destination,
+      distanceKm: trip.distanceKm != null ? String(trip.distanceKm) : '',
+      earnings: trip.earnings != null ? String(trip.earnings) : '',
+      durationMinutes: durationMinutes != null ? String(durationMinutes) : '',
+    });
+    setEditing(true);
+  };
+
+  const handleSaveEdit = async () => {
+    const earningsNum = parseFloat(editForm.earnings);
+    if (isNaN(earningsNum) || earningsNum < 0) {
+      Alert.alert(t('tripDetail.invalidEarningsTitle'), t('tripDetail.invalidEarningsBody'));
+      return;
+    }
+    const distanceNum = parseFloat(editForm.distanceKm);
+    if (editForm.distanceKm.trim() && (isNaN(distanceNum) || distanceNum < 0)) {
+      Alert.alert(t('tripDetail.invalidDistanceTitle'), t('tripDetail.invalidDistanceBody'));
+      return;
+    }
+    const durationNum = parseFloat(editForm.durationMinutes);
+    if (editForm.durationMinutes.trim() && (isNaN(durationNum) || durationNum < 0)) {
+      Alert.alert(t('tripDetail.invalidDurationTitle'), t('tripDetail.invalidDurationBody'));
+      return;
+    }
+    setSavingEdit(true);
+    try {
+      await updateTrip(tripId, {
+        origin: editForm.origin.trim() || 'A',
+        destination: editForm.destination.trim() || 'B',
+        distanceKm: editForm.distanceKm.trim() ? distanceNum : null,
+        earnings: earningsNum,
+        durationMinutes: editForm.durationMinutes.trim() ? durationNum : null,
+      });
+      setEditing(false);
+    } catch (e) {
+      Alert.alert(t('common.error'), String(e));
+    } finally {
+      setSavingEdit(false);
     }
   };
 
@@ -131,17 +191,34 @@ export default function TripDetailScreen() {
         {/* Route */}
         <Card style={styles.card}>
           <Text style={styles.sectionTitle}>{t('tripDetail.route')}</Text>
-          <View style={styles.routeRow}>
-            <View style={styles.routePoint}>
-              <Text style={styles.routeLabel}>{t('tripDetail.departure')}</Text>
-              <Text style={styles.routeValue}>{trip.origin}</Text>
+          {editing ? (
+            <>
+              <Input
+                label={t('tripDetail.departure')}
+                value={editForm.origin}
+                onChangeText={(v) => setEditForm((f) => ({ ...f, origin: v }))}
+                autoCapitalize="sentences"
+              />
+              <Input
+                label={t('tripDetail.arrival')}
+                value={editForm.destination}
+                onChangeText={(v) => setEditForm((f) => ({ ...f, destination: v }))}
+                autoCapitalize="sentences"
+              />
+            </>
+          ) : (
+            <View style={styles.routeRow}>
+              <View style={styles.routePoint}>
+                <Text style={styles.routeLabel}>{t('tripDetail.departure')}</Text>
+                <Text style={styles.routeValue}>{trip.origin}</Text>
+              </View>
+              <Text style={styles.arrow}>→</Text>
+              <View style={styles.routePoint}>
+                <Text style={styles.routeLabel}>{t('tripDetail.arrival')}</Text>
+                <Text style={styles.routeValue}>{trip.destination}</Text>
+              </View>
             </View>
-            <Text style={styles.arrow}>→</Text>
-            <View style={styles.routePoint}>
-              <Text style={styles.routeLabel}>{t('tripDetail.arrival')}</Text>
-              <Text style={styles.routeValue}>{trip.destination}</Text>
-            </View>
-          </View>
+          )}
         </Card>
 
         {/* Details */}
@@ -160,14 +237,14 @@ export default function TripDetailScreen() {
           {trip.distanceKm != null && (
             <DetailRow label={t('tripDetail.distance')} value={formatKm(trip.distanceKm)} />
           )}
-          {duration ? (
-            <DetailRow label={t('tripDetail.duration')} value={duration.display} />
+          {durationMinutes != null ? (
+            <DetailRow label={t('tripDetail.duration')} value={formatDuration(durationMinutes, i18n.language)} />
           ) : null}
           {trip.earnings != null && (
             <DetailRow
               label={t('tripDetail.earnings')}
               value={formatCurrency(trip.earnings, trip.currency)}
-              valueColor="#22C55E"
+              valueColor={colors.success}
             />
           )}
           {trip.notes ? (
@@ -180,6 +257,14 @@ export default function TripDetailScreen() {
           <Card style={styles.card}>
             <Text style={styles.sectionTitle}>{t('tripDetail.completeSection')}</Text>
             <Input
+              label={t('tripDetail.earningsLabel')}
+              placeholder={t('tripDetail.earningsPlaceholder')}
+              value={earnings}
+              onChangeText={setEarnings}
+              keyboardType="numeric"
+              suffix={CURRENCY_SYMBOLS[activeCurrency]}
+            />
+            <Input
               label={t('tripDetail.distanceLabel')}
               placeholder={t('tripDetail.distancePlaceholder')}
               value={distanceKm}
@@ -188,12 +273,12 @@ export default function TripDetailScreen() {
               suffix="km"
             />
             <Input
-              label={t('tripDetail.earningsLabel')}
-              placeholder={t('tripDetail.earningsPlaceholder')}
-              value={earnings}
-              onChangeText={setEarnings}
+              label={t('tripDetail.durationLabel')}
+              placeholder={t('tripDetail.durationPlaceholder')}
+              value={durationMinutesInput}
+              onChangeText={setDurationMinutesInput}
               keyboardType="numeric"
-              suffix={CURRENCY_SYMBOLS[activeCurrency]}
+              suffix="dk"
             />
             <Button
               label={t('tripDetail.completeButton')}
@@ -208,13 +293,67 @@ export default function TripDetailScreen() {
           </Card>
         ) : null}
 
-        {/* Delete */}
-        {!isActive ? (
-          <Button
-            label={t('tripDetail.deleteButton')}
-            onPress={handleDelete}
-            variant="danger"
-          />
+        {/* Edit Form (biten/iptal edilen seferler) */}
+        {!isActive && editing ? (
+          <Card style={styles.card}>
+            <Text style={styles.sectionTitle}>{t('tripDetail.editSection')}</Text>
+            <Input
+              label={t('tripDetail.earningsLabel')}
+              placeholder={t('tripDetail.earningsPlaceholder')}
+              value={editForm.earnings}
+              onChangeText={(v) => setEditForm((f) => ({ ...f, earnings: v }))}
+              keyboardType="numeric"
+              suffix={CURRENCY_SYMBOLS[activeCurrency]}
+            />
+            <Input
+              label={t('tripDetail.distanceLabel')}
+              placeholder={t('tripDetail.distancePlaceholder')}
+              value={editForm.distanceKm}
+              onChangeText={(v) => setEditForm((f) => ({ ...f, distanceKm: v }))}
+              keyboardType="numeric"
+              suffix="km"
+            />
+            <Input
+              label={t('tripDetail.durationLabel')}
+              placeholder={t('tripDetail.durationPlaceholder')}
+              value={editForm.durationMinutes}
+              onChangeText={(v) => setEditForm((f) => ({ ...f, durationMinutes: v }))}
+              keyboardType="numeric"
+              suffix="dk"
+            />
+            <View style={styles.editActions}>
+              <Button
+                label={t('common.cancel')}
+                onPress={() => setEditing(false)}
+                variant="ghost"
+                style={styles.actionBtn}
+              />
+              <Button
+                label={t('common.save')}
+                onPress={handleSaveEdit}
+                loading={savingEdit}
+                style={styles.actionBtn}
+              />
+            </View>
+          </Card>
+        ) : null}
+
+        {/* Edit / Delete (biten/iptal edilen seferler) */}
+        {!isActive && !editing ? (
+          <View style={styles.editActions}>
+            <Button
+              label={t('common.edit')}
+              onPress={handleStartEdit}
+              variant="ghost"
+              style={styles.actionBtn}
+            />
+            <Button
+              label={t('tripDetail.deleteButton')}
+              onPress={handleDelete}
+              variant="danger"
+              style={styles.actionBtn}
+            />
+          </View>
         ) : null}
       </ScrollView>
       </KeyboardAvoidingView>
@@ -225,44 +364,50 @@ export default function TripDetailScreen() {
 function DetailRow({
   label,
   value,
-  valueColor = '#F1F5F9',
+  valueColor,
 }: {
   label: string;
   value: string;
   valueColor?: string;
 }) {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   return (
     <View style={styles.detailRow}>
       <Text style={styles.detailLabel}>{label}</Text>
-      <Text style={[styles.detailValue, { color: valueColor }]}>{value}</Text>
+      <Text style={[styles.detailValue, { color: valueColor ?? colors.textPrimary }]}>{value}</Text>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#0F172A' },
-  content: { padding: 16, gap: 16, paddingBottom: 40 },
-  card: { gap: 12 },
-  sectionTitle: { color: '#F1F5F9', fontSize: 15, fontWeight: '700' },
-  routeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  routePoint: { flex: 1, gap: 4 },
-  routeLabel: { color: '#64748B', fontSize: 12 },
-  routeValue: { color: '#F1F5F9', fontWeight: '600', fontSize: 15 },
-  arrow: { color: '#3B82F6', fontSize: 20, fontWeight: '700' },
-  detailRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 6,
-    borderBottomWidth: 1,
-    borderBottomColor: '#1E293B',
-  },
-  detailLabel: { color: '#64748B', fontSize: 13 },
-  detailValue: { fontSize: 13, fontWeight: '600' },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16 },
-  notFound: { color: '#94A3B8', fontSize: 16 },
-});
+function createStyles(colors: ColorTokens) {
+  return StyleSheet.create({
+    safe: { flex: 1, backgroundColor: colors.background },
+    content: { padding: 16, gap: 16, paddingBottom: 40 },
+    card: { gap: 12 },
+    sectionTitle: { color: colors.textPrimary, fontSize: 15, fontWeight: '700' },
+    routeRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+    },
+    routePoint: { flex: 1, gap: 4 },
+    routeLabel: { color: colors.textMuted, fontSize: 12 },
+    routeValue: { color: colors.textPrimary, fontWeight: '600', fontSize: 15 },
+    arrow: { color: colors.accent, fontSize: 20, fontWeight: '700' },
+    detailRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: 6,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    detailLabel: { color: colors.textMuted, fontSize: 13 },
+    detailValue: { fontSize: 13, fontWeight: '600' },
+    center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16 },
+    notFound: { color: colors.textSecondary, fontSize: 16 },
+    editActions: { flexDirection: 'row', gap: 12 },
+    actionBtn: { flex: 1 },
+  });
+}

@@ -5,6 +5,8 @@ import { useTranslation } from 'react-i18next';
 import { Card } from './ui/Card';
 import { formatCurrency, formatLiters, formatDate, formatKm } from '@utils/formatters';
 import { useFuelStore } from '@stores/fuelStore';
+import { useTheme } from '@/theme/useTheme';
+import type { ColorTokens } from '@/theme/colors';
 import type { FuelEntry } from '@/types';
 
 interface FuelCardProps {
@@ -13,6 +15,8 @@ interface FuelCardProps {
 
 export function FuelCard({ entry }: FuelCardProps) {
   const { t, i18n } = useTranslation();
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   const { deleteFuelEntry } = useFuelStore();
 
   const handleDelete = () => {
@@ -46,7 +50,7 @@ export function FuelCard({ entry }: FuelCardProps) {
             style={styles.deleteBtn}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <Ionicons name="trash-outline" size={16} color="#EF4444" />
+            <Ionicons name="trash-outline" size={16} color={colors.danger} />
           </TouchableOpacity>
         </View>
       </View>
@@ -93,6 +97,8 @@ function DetailItem({
   label: string;
   value: string;
 }) {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   return (
     <View style={styles.detailItem}>
       <Text style={styles.detailIcon}>{icon}</Text>
@@ -104,28 +110,30 @@ function DetailItem({
   );
 }
 
-const styles = StyleSheet.create({
-  card: { gap: 12 },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-  },
-  headerLeft: { flex: 1 },
-  headerRight: {
-    alignItems: 'flex-end',
-    gap: 6,
-  },
-  stationName: { color: '#F1F5F9', fontWeight: '600', fontSize: 15 },
-  date: { color: '#64748B', fontSize: 12, marginTop: 2 },
-  totalCost: { color: '#EF4444', fontWeight: '700', fontSize: 18 },
-  deleteBtn: {
-    padding: 4,
-  },
-  details: { flexDirection: 'row', gap: 16 },
-  detailItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  detailIcon: { fontSize: 16 },
-  detailLabel: { color: '#64748B', fontSize: 11 },
-  detailValue: { color: '#F1F5F9', fontWeight: '600', fontSize: 13 },
-  notes: { color: '#64748B', fontSize: 12, fontStyle: 'italic' },
-});
+function createStyles(colors: ColorTokens) {
+  return StyleSheet.create({
+    card: { gap: 12 },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      justifyContent: 'space-between',
+    },
+    headerLeft: { flex: 1 },
+    headerRight: {
+      alignItems: 'flex-end',
+      gap: 6,
+    },
+    stationName: { color: colors.textPrimary, fontWeight: '600', fontSize: 15 },
+    date: { color: colors.textMuted, fontSize: 12, marginTop: 2 },
+    totalCost: { color: colors.danger, fontWeight: '700', fontSize: 18 },
+    deleteBtn: {
+      padding: 4,
+    },
+    details: { flexDirection: 'row', gap: 16 },
+    detailItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+    detailIcon: { fontSize: 16 },
+    detailLabel: { color: colors.textMuted, fontSize: 11 },
+    detailValue: { color: colors.textPrimary, fontWeight: '600', fontSize: 13 },
+    notes: { color: colors.textMuted, fontSize: 12, fontStyle: 'italic' },
+  });
+}

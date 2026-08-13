@@ -21,10 +21,14 @@ import type { NewIncomeEntry, IncomeSource } from '@/types';
 import { useIncomeSourceOptions } from '@/i18n/options';
 import { formatCurrency } from '@utils/formatters';
 import { AdBanner } from '@components/AdBanner';
+import { useTheme } from '@/theme/useTheme';
+import type { ColorTokens } from '@/theme/colors';
 
 export default function NewIncomeScreen() {
   const router = useRouter();
   const { t } = useTranslation();
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   const { addEntry } = useIncomeStore();
   const { activeVehicle } = useVehicleStore();
   const sourceOptions = useIncomeSourceOptions();
@@ -148,30 +152,32 @@ export default function NewIncomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#0F172A' },
-  content: { padding: 16, gap: 16, paddingBottom: 40 },
-  card: { gap: 12 },
-  sectionTitle: { color: '#F1F5F9', fontSize: 15, fontWeight: '700' },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  previewRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#0F172A',
-    borderRadius: 10,
-    padding: 12,
-  },
-  previewLabel: { color: '#94A3B8', fontSize: 14 },
-  previewValue: { color: '#22C55E', fontWeight: '700', fontSize: 18 },
-  vehicleInfo: {
-    backgroundColor: '#1E293B',
-    borderRadius: 10,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#334155',
-  },
-  vehicleInfoText: { color: '#94A3B8', fontSize: 13 },
-  actions: { flexDirection: 'row', gap: 12 },
-  actionBtn: { flex: 1 },
-});
+function createStyles(colors: ColorTokens) {
+  return StyleSheet.create({
+    safe: { flex: 1, backgroundColor: colors.background },
+    content: { padding: 16, gap: 16, paddingBottom: 40 },
+    card: { gap: 12 },
+    sectionTitle: { color: colors.textPrimary, fontSize: 15, fontWeight: '700' },
+    chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+    previewRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      backgroundColor: colors.background,
+      borderRadius: 10,
+      padding: 12,
+    },
+    previewLabel: { color: colors.textSecondary, fontSize: 14 },
+    previewValue: { color: colors.success, fontWeight: '700', fontSize: 18 },
+    vehicleInfo: {
+      backgroundColor: colors.surface,
+      borderRadius: 10,
+      padding: 12,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    vehicleInfoText: { color: colors.textSecondary, fontSize: 13 },
+    actions: { flexDirection: 'row', gap: 12 },
+    actionBtn: { flex: 1 },
+  });
+}

@@ -4,6 +4,8 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useOnboardingStore } from '@stores/onboardingStore';
+import { useTheme } from '@/theme/useTheme';
+import type { ColorTokens } from '@/theme/colors';
 
 interface Step {
   icon: string;
@@ -22,6 +24,8 @@ export default function OnboardingScreen() {
   const router = useRouter();
   const { t } = useTranslation();
   const { completeOnboarding } = useOnboardingStore();
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   const [stepIndex, setStepIndex] = useState(0);
 
   const isLast = stepIndex === STEPS.length - 1;
@@ -79,52 +83,54 @@ export default function OnboardingScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#0F172A' },
-  topRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 8,
-  },
-  dots: { flexDirection: 'row', gap: 6 },
-  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#334155' },
-  dotActive: { backgroundColor: '#3B82F6', width: 20 },
-  skipText: { color: '#64748B', fontSize: 14, fontWeight: '600' },
+function createStyles(colors: ColorTokens) {
+  return StyleSheet.create({
+    safe: { flex: 1, backgroundColor: colors.background },
+    topRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 20,
+      paddingTop: 8,
+    },
+    dots: { flexDirection: 'row', gap: 6 },
+    dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.border },
+    dotActive: { backgroundColor: colors.accent, width: 20 },
+    skipText: { color: colors.textMuted, fontSize: 14, fontWeight: '600' },
 
-  content: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 32,
-    gap: 16,
-  },
-  icon: { fontSize: 80, marginBottom: 8 },
-  title: { color: '#F1F5F9', fontSize: 24, fontWeight: '800', textAlign: 'center' },
-  body: { color: '#94A3B8', fontSize: 15, textAlign: 'center', lineHeight: 22 },
+    content: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: 32,
+      gap: 16,
+    },
+    icon: { fontSize: 80, marginBottom: 8 },
+    title: { color: colors.textPrimary, fontSize: 24, fontWeight: '800', textAlign: 'center' },
+    body: { color: colors.textSecondary, fontSize: 15, textAlign: 'center', lineHeight: 22 },
 
-  bottom: {
-    flexDirection: 'row',
-    gap: 12,
-    paddingHorizontal: 20,
-    paddingBottom: 12,
-  },
-  backBtn: {
-    flex: 1,
-    paddingVertical: 15,
-    borderRadius: 14,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#334155',
-  },
-  backBtnText: { color: '#94A3B8', fontWeight: '700', fontSize: 15 },
-  nextBtn: {
-    flex: 2,
-    backgroundColor: '#3B82F6',
-    paddingVertical: 15,
-    borderRadius: 14,
-    alignItems: 'center',
-  },
-  nextBtnText: { color: '#FFFFFF', fontWeight: '700', fontSize: 15 },
-});
+    bottom: {
+      flexDirection: 'row',
+      gap: 12,
+      paddingHorizontal: 20,
+      paddingBottom: 12,
+    },
+    backBtn: {
+      flex: 1,
+      paddingVertical: 15,
+      borderRadius: 14,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    backBtnText: { color: colors.textSecondary, fontWeight: '700', fontSize: 15 },
+    nextBtn: {
+      flex: 2,
+      backgroundColor: colors.accent,
+      paddingVertical: 15,
+      borderRadius: 14,
+      alignItems: 'center',
+    },
+    nextBtnText: { color: colors.onAccent, fontWeight: '700', fontSize: 15 },
+  });
+}

@@ -18,10 +18,15 @@ import { useVehicleStore } from '@stores/vehicleStore';
 import type { Vehicle, VehicleType, FuelType } from '@/types';
 import { useVehicleTypeOptions, useFuelTypeOptions } from '@/i18n/options';
 import { AdBanner } from '@components/AdBanner';
+import { useTheme } from '@/theme/useTheme';
+import type { ColorTokens } from '@/theme/colors';
 
 export default function VehicleDetailScreen() {
   const router = useRouter();
   const { t } = useTranslation();
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
+  const detailStyles = createDetailStyles(colors);
   const { id } = useLocalSearchParams<{ id: string }>();
   const { vehicles, updateVehicle, deleteVehicle, setActiveVehicle, activeVehicle } =
     useVehicleStore();
@@ -290,6 +295,8 @@ export default function VehicleDetailScreen() {
 }
 
 function DetailRow({ label, value }: { label: string; value: string }) {
+  const { colors } = useTheme();
+  const detailStyles = createDetailStyles(colors);
   return (
     <View style={detailStyles.row}>
       <Text style={detailStyles.label}>{label}</Text>
@@ -298,57 +305,61 @@ function DetailRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-const detailStyles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 6,
-    borderBottomWidth: 1,
-    borderBottomColor: '#1E293B',
-  },
-  label: { color: '#94A3B8', fontSize: 14 },
-  value: { color: '#F1F5F9', fontSize: 14, fontWeight: '500' },
-});
+function createDetailStyles(colors: ColorTokens) {
+  return StyleSheet.create({
+    row: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: 6,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    label: { color: colors.textSecondary, fontSize: 14 },
+    value: { color: colors.textPrimary, fontSize: 14, fontWeight: '500' },
+  });
+}
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#0F172A' },
-  content: { padding: 16, gap: 16, paddingBottom: 40 },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
-  notFoundText: { color: '#94A3B8', fontSize: 16 },
-  headerCard: { gap: 4 },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  vehicleName: { color: '#F1F5F9', fontSize: 20, fontWeight: '800' },
-  vehicleMeta: { color: '#94A3B8', fontSize: 13, marginTop: 4 },
-  plateBadge: {
-    marginTop: 8,
-    backgroundColor: '#0F172A',
-    borderRadius: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    alignSelf: 'flex-start',
-    borderWidth: 1,
-    borderColor: '#334155',
-  },
-  plateText: { color: '#F1F5F9', fontSize: 13, fontWeight: '700', letterSpacing: 1 },
-  activeBadge: {
-    backgroundColor: '#15803D',
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
-  activeBadgeText: { color: '#DCFCE7', fontSize: 12, fontWeight: '600' },
-  card: { gap: 8 },
-  cardRaised: { zIndex: 50, elevation: 50 },
-  sectionTitle: { color: '#F1F5F9', fontSize: 15, fontWeight: '700', marginBottom: 4 },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  actionGroup: { gap: 10 },
-  actions: { flexDirection: 'row', gap: 12 },
-  actionBtn: { flex: 1 },
-  editBtn: { paddingHorizontal: 12 },
-  editBtnText: { color: '#3B82F6', fontSize: 15, fontWeight: '600' },
-});
+function createStyles(colors: ColorTokens) {
+  return StyleSheet.create({
+    safe: { flex: 1, backgroundColor: colors.background },
+    content: { padding: 16, gap: 16, paddingBottom: 40 },
+    center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
+    notFoundText: { color: colors.textSecondary, fontSize: 16 },
+    headerCard: { gap: 4 },
+    headerRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+    },
+    vehicleName: { color: colors.textPrimary, fontSize: 20, fontWeight: '800' },
+    vehicleMeta: { color: colors.textSecondary, fontSize: 13, marginTop: 4 },
+    plateBadge: {
+      marginTop: 8,
+      backgroundColor: colors.background,
+      borderRadius: 6,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      alignSelf: 'flex-start',
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    plateText: { color: colors.textPrimary, fontSize: 13, fontWeight: '700', letterSpacing: 1 },
+    activeBadge: {
+      backgroundColor: colors.successSoftBg,
+      borderRadius: 8,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+    },
+    activeBadgeText: { color: colors.successSoftText, fontSize: 12, fontWeight: '600' },
+    card: { gap: 8 },
+    cardRaised: { zIndex: 50, elevation: 50 },
+    sectionTitle: { color: colors.textPrimary, fontSize: 15, fontWeight: '700', marginBottom: 4 },
+    chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+    actionGroup: { gap: 10 },
+    actions: { flexDirection: 'row', gap: 12 },
+    actionBtn: { flex: 1 },
+    editBtn: { paddingHorizontal: 12 },
+    editBtnText: { color: colors.accent, fontSize: 15, fontWeight: '600' },
+  });
+}

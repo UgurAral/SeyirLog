@@ -5,6 +5,8 @@ import { useTranslation } from 'react-i18next';
 import { Card } from './ui/Card';
 import { formatCurrency, formatDate } from '@utils/formatters';
 import { useExpenseStore } from '@stores/expenseStore';
+import { useTheme } from '@/theme/useTheme';
+import type { ColorTokens } from '@/theme/colors';
 import type { Expense, ExpenseCategory } from '@/types';
 
 interface ExpenseCardProps {
@@ -23,6 +25,8 @@ const CATEGORY_ICONS: Record<ExpenseCategory, string> = {
 
 export function ExpenseCard({ expense }: ExpenseCardProps) {
   const { t, i18n } = useTranslation();
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   const { deleteExpense } = useExpenseStore();
   const category = expense.category as ExpenseCategory;
   const icon = CATEGORY_ICONS[category] ?? '📋';
@@ -65,7 +69,7 @@ export function ExpenseCard({ expense }: ExpenseCardProps) {
             style={styles.deleteBtn}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <Ionicons name="trash-outline" size={15} color="#EF4444" />
+            <Ionicons name="trash-outline" size={15} color={colors.danger} />
           </TouchableOpacity>
         </View>
       </View>
@@ -73,28 +77,30 @@ export function ExpenseCard({ expense }: ExpenseCardProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  card: {},
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  iconWrapper: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: '#0F172A',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  icon: { fontSize: 20 },
-  info: { flex: 1, gap: 2 },
-  category: { color: '#F1F5F9', fontWeight: '600', fontSize: 14 },
-  description: { color: '#94A3B8', fontSize: 12 },
-  date: { color: '#64748B', fontSize: 11 },
-  rightSection: {
-    alignItems: 'flex-end',
-    gap: 6,
-  },
-  amount: { color: '#EF4444', fontWeight: '700', fontSize: 16 },
-  deleteBtn: {
-    padding: 2,
-  },
-});
+function createStyles(colors: ColorTokens) {
+  return StyleSheet.create({
+    card: {},
+    row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+    iconWrapper: {
+      width: 44,
+      height: 44,
+      borderRadius: 12,
+      backgroundColor: colors.background,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    icon: { fontSize: 20 },
+    info: { flex: 1, gap: 2 },
+    category: { color: colors.textPrimary, fontWeight: '600', fontSize: 14 },
+    description: { color: colors.textSecondary, fontSize: 12 },
+    date: { color: colors.textMuted, fontSize: 11 },
+    rightSection: {
+      alignItems: 'flex-end',
+      gap: 6,
+    },
+    amount: { color: colors.danger, fontWeight: '700', fontSize: 16 },
+    deleteBtn: {
+      padding: 2,
+    },
+  });
+}

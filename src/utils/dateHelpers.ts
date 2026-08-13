@@ -65,3 +65,22 @@ export function isInPeriod(
 
   return timestamp >= start;
 }
+
+/**
+ * Verilen Unix timestamp'in İstanbul saatiyle tarih (YYYY-MM-DD), saat (0-23) ve
+ * haftanın günü (0=Pazar..6=Cumartesi) bileşenlerini döndürür. Anonim talep
+ * sinyali (demand_signals) kaydı için kullanılır.
+ */
+export function getIstanbulDateParts(timestamp: number): {
+  date: string;
+  hour: number;
+  dayOfWeek: number;
+} {
+  const shifted = toIstanbulShifted(new Date(timestamp * 1000));
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return {
+    date: `${shifted.getUTCFullYear()}-${pad(shifted.getUTCMonth() + 1)}-${pad(shifted.getUTCDate())}`,
+    hour: shifted.getUTCHours(),
+    dayOfWeek: shifted.getUTCDay(),
+  };
+}

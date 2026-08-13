@@ -7,6 +7,8 @@ import {
   type ViewStyle,
   type TextStyle,
 } from 'react-native';
+import { useTheme } from '@/theme/useTheme';
+import type { ColorTokens } from '@/theme/colors';
 
 type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost';
 type ButtonSize = 'sm' | 'md' | 'lg';
@@ -33,6 +35,8 @@ export function Button({
   textStyle,
 }: ButtonProps) {
   const isDisabled = disabled || loading;
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
 
   return (
     <TouchableOpacity
@@ -49,7 +53,7 @@ export function Button({
     >
       {loading ? (
         <ActivityIndicator
-          color={variant === 'ghost' ? '#3B82F6' : '#FFFFFF'}
+          color={variant === 'ghost' ? colors.accent : colors.onAccent}
           size="small"
         />
       ) : (
@@ -61,32 +65,34 @@ export function Button({
   );
 }
 
-const styles = StyleSheet.create({
-  base: {
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
-  },
-  // Variants
-  primary: { backgroundColor: '#3B82F6' },
-  secondary: { backgroundColor: '#6B7280' },
-  danger: { backgroundColor: '#EF4444' },
-  ghost: {
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: '#3B82F6',
-  },
-  // Sizes
-  sm: { paddingVertical: 6, paddingHorizontal: 12 },
-  md: { paddingVertical: 12, paddingHorizontal: 20 },
-  lg: { paddingVertical: 16, paddingHorizontal: 28 },
-  // Disabled
-  disabled: { opacity: 0.5 },
-  // Text
-  text: { fontWeight: '600', fontSize: 15 },
-  primaryText: { color: '#FFFFFF' },
-  secondaryText: { color: '#FFFFFF' },
-  dangerText: { color: '#FFFFFF' },
-  ghostText: { color: '#3B82F6' },
-});
+function createStyles(colors: ColorTokens) {
+  return StyleSheet.create({
+    base: {
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexDirection: 'row',
+    },
+    // Variants
+    primary: { backgroundColor: colors.accent },
+    secondary: { backgroundColor: colors.textMuted },
+    danger: { backgroundColor: colors.danger },
+    ghost: {
+      backgroundColor: 'transparent',
+      borderWidth: 1,
+      borderColor: colors.accent,
+    },
+    // Sizes
+    sm: { paddingVertical: 6, paddingHorizontal: 12 },
+    md: { paddingVertical: 12, paddingHorizontal: 20 },
+    lg: { paddingVertical: 16, paddingHorizontal: 28 },
+    // Disabled
+    disabled: { opacity: 0.5 },
+    // Text
+    text: { fontWeight: '600', fontSize: 15 },
+    primaryText: { color: colors.onAccent },
+    secondaryText: { color: colors.onAccent },
+    dangerText: { color: colors.onAccent },
+    ghostText: { color: colors.accent },
+  });
+}

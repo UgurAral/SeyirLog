@@ -4,17 +4,24 @@ import {
   StyleSheet, KeyboardAvoidingView, Platform, Alert, ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { signIn, signUp, resetPassword, signInWithGoogle, signInWithApple, firebaseAuth } from '@services/auth';
 import { onLoginSync } from '@services/sync';
+import { LanguagePicker } from '@components/LanguagePicker';
+import { useTheme } from '@/theme/useTheme';
+import type { ColorTokens } from '@/theme/colors';
 
 type Mode = 'login' | 'register' | 'reset';
 
 export default function AuthScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { t } = useTranslation();
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   const [mode, setMode] = useState<Mode>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -125,6 +132,7 @@ export default function AuthScreen() {
       style={styles.root}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
+      <LanguagePicker compact style={[styles.languagePicker, { top: insets.top + 12 }]} />
       <View style={styles.card}>
         <Text style={styles.logo}>🚖</Text>
         <Text style={styles.title}>{t('auth.appName')}</Text>
@@ -135,7 +143,7 @@ export default function AuthScreen() {
         <TextInput
           style={styles.input}
           placeholder={t('auth.email')}
-          placeholderTextColor="#475569"
+          placeholderTextColor={colors.textMuted}
           value={email}
           onChangeText={setEmail}
           keyboardType="email-address"
@@ -148,7 +156,7 @@ export default function AuthScreen() {
             <TextInput
               style={styles.passwordInput}
               placeholder={t('auth.password')}
-              placeholderTextColor="#475569"
+              placeholderTextColor={colors.textMuted}
               value={password}
               onChangeText={setPassword}
               secureTextEntry={!showPassword}
@@ -158,7 +166,7 @@ export default function AuthScreen() {
               hitSlop={8}
               style={styles.passwordToggle}
             >
-              <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={20} color="#64748B" />
+              <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={20} color={colors.textMuted} />
             </TouchableOpacity>
           </View>
         )}
@@ -170,7 +178,7 @@ export default function AuthScreen() {
           activeOpacity={0.85}
         >
           {loading
-            ? <ActivityIndicator color="#fff" />
+            ? <ActivityIndicator color={colors.onAccent} />
             : <Text style={styles.btnText}>
                 {mode === 'login' ? t('auth.loginButton') : mode === 'register' ? t('auth.registerButton') : t('auth.resetButton')}
               </Text>
@@ -237,36 +245,40 @@ export default function AuthScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#0F172A', justifyContent: 'center' },
-  card: { margin: 24, backgroundColor: '#1E293B', borderRadius: 20, padding: 28, gap: 14 },
-  logo: { fontSize: 48, textAlign: 'center' },
-  title: { color: '#F1F5F9', fontSize: 26, fontWeight: '800', textAlign: 'center' },
-  subtitle: { color: '#64748B', fontSize: 14, textAlign: 'center', marginBottom: 8 },
-  input: {
-    backgroundColor: '#0F172A', borderRadius: 10, paddingHorizontal: 14,
-    paddingVertical: 12, color: '#F1F5F9', fontSize: 15, borderWidth: 1, borderColor: '#334155',
-  },
-  passwordWrap: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#0F172A', borderRadius: 10, borderWidth: 1, borderColor: '#334155',
-    paddingRight: 6,
-  },
-  passwordInput: {
-    flex: 1, paddingHorizontal: 14, paddingVertical: 12, color: '#F1F5F9', fontSize: 15,
-  },
-  passwordToggle: { padding: 8 },
-  btn: { backgroundColor: '#3B82F6', borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
-  btnText: { color: '#fff', fontWeight: '700', fontSize: 16 },
-  links: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 },
-  link: { color: '#3B82F6', fontSize: 13 },
-  dividerRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 6 },
-  dividerLine: { flex: 1, height: 1, backgroundColor: '#334155' },
-  dividerText: { color: '#64748B', fontSize: 12 },
-  googleBtn: {
-    backgroundColor: '#F1F5F9', borderRadius: 12, paddingVertical: 14, alignItems: 'center',
-  },
-  googleBtnText: { color: '#1E293B', fontWeight: '700', fontSize: 16 },
-  appleBtn: { height: 48, width: '100%' },
-  appleBtnLoading: { backgroundColor: '#000', borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-});
+function createStyles(colors: ColorTokens) {
+  return StyleSheet.create({
+    root: { flex: 1, backgroundColor: colors.background, justifyContent: 'center' },
+    languagePicker: { position: 'absolute', right: 16, zIndex: 10 },
+    card: { margin: 24, backgroundColor: colors.surface, borderRadius: 20, padding: 28, gap: 14 },
+    logo: { fontSize: 48, textAlign: 'center' },
+    title: { color: colors.textPrimary, fontSize: 26, fontWeight: '800', textAlign: 'center' },
+    subtitle: { color: colors.textMuted, fontSize: 14, textAlign: 'center', marginBottom: 8 },
+    input: {
+      backgroundColor: colors.background, borderRadius: 10, paddingHorizontal: 14,
+      paddingVertical: 12, color: colors.textPrimary, fontSize: 15, borderWidth: 1, borderColor: colors.border,
+    },
+    passwordWrap: {
+      flexDirection: 'row', alignItems: 'center',
+      backgroundColor: colors.background, borderRadius: 10, borderWidth: 1, borderColor: colors.border,
+      paddingRight: 6,
+    },
+    passwordInput: {
+      flex: 1, paddingHorizontal: 14, paddingVertical: 12, color: colors.textPrimary, fontSize: 15,
+    },
+    passwordToggle: { padding: 8 },
+    btn: { backgroundColor: colors.accent, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
+    btnText: { color: colors.onAccent, fontWeight: '700', fontSize: 16 },
+    links: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 },
+    link: { color: colors.accent, fontSize: 13 },
+    dividerRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 6 },
+    dividerLine: { flex: 1, height: 1, backgroundColor: colors.border },
+    dividerText: { color: colors.textMuted, fontSize: 12 },
+    // Google/Apple butonları marka kurallarına göre sabit renkli — temaya göre değişmez.
+    googleBtn: {
+      backgroundColor: '#F1F5F9', borderRadius: 12, paddingVertical: 14, alignItems: 'center',
+    },
+    googleBtnText: { color: '#1E293B', fontWeight: '700', fontSize: 16 },
+    appleBtn: { height: 48, width: '100%' },
+    appleBtnLoading: { backgroundColor: '#000', borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  });
+}

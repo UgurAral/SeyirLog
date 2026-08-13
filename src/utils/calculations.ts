@@ -2,6 +2,20 @@ import type { Trip, FuelEntry, Expense, DailyStats, PeriodStats, TripDuration } 
 import { formatDuration } from '@utils/formatters';
 
 /**
+ * Bir seferin süresini dakika olarak döner: önce kayıtlı (elle girilmiş veya
+ * tamamlama anında hesaplanmış) `durationMinutes` değerini, o yoksa henüz
+ * bitmemiş/eski kayıtlarda başlangıç-bitiş zaman damgalarından canlı hesaplar.
+ * Sefer hâlâ aktifse (endTime yok) null döner.
+ */
+export function resolveTripDurationMinutes(
+  trip: Pick<Trip, 'startTime' | 'endTime' | 'durationMinutes'>,
+): number | null {
+  if (trip.durationMinutes != null) return trip.durationMinutes;
+  if (trip.endTime == null) return null;
+  return Math.max(0, Math.floor((trip.endTime - trip.startTime) / 60));
+}
+
+/**
  * Net kazancı hesaplar.
  * @param earnings - Toplam kazanç (TL)
  * @param fuelCosts - Toplam yakıt maliyeti (TL)

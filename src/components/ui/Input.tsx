@@ -7,6 +7,8 @@ import {
   type TextInputProps,
   type ViewStyle,
 } from 'react-native';
+import { useTheme } from '@/theme/useTheme';
+import type { ColorTokens } from '@/theme/colors';
 
 interface InputProps extends Omit<TextInputProps, 'style'> {
   label?: string;
@@ -27,6 +29,8 @@ export function Input({
   ...props
 }: InputProps) {
   const [focused, setFocused] = useState(false);
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
 
   return (
     <View style={[styles.container, containerStyle]}>
@@ -42,7 +46,7 @@ export function Input({
         <TextInput
           {...props}
           style={styles.input}
-          placeholderTextColor="#64748B"
+          placeholderTextColor={colors.textMuted}
           onFocus={(e) => {
             setFocused(true);
             props.onFocus?.(e);
@@ -60,28 +64,30 @@ export function Input({
   );
 }
 
-const styles = StyleSheet.create({
-  container: { gap: 4 },
-  label: { color: '#94A3B8', fontSize: 13, fontWeight: '500' },
-  inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#0F172A',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#334155',
-    paddingHorizontal: 12,
-    minHeight: 48,
-  },
-  inputWrapperFocused: { borderColor: '#3B82F6' },
-  inputWrapperError: { borderColor: '#EF4444' },
-  input: {
-    flex: 1,
-    color: '#F1F5F9',
-    fontSize: 15,
-    paddingVertical: 10,
-  },
-  affix: { color: '#94A3B8', fontSize: 14, marginHorizontal: 4 },
-  error: { color: '#EF4444', fontSize: 12 },
-  hint: { color: '#64748B', fontSize: 12 },
-});
+function createStyles(colors: ColorTokens) {
+  return StyleSheet.create({
+    container: { gap: 4 },
+    label: { color: colors.textSecondary, fontSize: 13, fontWeight: '500' },
+    inputWrapper: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.background,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: colors.border,
+      paddingHorizontal: 12,
+      minHeight: 48,
+    },
+    inputWrapperFocused: { borderColor: colors.accent },
+    inputWrapperError: { borderColor: colors.danger },
+    input: {
+      flex: 1,
+      color: colors.textPrimary,
+      fontSize: 15,
+      paddingVertical: 10,
+    },
+    affix: { color: colors.textSecondary, fontSize: 14, marginHorizontal: 4 },
+    error: { color: colors.danger, fontSize: 12 },
+    hint: { color: colors.textMuted, fontSize: 12 },
+  });
+}

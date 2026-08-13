@@ -52,6 +52,13 @@ module.exports = {
         },
       ],
       ['expo-sqlite', { useSQLiteCPP: true }],
+      [
+        'expo-location',
+        {
+          locationWhenInUsePermission:
+            'SeyirLog, tahminlerini iyileştirmek ve sefer başlatırken konumunuzu otomatik doldurmak için konumunuzu kullanır.',
+        },
+      ],
       '@react-native-google-signin/google-signin',
       'expo-apple-authentication',
       './plugins/withFirebaseModularHeadersFix',

@@ -5,7 +5,7 @@
  */
 
 import { Platform } from 'react-native';
-import {
+import mobileAds, {
   AdEventType,
   BannerAd,
   BannerAdSize,
@@ -46,18 +46,70 @@ export async function shouldShowAd(): Promise<boolean> {
   return Date.now() - parseInt(raw, 10) > AD_INTERVAL_MS;
 }
 
+// ── SDK başlatma + ödüllü reklamı önden yükleme ──────────────────────────────
+// SDK açıkça başlatılmadan yapılan imperatif RewardedAd.load() çağrıları
+// (bir bileşenin mount olmasını beklemeden) tutarsız davranabiliyor; ayrıca
+// "Günü Bitir" anında sıfırdan yükleme başlatmak birkaç saniye sürebildiği
+// için 10sn zaman aşımına takılıp reklamsız geçme ihtimalini artırıyordu.
+// Bu yüzden uygulama açılışında SDK başlatılır ve bir sonraki gösterim için
+// arka planda bir ödüllü reklam önceden yüklenir.
+let preloadedRewarded: RewardedAd | null = null;
+let preloadedRewardedReady = false;
+
+function preloadRewardedAd(): void {
+  const rewarded = RewardedAd.createForAdRequest(AD_UNITS.REWARDED, {
+    requestNonPersonalizedAdsOnly: true,
+  });
+  preloadedRewarded = rewarded;
+  preloadedRewardedReady = false;
+
+  const unsubLoad = rewarded.addAdEventListener(RewardedAdEventType.LOADED, () => {
+    if (preloadedRewarded === rewarded) preloadedRewardedReady = true;
+    unsubLoad();
+    unsubError();
+  });
+  const unsubError = rewarded.addAdEventListener(AdEventType.ERROR, () => {
+    if (preloadedRewarded === rewarded) {
+      preloadedRewarded = null;
+      preloadedRewardedReady = false;
+    }
+    unsubLoad();
+    unsubError();
+  });
+  rewarded.load();
+}
+
+export function initAds(): void {
+  mobileAds()
+    .initialize()
+    .then(() => preloadRewardedAd())
+    .catch(() => {});
+}
+
 export function showRewardedAd(): Promise<boolean> {
   return new Promise((resolve) => {
-    const rewarded = RewardedAd.createForAdRequest(AD_UNITS.REWARDED, {
-      requestNonPersonalizedAdsOnly: true,
-    });
+    const usingPreloaded = preloadedRewardedReady && preloadedRewarded != null;
+    const rewarded = usingPreloaded
+      ? preloadedRewarded!
+      : RewardedAd.createForAdRequest(AD_UNITS.REWARDED, { requestNonPersonalizedAdsOnly: true });
+    // Önden yüklenmiş reklam kullanılıyorsa hemen bir sonraki gösterim için
+    // yeni bir tane yüklemeye başla; bu instance tekrar kullanılamaz.
+    if (usingPreloaded) {
+      preloadedRewarded = null;
+      preloadedRewardedReady = false;
+      preloadRewardedAd();
+    }
 
-    let loaded = false;
+    let loaded = usingPreloaded;
 
     const unsubLoad = rewarded.addAdEventListener(RewardedAdEventType.LOADED, () => {
       loaded = true;
       rewarded.show();
     });
+
+    if (usingPreloaded) {
+      rewarded.show();
+    }
 
     const unsubEarned = rewarded.addAdEventListener(
       RewardedAdEventType.EARNED_REWARD,
@@ -91,7 +143,9 @@ export function showRewardedAd(): Promise<boolean> {
       resolve(true);
     });
 
-    rewarded.load();
+    if (!usingPreloaded) {
+      rewarded.load();
+    }
 
     // Reklam 10 sn içinde hiç yüklenemezse yine de kaydı geçir — sayaç
     // başlamaz, bir sonraki denemede tekrar reklam yüklemeyi dener.

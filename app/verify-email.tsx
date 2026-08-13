@@ -8,10 +8,14 @@ import { sendVerificationEmail, reloadCurrentUser, signOut } from '@services/aut
 import { useAuthStore } from '@stores/authStore';
 import { onLoginSync } from '@services/sync';
 import { startRealtimeSync } from '@services/realtime';
+import { useTheme } from '@/theme/useTheme';
+import type { ColorTokens } from '@/theme/colors';
 
 export default function VerifyEmailScreen() {
   const router = useRouter();
   const { t } = useTranslation();
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   const { user, setUser } = useAuthStore();
   const [checking, setChecking] = useState(false);
   const [resending, setResending] = useState(false);
@@ -70,7 +74,7 @@ export default function VerifyEmailScreen() {
           activeOpacity={0.85}
         >
           {checking
-            ? <ActivityIndicator color="#fff" />
+            ? <ActivityIndicator color={colors.onAccent} />
             : <Text style={styles.btnText}>{t('verifyEmail.checkButton')}</Text>}
         </TouchableOpacity>
 
@@ -92,19 +96,21 @@ export default function VerifyEmailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#0F172A', justifyContent: 'center' },
-  card: { margin: 24, backgroundColor: '#1E293B', borderRadius: 20, padding: 28, gap: 14 },
-  logo: { fontSize: 48, textAlign: 'center' },
-  title: { color: '#F1F5F9', fontSize: 22, fontWeight: '800', textAlign: 'center' },
-  body: { color: '#94A3B8', fontSize: 14, textAlign: 'center', lineHeight: 21 },
-  btn: {
-    backgroundColor: '#3B82F6', borderRadius: 12, paddingVertical: 14,
-    alignItems: 'center', marginTop: 8,
-  },
-  btnDisabled: { opacity: 0.6 },
-  btnText: { color: '#fff', fontWeight: '700', fontSize: 16 },
-  linkBtn: { alignItems: 'center', paddingVertical: 6 },
-  link: { color: '#3B82F6', fontSize: 13, fontWeight: '600' },
-  linkMuted: { color: '#64748B', fontSize: 13 },
-});
+function createStyles(colors: ColorTokens) {
+  return StyleSheet.create({
+    root: { flex: 1, backgroundColor: colors.background, justifyContent: 'center' },
+    card: { margin: 24, backgroundColor: colors.surface, borderRadius: 20, padding: 28, gap: 14 },
+    logo: { fontSize: 48, textAlign: 'center' },
+    title: { color: colors.textPrimary, fontSize: 22, fontWeight: '800', textAlign: 'center' },
+    body: { color: colors.textSecondary, fontSize: 14, textAlign: 'center', lineHeight: 21 },
+    btn: {
+      backgroundColor: colors.accent, borderRadius: 12, paddingVertical: 14,
+      alignItems: 'center', marginTop: 8,
+    },
+    btnDisabled: { opacity: 0.6 },
+    btnText: { color: colors.onAccent, fontWeight: '700', fontSize: 16 },
+    linkBtn: { alignItems: 'center', paddingVertical: 6 },
+    link: { color: colors.accent, fontSize: 13, fontWeight: '600' },
+    linkMuted: { color: colors.textMuted, fontSize: 13 },
+  });
+}

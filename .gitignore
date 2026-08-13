@@ -16,3 +16,4 @@ ios/
 .vscode/
 *.keystore
 *.jks
+.claude/settings.local.json

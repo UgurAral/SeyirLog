@@ -3,14 +3,15 @@ import {
   View,
   Text,
   TouchableOpacity,
-  Modal,
   FlatList,
   StyleSheet,
-  Pressable,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useVehicles } from '@hooks/useVehicles';
+import { BottomSheet, BottomSheetDivider } from './BottomSheet';
+import { useTheme } from '@/theme/useTheme';
+import type { ColorTokens } from '@/theme/colors';
 import type { Vehicle } from '@/types';
 
 interface VehiclePickerProps {
@@ -31,6 +32,8 @@ export function VehiclePicker({ style }: VehiclePickerProps) {
   const { t } = useTranslation();
   const { vehicles, activeVehicle, setActiveVehicle } = useVehicles();
   const [visible, setVisible] = useState(false);
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
 
   // Tek araç veya hiç araç yoksa — sadece isim göster, dropdown yok
   if (vehicles.length <= 1) {
@@ -59,105 +62,76 @@ export function VehiclePicker({ style }: VehiclePickerProps) {
         <Text style={styles.vehicleLabel} numberOfLines={1}>
           {activeVehicle ? formatVehicleLabel(activeVehicle) : t('vehicle.pickerTitle')}
         </Text>
-        <Ionicons name="chevron-down" size={14} color="#94A3B8" />
+        <Ionicons name="chevron-down" size={14} color={colors.textSecondary} />
       </TouchableOpacity>
 
-      <Modal
-        visible={visible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setVisible(false)}
-      >
-        <Pressable style={styles.overlay} onPress={() => setVisible(false)}>
-          <View style={styles.sheet}>
-            <Text style={styles.sheetTitle}>{t('vehicle.pickerTitle')}</Text>
-            <FlatList
-              data={vehicles}
-              keyExtractor={(item) => String(item.id)}
-              ItemSeparatorComponent={() => <View style={styles.divider} />}
-              renderItem={({ item }) => {
-                const isActive = item.id === activeVehicle?.id;
-                return (
-                  <TouchableOpacity
-                    style={styles.optionRow}
-                    onPress={() => handleSelect(item)}
-                    activeOpacity={0.75}
-                  >
-                    <View style={styles.optionInfo}>
-                      <Text style={[styles.optionName, isActive && styles.optionNameActive]}>
-                        {item.brand} {item.model}
-                      </Text>
-                      {item.plate ? (
-                        <Text style={styles.optionPlate}>{item.plate}</Text>
-                      ) : null}
-                    </View>
-                    {isActive && (
-                      <Ionicons name="checkmark-circle" size={20} color="#3B82F6" />
-                    )}
-                  </TouchableOpacity>
-                );
-              }}
-            />
-          </View>
-        </Pressable>
-      </Modal>
+      <BottomSheet visible={visible} onClose={() => setVisible(false)} title={t('vehicle.pickerTitle')}>
+        <FlatList
+          data={vehicles}
+          keyExtractor={(item) => String(item.id)}
+          ItemSeparatorComponent={BottomSheetDivider}
+          renderItem={({ item }) => {
+            const isActive = item.id === activeVehicle?.id;
+            return (
+              <TouchableOpacity
+                style={styles.optionRow}
+                onPress={() => handleSelect(item)}
+                activeOpacity={0.75}
+              >
+                <View style={styles.optionInfo}>
+                  <Text style={[styles.optionName, isActive && styles.optionNameActive]}>
+                    {item.brand} {item.model}
+                  </Text>
+                  {item.plate ? (
+                    <Text style={styles.optionPlate}>{item.plate}</Text>
+                  ) : null}
+                </View>
+                {isActive && (
+                  <Ionicons name="checkmark-circle" size={20} color={colors.accent} />
+                )}
+              </TouchableOpacity>
+            );
+          }}
+        />
+      </BottomSheet>
     </>
   );
 }
 
-const styles = StyleSheet.create({
-  labelOnly: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  vehicleLabel: {
-    color: '#94A3B8',
-    fontSize: 13,
-    fontWeight: '500',
-    flexShrink: 1,
-  },
-  trigger: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#1E293B',
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderWidth: 1,
-    borderColor: '#334155',
-    maxWidth: 220,
-  },
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    justifyContent: 'flex-end',
-  },
-  sheet: {
-    backgroundColor: '#1E293B',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 16,
-    paddingBottom: 32,
-    gap: 12,
-  },
-  sheetTitle: {
-    color: '#F1F5F9',
-    fontSize: 16,
-    fontWeight: '700',
-    textAlign: 'center',
-    marginBottom: 4,
-  },
-  divider: { height: 1, backgroundColor: '#334155' },
-  optionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 14,
-    paddingHorizontal: 4,
-  },
-  optionInfo: { gap: 2, flex: 1 },
-  optionName: { color: '#CBD5E1', fontSize: 15, fontWeight: '600' },
-  optionNameActive: { color: '#3B82F6' },
-  optionPlate: { color: '#64748B', fontSize: 12, letterSpacing: 0.5 },
-});
+function createStyles(colors: ColorTokens) {
+  return StyleSheet.create({
+    labelOnly: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    vehicleLabel: {
+      color: colors.textSecondary,
+      fontSize: 13,
+      fontWeight: '500',
+      flexShrink: 1,
+    },
+    trigger: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      backgroundColor: colors.surface,
+      borderRadius: 8,
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+      borderWidth: 1,
+      borderColor: colors.border,
+      maxWidth: 220,
+    },
+    optionRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: 14,
+      paddingHorizontal: 4,
+    },
+    optionInfo: { gap: 2, flex: 1 },
+    optionName: { color: colors.textPrimary, fontSize: 15, fontWeight: '600' },
+    optionNameActive: { color: colors.accent },
+    optionPlate: { color: colors.textMuted, fontSize: 12, letterSpacing: 0.5 },
+  });
+}

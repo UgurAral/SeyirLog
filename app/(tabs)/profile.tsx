@@ -24,29 +24,42 @@ import { Button } from '@components/ui/Button';
 import { useVehicles } from '@hooks/useVehicles';
 import { exportBackup, importBackup } from '@utils/backup';
 import { signOut } from '@services/auth';
-import { LANGUAGE_OPTIONS, changeLanguage, type SupportedLanguage } from '@/i18n';
 import { useCurrencyStore, type SupportedCurrency } from '@stores/currencyStore';
 import { useCurrencyOptions } from '@/i18n/options';
 import { AdBanner } from '@components/AdBanner';
+import { LanguagePicker } from '@components/LanguagePicker';
+import { BottomSheet, BottomSheetDivider } from '@components/ui/BottomSheet';
 import { submitFeedback } from '@services/firestore';
+import { useTabTitle } from '@hooks/useTabTitle';
+import { useThemeStore, type ThemeMode } from '@stores/themeStore';
+import { useTheme } from '@/theme/useTheme';
+import type { ColorTokens } from '@/theme/colors';
 import type { Vehicle } from '@/types';
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
+  useTabTitle(t('tabs.profile'));
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
+  const { mode: themeMode, setMode: setThemeMode } = useThemeStore();
   const { vehicles, activeVehicle, isLoading, error, setActiveVehicle, fetchVehicles } =
     useVehicles();
   const [backupLoading, setBackupLoading] = useState(false);
   const [restoreLoading, setRestoreLoading] = useState(false);
-  const [languagePickerVisible, setLanguagePickerVisible] = useState(false);
   const [currencyPickerVisible, setCurrencyPickerVisible] = useState(false);
   const [feedbackVisible, setFeedbackVisible] = useState(false);
   const [feedbackText, setFeedbackText] = useState('');
   const [feedbackSending, setFeedbackSending] = useState(false);
-  const currentLanguage = LANGUAGE_OPTIONS.find((o) => o.code === i18n.language) ?? LANGUAGE_OPTIONS[0];
   const { currency, setCurrency } = useCurrencyStore();
   const currencyOptions = useCurrencyOptions();
   const currentCurrency = currencyOptions.find((o) => o.code === currency) ?? currencyOptions[0];
+
+  const THEME_MODES: { id: ThemeMode; label: string }[] = [
+    { id: 'system', label: t('theme.system') },
+    { id: 'light', label: t('theme.light') },
+    { id: 'dark', label: t('theme.dark') },
+  ];
 
   const handleExport = async () => {
     setBackupLoading(true);
@@ -124,7 +137,7 @@ export default function ProfileScreen() {
         {/* Yükleniyor */}
         {isLoading && (
           <View style={styles.center}>
-            <ActivityIndicator color="#3B82F6" />
+            <ActivityIndicator color={colors.accent} />
             <Text style={styles.loadingText}>{t('vehicle.loadingVehicles')}</Text>
           </View>
         )}
@@ -179,7 +192,7 @@ export default function ProfileScreen() {
               activeOpacity={0.85}
             >
               {backupLoading
-                ? <ActivityIndicator color="#FFFFFF" size="small" />
+                ? <ActivityIndicator color={colors.onAccent} size="small" />
                 : <Text style={styles.backupBtnIcon}>📤</Text>
               }
               <Text style={styles.backupBtnText}>
@@ -193,7 +206,7 @@ export default function ProfileScreen() {
               activeOpacity={0.85}
             >
               {restoreLoading
-                ? <ActivityIndicator color="#FFFFFF" size="small" />
+                ? <ActivityIndicator color={colors.onAccent} size="small" />
                 : <Text style={styles.backupBtnIcon}>📥</Text>
               }
               <Text style={styles.backupBtnText}>
@@ -224,16 +237,16 @@ export default function ProfileScreen() {
           onRequestClose={() => setFeedbackVisible(false)}
         >
           <KeyboardAvoidingView
-            style={styles.overlay}
+            style={styles.feedbackOverlay}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           >
-          <Pressable style={styles.overlay} onPress={() => setFeedbackVisible(false)}>
-            <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
-              <Text style={styles.sheetTitle}>{t('profile.feedbackSection')}</Text>
+          <Pressable style={styles.feedbackOverlay} onPress={() => setFeedbackVisible(false)}>
+            <Pressable style={styles.feedbackSheet} onPress={(e) => e.stopPropagation()}>
+              <Text style={styles.feedbackSheetTitle}>{t('profile.feedbackSection')}</Text>
               <TextInput
                 style={styles.feedbackInput}
                 placeholder={t('profile.feedbackPlaceholder')}
-                placeholderTextColor="#64748B"
+                placeholderTextColor={colors.textMuted}
                 value={feedbackText}
                 onChangeText={setFeedbackText}
                 multiline
@@ -254,53 +267,8 @@ export default function ProfileScreen() {
         {/* Dil Seçimi */}
         <View style={styles.languageSection}>
           <Text style={styles.sectionTitle}>{t('profile.language')}</Text>
-          <TouchableOpacity
-            style={styles.languageTrigger}
-            onPress={() => setLanguagePickerVisible(true)}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.languageFlag}>{currentLanguage.flag}</Text>
-            <Text style={styles.languageTriggerText}>{currentLanguage.name}</Text>
-            <Ionicons name="chevron-down" size={16} color="#94A3B8" />
-          </TouchableOpacity>
+          <LanguagePicker />
         </View>
-
-        <Modal
-          visible={languagePickerVisible}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setLanguagePickerVisible(false)}
-        >
-          <Pressable style={styles.overlay} onPress={() => setLanguagePickerVisible(false)}>
-            <View style={styles.sheet}>
-              <Text style={styles.sheetTitle}>{t('language.title')}</Text>
-              <FlatList
-                data={LANGUAGE_OPTIONS}
-                keyExtractor={(item) => item.code}
-                ItemSeparatorComponent={() => <View style={styles.divider} />}
-                renderItem={({ item }) => {
-                  const isSelected = i18n.language === item.code;
-                  return (
-                    <TouchableOpacity
-                      style={styles.languageOptionRow}
-                      onPress={() => {
-                        changeLanguage(item.code as SupportedLanguage);
-                        setLanguagePickerVisible(false);
-                      }}
-                      activeOpacity={0.75}
-                    >
-                      <Text style={styles.languageFlag}>{item.flag}</Text>
-                      <Text style={[styles.languageOptionName, isSelected && styles.languageNameActive]}>
-                        {item.name}
-                      </Text>
-                      {isSelected && <Ionicons name="checkmark-circle" size={20} color="#3B82F6" />}
-                    </TouchableOpacity>
-                  );
-                }}
-              />
-            </View>
-          </Pressable>
-        </Modal>
 
         {/* Para Birimi Seçimi */}
         <View style={styles.languageSection}>
@@ -312,46 +280,64 @@ export default function ProfileScreen() {
           >
             <Text style={styles.languageFlag}>{currentCurrency.symbol}</Text>
             <Text style={styles.languageTriggerText}>{currentCurrency.name}</Text>
-            <Ionicons name="chevron-down" size={16} color="#94A3B8" />
+            <Ionicons name="chevron-down" size={16} color={colors.textSecondary} />
           </TouchableOpacity>
         </View>
 
-        <Modal
+        <BottomSheet
           visible={currencyPickerVisible}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setCurrencyPickerVisible(false)}
+          onClose={() => setCurrencyPickerVisible(false)}
+          title={t('currency.title')}
         >
-          <Pressable style={styles.overlay} onPress={() => setCurrencyPickerVisible(false)}>
-            <View style={styles.sheet}>
-              <Text style={styles.sheetTitle}>{t('currency.title')}</Text>
-              <FlatList
-                data={currencyOptions}
-                keyExtractor={(item) => item.code}
-                ItemSeparatorComponent={() => <View style={styles.divider} />}
-                renderItem={({ item }) => {
-                  const isSelected = currency === item.code;
-                  return (
-                    <TouchableOpacity
-                      style={styles.languageOptionRow}
-                      onPress={() => {
-                        setCurrency(item.code as SupportedCurrency);
-                        setCurrencyPickerVisible(false);
-                      }}
-                      activeOpacity={0.75}
-                    >
-                      <Text style={styles.languageFlag}>{item.symbol}</Text>
-                      <Text style={[styles.languageOptionName, isSelected && styles.languageNameActive]}>
-                        {item.name}
-                      </Text>
-                      {isSelected && <Ionicons name="checkmark-circle" size={20} color="#3B82F6" />}
-                    </TouchableOpacity>
-                  );
-                }}
-              />
-            </View>
-          </Pressable>
-        </Modal>
+          <FlatList
+            data={currencyOptions}
+            keyExtractor={(item) => item.code}
+            ItemSeparatorComponent={BottomSheetDivider}
+            renderItem={({ item }) => {
+              const isSelected = currency === item.code;
+              return (
+                <TouchableOpacity
+                  style={styles.languageOptionRow}
+                  onPress={() => {
+                    setCurrency(item.code as SupportedCurrency);
+                    setCurrencyPickerVisible(false);
+                  }}
+                  activeOpacity={0.75}
+                >
+                  <Text style={styles.languageFlag}>{item.symbol}</Text>
+                  <Text style={[styles.languageOptionName, isSelected && styles.languageNameActive]}>
+                    {item.name}
+                  </Text>
+                  {isSelected && <Ionicons name="checkmark-circle" size={20} color={colors.accent} />}
+                </TouchableOpacity>
+              );
+            }}
+          />
+        </BottomSheet>
+
+        {/* Tema Seçimi */}
+        <View style={styles.languageSection}>
+          <Text style={styles.sectionTitle}>{t('theme.title')}</Text>
+          <View style={styles.themeSwitchRow}>
+            {THEME_MODES.map((m) => {
+              const isActive = themeMode === m.id;
+              return (
+                <TouchableOpacity
+                  key={m.id}
+                  style={[styles.themeSwitchOption, isActive && styles.themeSwitchOptionActive]}
+                  onPress={() => setThemeMode(m.id)}
+                  activeOpacity={0.8}
+                >
+                  <Text
+                    style={[styles.themeSwitchText, isActive && styles.themeSwitchTextActive]}
+                  >
+                    {m.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
 
         {/* Çıkış */}
         <TouchableOpacity
@@ -408,6 +394,8 @@ function VehicleCard({
   onSetActive: () => void;
 }) {
   const { t } = useTranslation();
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
       <Card
@@ -455,220 +443,240 @@ function VehicleCard({
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#0F172A' },
-  scroll: { flex: 1 },
-  content: { padding: 16, gap: 16, paddingBottom: 90 },
-  bottomBannerWrap: { position: 'absolute', bottom: 0, left: 0, right: 0 },
+function createStyles(colors: ColorTokens) {
+  return StyleSheet.create({
+    safe: { flex: 1, backgroundColor: colors.background },
+    scroll: { flex: 1 },
+    content: { padding: 16, gap: 16, paddingBottom: 90 },
+    bottomBannerWrap: { position: 'absolute', bottom: 0, left: 0, right: 0 },
 
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  title: { color: '#F1F5F9', fontSize: 26, fontWeight: '800' },
+    headerRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    title: { color: colors.textPrimary, fontSize: 26, fontWeight: '800' },
 
-  center: { alignItems: 'center', gap: 8, paddingVertical: 24 },
-  loadingText: { color: '#94A3B8', fontSize: 14 },
+    center: { alignItems: 'center', gap: 8, paddingVertical: 24 },
+    loadingText: { color: colors.textSecondary, fontSize: 14 },
 
-  errorBox: {
-    backgroundColor: '#1C1917',
-    borderRadius: 10,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: '#EF4444',
-  },
-  errorText: { color: '#EF4444', fontSize: 13 },
+    errorBox: {
+      backgroundColor: colors.surface,
+      borderRadius: 10,
+      padding: 14,
+      borderWidth: 1,
+      borderColor: colors.danger,
+    },
+    errorText: { color: colors.danger, fontSize: 13 },
 
-  emptyCard: { alignItems: 'center', gap: 10, paddingVertical: 24 },
-  emptyTitle: { color: '#F1F5F9', fontSize: 17, fontWeight: '700' },
-  emptySubtitle: {
-    color: '#94A3B8',
-    fontSize: 14,
-    textAlign: 'center',
-    lineHeight: 20,
-  },
+    emptyCard: { alignItems: 'center', gap: 10, paddingVertical: 24 },
+    emptyTitle: { color: colors.textPrimary, fontSize: 17, fontWeight: '700' },
+    emptySubtitle: {
+      color: colors.textSecondary,
+      fontSize: 14,
+      textAlign: 'center',
+      lineHeight: 20,
+    },
 
-  vehicleList: { gap: 10 },
-  vehicleCard: { gap: 0 },
-  vehicleCardActive: {
-    borderWidth: 1.5,
-    borderColor: '#3B82F6',
-  },
-  vehicleCardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  vehicleCardInfo: { flex: 1, gap: 4 },
-  vehicleName: { color: '#F1F5F9', fontSize: 16, fontWeight: '700' },
-  vehicleMeta: { color: '#94A3B8', fontSize: 13 },
-  plateBadge: {
-    backgroundColor: '#0F172A',
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    alignSelf: 'flex-start',
-    borderWidth: 1,
-    borderColor: '#334155',
-    marginTop: 4,
-  },
-  plateText: {
-    color: '#F1F5F9',
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 1,
-  },
-  vehicleCardActions: {
-    alignItems: 'flex-end',
-    gap: 6,
-    marginLeft: 12,
-  },
-  activeBadge: {
-    backgroundColor: '#15803D',
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
-  activeBadgeText: { color: '#DCFCE7', fontSize: 12, fontWeight: '600' },
-  setActiveBtn: {
-    backgroundColor: '#1E3A5F',
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderWidth: 1,
-    borderColor: '#3B82F6',
-  },
-  setActiveBtnText: { color: '#93C5FD', fontSize: 12, fontWeight: '600' },
-  chevron: { color: '#64748B', fontSize: 20 },
+    vehicleList: { gap: 10 },
+    vehicleCard: { gap: 0 },
+    vehicleCardActive: {
+      borderWidth: 1.5,
+      borderColor: colors.accent,
+    },
+    vehicleCardHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    vehicleCardInfo: { flex: 1, gap: 4 },
+    vehicleName: { color: colors.textPrimary, fontSize: 16, fontWeight: '700' },
+    vehicleMeta: { color: colors.textSecondary, fontSize: 13 },
+    plateBadge: {
+      backgroundColor: colors.background,
+      borderRadius: 6,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      alignSelf: 'flex-start',
+      borderWidth: 1,
+      borderColor: colors.border,
+      marginTop: 4,
+    },
+    plateText: {
+      color: colors.textPrimary,
+      fontSize: 12,
+      fontWeight: '700',
+      letterSpacing: 1,
+    },
+    vehicleCardActions: {
+      alignItems: 'flex-end',
+      gap: 6,
+      marginLeft: 12,
+    },
+    activeBadge: {
+      backgroundColor: colors.successSoftBg,
+      borderRadius: 8,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+    },
+    activeBadgeText: { color: colors.successSoftText, fontSize: 12, fontWeight: '600' },
+    setActiveBtn: {
+      backgroundColor: colors.infoSoftBg,
+      borderRadius: 8,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderWidth: 1,
+      borderColor: colors.accent,
+    },
+    setActiveBtnText: { color: colors.infoSoftText, fontSize: 12, fontWeight: '600' },
+    chevron: { color: colors.textMuted, fontSize: 20 },
 
-  backupSection: {
-    backgroundColor: '#1E293B',
-    borderRadius: 14,
-    padding: 16,
-    gap: 10,
-    borderWidth: 1,
-    borderColor: '#334155',
-  },
-  sectionTitle: { color: '#F1F5F9', fontSize: 16, fontWeight: '700' },
-  sectionDesc: { color: '#94A3B8', fontSize: 13, lineHeight: 19 },
-  backupButtons: { flexDirection: 'row', gap: 10, marginTop: 4 },
-  backupBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    borderRadius: 11,
-    paddingVertical: 13,
-  },
-  exportBtn: { backgroundColor: '#3B82F6' },
-  importBtn: { backgroundColor: '#6366F1' },
-  btnDisabled: { opacity: 0.55 },
-  backupBtnIcon: { fontSize: 16 },
-  backupBtnText: { color: '#FFFFFF', fontWeight: '700', fontSize: 14 },
+    backupSection: {
+      backgroundColor: colors.surface,
+      borderRadius: 14,
+      padding: 16,
+      gap: 10,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    sectionTitle: { color: colors.textPrimary, fontSize: 16, fontWeight: '700' },
+    sectionDesc: { color: colors.textSecondary, fontSize: 13, lineHeight: 19 },
+    backupButtons: { flexDirection: 'row', gap: 10, marginTop: 4 },
+    backupBtn: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      borderRadius: 11,
+      paddingVertical: 13,
+    },
+    exportBtn: { backgroundColor: colors.accent },
+    importBtn: { backgroundColor: colors.accentSecondary },
+    btnDisabled: { opacity: 0.55 },
+    backupBtnIcon: { fontSize: 16 },
+    backupBtnText: { color: colors.onAccent, fontWeight: '700', fontSize: 14 },
 
-  feedbackBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    borderRadius: 11,
-    paddingVertical: 13,
-    backgroundColor: '#6366F1',
-  },
-  feedbackBtnIcon: { fontSize: 16 },
-  feedbackInput: {
-    backgroundColor: '#0F172A',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#334155',
-    color: '#F1F5F9',
-    fontSize: 14,
-    padding: 12,
-    minHeight: 110,
-    marginBottom: 4,
-  },
+    feedbackBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      borderRadius: 11,
+      paddingVertical: 13,
+      backgroundColor: colors.accentSecondary,
+    },
+    feedbackBtnIcon: { fontSize: 16 },
+    feedbackOverlay: {
+      flex: 1,
+      backgroundColor: colors.overlay,
+      justifyContent: 'flex-end',
+    },
+    feedbackSheet: {
+      backgroundColor: colors.surface,
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+      padding: 16,
+      paddingBottom: 32,
+      gap: 12,
+    },
+    feedbackSheetTitle: {
+      color: colors.textPrimary,
+      fontSize: 16,
+      fontWeight: '700',
+      textAlign: 'center',
+      marginBottom: 4,
+    },
+    feedbackInput: {
+      backgroundColor: colors.background,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: colors.border,
+      color: colors.textPrimary,
+      fontSize: 14,
+      padding: 12,
+      minHeight: 110,
+      marginBottom: 4,
+    },
 
-  languageSection: {
-    backgroundColor: '#1E293B',
-    borderRadius: 14,
-    padding: 16,
-    gap: 10,
-    borderWidth: 1,
-    borderColor: '#334155',
-  },
-  languageTrigger: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: '#0F172A',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#334155',
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-  },
-  languageFlag: { fontSize: 20 },
-  languageTriggerText: { flex: 1, color: '#F1F5F9', fontSize: 15, fontWeight: '600' },
+    languageSection: {
+      backgroundColor: colors.surface,
+      borderRadius: 14,
+      padding: 16,
+      gap: 10,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    languageTrigger: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      backgroundColor: colors.background,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: colors.border,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+    },
+    languageFlag: { fontSize: 20 },
+    languageTriggerText: { flex: 1, color: colors.textPrimary, fontSize: 15, fontWeight: '600' },
 
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    justifyContent: 'flex-end',
-  },
-  sheet: {
-    backgroundColor: '#1E293B',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 16,
-    paddingBottom: 32,
-    gap: 12,
-  },
-  sheetTitle: {
-    color: '#F1F5F9',
-    fontSize: 16,
-    fontWeight: '700',
-    textAlign: 'center',
-    marginBottom: 4,
-  },
-  divider: { height: 1, backgroundColor: '#334155' },
-  languageOptionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 4,
-  },
-  languageOptionName: { flex: 1, color: '#CBD5E1', fontSize: 15, fontWeight: '600' },
-  languageNameActive: { color: '#3B82F6' },
+    languageOptionRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      paddingVertical: 14,
+      paddingHorizontal: 4,
+    },
+    languageOptionName: { flex: 1, color: colors.textPrimary, fontSize: 15, fontWeight: '600' },
+    languageNameActive: { color: colors.accent },
 
-  signOutBtn: {
-    backgroundColor: '#1E293B',
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#EF4444',
-  },
-  signOutText: { color: '#EF4444', fontWeight: '700', fontSize: 15 },
-  deleteAccountBtn: {
-    borderRadius: 12,
-    paddingVertical: 12,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#7F1D1D',
-    backgroundColor: '#7F1D1D20',
-  },
-  deleteAccountText: { color: '#F87171', fontWeight: '700', fontSize: 14 },
-  appInfoCard: { alignItems: 'center', gap: 4, paddingVertical: 16, marginTop: 8 },
-  appInfoTitle: { color: '#F1F5F9', fontSize: 16, fontWeight: '800' },
-  appInfoVersion: { color: '#3B82F6', fontSize: 12 },
-  appInfoDesc: {
-    color: '#64748B',
-    fontSize: 12,
-    textAlign: 'center',
-    lineHeight: 18,
-    marginTop: 4,
-  },
-});
+    themeSwitchRow: {
+      flexDirection: 'row',
+      backgroundColor: colors.background,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: colors.border,
+      padding: 4,
+      gap: 4,
+    },
+    themeSwitchOption: {
+      flex: 1,
+      paddingVertical: 10,
+      alignItems: 'center',
+      borderRadius: 8,
+    },
+    themeSwitchOptionActive: { backgroundColor: colors.accent },
+    themeSwitchText: { color: colors.textSecondary, fontSize: 13, fontWeight: '600' },
+    themeSwitchTextActive: { color: colors.onAccent },
+
+    signOutBtn: {
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      paddingVertical: 14,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: colors.danger,
+    },
+    signOutText: { color: colors.danger, fontWeight: '700', fontSize: 15 },
+    deleteAccountBtn: {
+      borderRadius: 12,
+      paddingVertical: 12,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: colors.dangerSoftBg,
+      backgroundColor: colors.dangerSoftBg + '20',
+    },
+    deleteAccountText: { color: colors.dangerSoftText, fontWeight: '700', fontSize: 14 },
+    appInfoCard: { alignItems: 'center', gap: 4, paddingVertical: 16, marginTop: 8 },
+    appInfoTitle: { color: colors.textPrimary, fontSize: 16, fontWeight: '800' },
+    appInfoVersion: { color: colors.accent, fontSize: 12 },
+    appInfoDesc: {
+      color: colors.textMuted,
+      fontSize: 12,
+      textAlign: 'center',
+      lineHeight: 18,
+      marginTop: 4,
+    },
+  });
+}

@@ -18,9 +18,10 @@ interface TripStore {
   updateTrip: (id: number, data: Partial<NewTrip>) => Promise<void>;
   completeTrip: (
     id: number,
-    distanceKm: number,
+    distanceKm: number | null,
     endTime: number,
     earnings: number,
+    durationMinutesOverride?: number,
   ) => Promise<void>;
   cancelTrip: (id: number) => Promise<void>;
   deleteTrip: (id: number) => Promise<void>;
@@ -101,15 +102,24 @@ export const useTripStore = create<TripStore>((set, get) => ({
 
   completeTrip: async (
     id: number,
-    distanceKm: number,
+    distanceKm: number | null,
     endTime: number,
     earnings: number,
+    durationMinutesOverride?: number,
   ) => {
     const now = Math.floor(Date.now() / 1000);
-    const trip = get().trips.find((t) => t.id === id);
-    const durationMinutes = trip
-      ? Math.floor((endTime - trip.startTime) / 60)
-      : undefined;
+    // Zustand'daki `trips` dizisi taze olmayabilir (örn. aktif sefer
+    // yeniden başlatma sonrası hiç fetchTrips() çağrılmadan bitirilirse) —
+    // süreyi güvenilir hesaplamak için başlangıç zamanını doğrudan DB'den oku.
+    let durationMinutes = durationMinutesOverride;
+    if (durationMinutes == null) {
+      const [row] = await db
+        .select({ startTime: trips.startTime })
+        .from(trips)
+        .where(eq(trips.id, id))
+        .limit(1);
+      durationMinutes = row ? Math.max(0, Math.floor((endTime - row.startTime) / 60)) : undefined;
+    }
     const currency = useCurrencyStore.getState().currency;
 
     await db
