@@ -10,7 +10,9 @@ import {
   formatKm,
   formatDuration,
   formatDate,
+  formatElapsedClock,
 } from '../utils/formatters';
+import { getElapsedSeconds } from '../utils/calculations';
 
 // ─── formatCurrency ───────────────────────────────────────────────────────────
 
@@ -56,10 +58,18 @@ describe('formatCurrency', () => {
     expect(result.length).toBeGreaterThan(5);
   });
 
-  it('iki ondalık basamak içerir', () => {
+  it('ondalık kısım sıfırsa virgül göstermez', () => {
     const result = formatCurrency(100);
-    // tr-TR locale ile 100,00 formatı
-    expect(result).toMatch(/,\d{2}/);
+    expect(result).not.toContain(',');
+  });
+
+  it('ondalık kısım varsa gösterir (max 2 basamak)', () => {
+    expect(formatCurrency(100.5)).toBe('100,5 ₺');
+    expect(formatCurrency(100.55)).toBe('100,55 ₺');
+  });
+
+  it('ondalık kısmı 2 basamağa yuvarlar', () => {
+    expect(formatCurrency(100.555)).toBe('100,56 ₺');
   });
 });
 
@@ -98,6 +108,11 @@ describe('formatKm', () => {
     const result = formatKm(999999);
     expect(result).toContain('km');
     expect(result).toContain('999');
+  });
+
+  it('"mi" birimi seçiliyse mile çevirip "mi" ekler', () => {
+    // 160.9344 km ≈ 100 mi
+    expect(formatKm(160.9344, 'mi')).toBe('100 mi');
   });
 });
 
@@ -183,5 +198,47 @@ describe('formatDate', () => {
     // 2030-01-01
     const result = formatDate(1893456000);
     expect(result).toContain('2030');
+  });
+});
+
+// ─── formatElapsedClock ───────────────────────────────────────────────────────
+
+describe('formatElapsedClock', () => {
+  it('1 saatten kısa süreyi MM:SS formatlar', () => {
+    expect(formatElapsedClock(330)).toBe('05:30');
+  });
+
+  it('1 saatten uzun süreyi H:MM:SS formatlar', () => {
+    expect(formatElapsedClock(68054)).toBe('18:54:14');
+  });
+
+  it('sıfırı 00:00 formatlar', () => {
+    expect(formatElapsedClock(0)).toBe('00:00');
+  });
+
+  it('negatif değeri 0 gibi işler', () => {
+    expect(formatElapsedClock(-10)).toBe('00:00');
+  });
+});
+
+// ─── getElapsedSeconds ─────────────────────────────────────────────────────────
+
+describe('getElapsedSeconds', () => {
+  it('gün başlamamışsa 0 döner', () => {
+    expect(getElapsedSeconds(null, null, 0, 1000)).toBe(0);
+  });
+
+  it('molasız geçen süreyi doğru hesaplar', () => {
+    expect(getElapsedSeconds(1000, null, 0, 1600)).toBe(600);
+  });
+
+  it('geçmiş molaları toplam süreden düşer', () => {
+    expect(getElapsedSeconds(1000, null, 200, 1600)).toBe(400);
+  });
+
+  it('devam eden molayı da düşer (molada iken zaman ilerlese de sonuç sabit kalır)', () => {
+    // 1000'de başladı, 1300'de molaya girdi, hâlâ molada
+    expect(getElapsedSeconds(1000, 1300, 0, 1400)).toBe(300);
+    expect(getElapsedSeconds(1000, 1300, 0, 1900)).toBe(300);
   });
 });

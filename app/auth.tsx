@@ -11,6 +11,7 @@ import * as AppleAuthentication from 'expo-apple-authentication';
 import { signIn, signUp, resetPassword, signInWithGoogle, signInWithApple, firebaseAuth } from '@services/auth';
 import { onLoginSync } from '@services/sync';
 import { LanguagePicker } from '@components/LanguagePicker';
+import { ThemeToggle } from '@components/ThemeToggle';
 import { useTheme } from '@/theme/useTheme';
 import type { ColorTokens } from '@/theme/colors';
 
@@ -132,6 +133,7 @@ export default function AuthScreen() {
       style={styles.root}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
+      <ThemeToggle style={[styles.themeToggle, { top: insets.top + 12 }]} />
       <LanguagePicker compact style={[styles.languagePicker, { top: insets.top + 12 }]} />
       <View style={styles.card}>
         <Text style={styles.logo}>🚖</Text>
@@ -249,6 +251,7 @@ function createStyles(colors: ColorTokens) {
   return StyleSheet.create({
     root: { flex: 1, backgroundColor: colors.background, justifyContent: 'center' },
     languagePicker: { position: 'absolute', right: 16, zIndex: 10 },
+    themeToggle: { position: 'absolute', left: 16, zIndex: 10 },
     card: { margin: 24, backgroundColor: colors.surface, borderRadius: 20, padding: 28, gap: 14 },
     logo: { fontSize: 48, textAlign: 'center' },
     title: { color: colors.textPrimary, fontSize: 26, fontWeight: '800', textAlign: 'center' },

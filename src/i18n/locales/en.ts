@@ -15,6 +15,7 @@ export const en: TranslationSchema = {
     yes: 'Yes',
     no: 'No',
     optional: 'optional',
+    notSet: 'Not set',
   },
 
   periods: {
@@ -145,14 +146,28 @@ export const en: TranslationSchema = {
     statNet: 'Net',
     fuelLabel: 'Fuel',
     expenseLabel: 'Expenses',
+    incomeLabel: 'Extra Income',
     recentTrips: 'Recent Trips',
     seeAll: 'See All →',
     noTripsToday: 'No trips yet today.',
     noTripsPeriod: 'No trips in this period.',
     startDayButton: '▶️ Start Day',
     endDayButton: 'End',
+    endDayConfirmTitle: 'End Day',
+    endDayConfirmBody: 'Are you sure you want to end this shift?',
+    addButton: 'Add',
     dayActiveLabel: 'Day In Progress',
+    dayPausedLabel: 'On Break',
     dayStartedAt: 'Started: {{time}}',
+    statDuration: 'Duration',
+    statIncomePerKm: 'Income/Distance',
+    perHourSuffix: 'h',
+    dayNetLabel: 'Active Net Income',
+    pauseButton: '⏸ Take a Break',
+    resumeButton: '▶️ Resume',
+    startOdometerLabel: 'Start Odometer',
+    odometerCarriedTitle: 'Start Odometer Filled In',
+    odometerCarriedBody: "Your last shift's end reading ({{value}}) was used as the start. You can update it below if needed.",
   },
 
   trips: {
@@ -180,8 +195,8 @@ export const en: TranslationSchema = {
     note: 'Note',
     completeSection: 'Complete Trip',
     editSection: 'Edit Trip',
-    distanceLabel: 'Distance (km)',
-    distancePlaceholder: 'How many km did you drive? (optional)',
+    distanceLabel: 'Distance',
+    distancePlaceholder: 'How many {{unit}} did you drive? (optional)',
     durationLabel: 'Duration (min)',
     durationPlaceholder: 'Leave empty to calculate automatically',
     earningsLabel: 'Earnings *',
@@ -366,6 +381,7 @@ export const en: TranslationSchema = {
   },
 
   profile: {
+    dayHistoryButton: 'Shift History',
     backupSection: 'Data Backup',
     backupSectionDesc:
       'Export your data as a JSON file. You can restore it even if the app is deleted.',
@@ -411,8 +427,8 @@ export const en: TranslationSchema = {
 
     activeTripLabel: 'Active Trip',
     endTripSection: 'End Trip',
-    distanceLabel: 'Distance (km)',
-    distancePlaceholder: 'How many km did you drive? (optional)',
+    distanceLabel: 'Distance',
+    distancePlaceholder: 'How many {{unit}} did you drive? (optional)',
     durationLabel: 'Duration (min)',
     durationPlaceholder: 'Leave empty to calculate automatically',
     earningsLabel: 'Earnings (₺) *',
@@ -516,6 +532,8 @@ export const en: TranslationSchema = {
     statKm: 'Total KM',
     statDuration: 'Total Time',
     statPerKm: 'Per KM',
+    statIncomePerDuration: 'Income/Duration',
+    perHourSuffix: 'h',
     incomeSection: 'Income',
     outcomeSection: 'Expenses',
     tripEarningsLabel: 'Trip Earnings',
@@ -525,6 +543,17 @@ export const en: TranslationSchema = {
     tripsSection: 'Trips',
     noData: 'No data yet for this period.',
     noRange: 'This summary is only created when you tap "End Day".',
+    odometerSectionTitle: 'Vehicle Odometer',
+    odometerHint: 'Since the vehicle may also drive outside of trips, you can enter the start/end odometer reading to account for total distance — not required right now.',
+    startOdometerLabel: 'Start Odometer',
+    endOdometerLabel: 'End Odometer',
+    totalDistanceLabel: 'Total Distance',
+    totalPerKmLabel: 'Total Per Distance',
+  },
+
+  dayHistory: {
+    pageTitle: 'Shift History',
+    empty: 'No completed shifts yet. Once you end a day, it will be listed here.',
   },
 
   onboarding: {
@@ -547,6 +576,12 @@ export const en: TranslationSchema = {
     system: 'System',
     light: 'Light',
     dark: 'Dark',
+  },
+
+  distanceUnit: {
+    title: 'Distance Unit',
+    km: 'Kilometers (km)',
+    mi: 'Miles (mi)',
   },
 
   locationPermission: {

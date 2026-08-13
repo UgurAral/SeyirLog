@@ -48,9 +48,13 @@ export function CurrencyBreakdownValue({
   const { colors } = useTheme();
   const styles = createStyles(colors);
 
+  // `amounts` bağımlılığı bilinçli: aynı ekran konumundaki bileşen aynı
+  // kalsa bile (örn. bir önceki günün özetinden yeni bir güne geçilince)
+  // "gözat" seçimi (`selected`) önceki verinin para birimine kilitli
+  // kalmasın — veri kümesi her değiştiğinde aktif para birimine sıfırlanır.
   useEffect(() => {
     setSelected(activeCurrency);
-  }, [activeCurrency]);
+  }, [activeCurrency, amounts]);
 
   const amount = amounts[selected] ?? 0;
   const resolvedColor = colorFor ? colorFor(amount) : color;
@@ -106,8 +110,8 @@ export function CurrencyBreakdownValue({
 
 function createStyles(colors: ColorTokens) {
   return StyleSheet.create({
-    row: { flexDirection: 'row', alignItems: 'center', gap: 3 },
-    chevron: { marginTop: 1 },
+    row: { alignItems: 'center' },
+    chevron: { marginTop: 2 },
     optionRow: {
       flexDirection: 'row',
       justifyContent: 'space-between',

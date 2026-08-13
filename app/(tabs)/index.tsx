@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   ScrollView,
   View,
@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Image,
+  Alert,
+  AppState,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -19,10 +21,13 @@ import { useExpenses } from '@hooks/useExpenses';
 import { useIncome } from '@hooks/useIncome';
 import { useVehicles } from '@hooks/useVehicles';
 import { useCurrencyStore } from '@stores/currencyStore';
+import { useDistanceUnitStore, kmToDisplay } from '@stores/distanceUnitStore';
 import { useDayTrackingStore } from '@stores/dayTrackingStore';
-import { formatKm, formatTime } from '@utils/formatters';
+import { formatKm, formatTime, formatCurrency, formatLiters, formatElapsedClock } from '@utils/formatters';
+import { sumByCurrency, getElapsedSeconds } from '@utils/calculations';
 import { AdBanner } from '@components/AdBanner';
 import { CurrencyBreakdownValue } from '@components/ui/CurrencyBreakdownValue';
+import { OdometerRow } from '@components/ui/OdometerRow';
 import { showRewardedAd } from '@utils/ads';
 import { useTabTitle } from '@hooks/useTabTitle';
 import { useTheme } from '@/theme/useTheme';
@@ -40,23 +45,80 @@ export default function DashboardScreen() {
   const [endDayLoading, setEndDayLoading] = useState(false);
   const { vehicles, activeVehicle } = useVehicles();
   const vehicleId = activeVehicle?.id;
-  const { dayStartedAt, startDay, endDay } = useDayTrackingStore();
+  const {
+    dayStartedAt,
+    startOdometerKm,
+    pausedAt,
+    totalPausedSeconds,
+    startDay,
+    setActiveStartOdometer,
+    pauseDay,
+    resumeDay,
+    endDay,
+  } = useDayTrackingStore();
+
+  // Canlı vardiya sayacı — sadece gün aktif ve molada değilken saniyede bir
+  // tetiklenir; molada iken (veya gün yokken) hiç interval kurulmaz, çünkü
+  // getElapsedSeconds() molalıyken zaten değişmeyen bir değer döner.
+  const [nowSec, setNowSec] = useState(() => Math.floor(Date.now() / 1000));
+  useEffect(() => {
+    if (dayStartedAt == null) return;
+    setNowSec(Math.floor(Date.now() / 1000));
+    if (pausedAt != null) return;
+    const interval = setInterval(() => setNowSec(Math.floor(Date.now() / 1000)), 1000);
+    return () => clearInterval(interval);
+  }, [dayStartedAt, pausedAt]);
+
+  // Uygulama arka plana atılıp (hatta kapatılıp) tekrar açıldığında JS
+  // interval'ları o süre boyunca hiç çalışmaz — bu yüzden geçen süre, gerçek
+  // zamandan hesaplanmasına rağmen ekranda bir sonraki tick'e kadar eski
+  // görünebilir. Uygulama tekrar "active" olur olmaz saati anında tazeliyoruz.
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') setNowSec(Math.floor(Date.now() / 1000));
+    });
+    return () => sub.remove();
+  }, []);
 
   const handleStartDay = async () => {
-    await startDay();
+    const result = await startDay(vehicleId);
+    if (result.carriedOverOdometerKm != null) {
+      Alert.alert(
+        t('dashboard.odometerCarriedTitle'),
+        t('dashboard.odometerCarriedBody', {
+          value: formatKm(result.carriedOverOdometerKm, distanceUnit),
+        }),
+      );
+    }
   };
 
-  const handleEndDay = async () => {
-    if (dayStartedAt === null) return;
+  const handlePauseToggle = async () => {
+    if (pausedAt != null) await resumeDay();
+    else await pauseDay();
+  };
+
+  const confirmEndDay = async () => {
     setEndDayLoading(true);
-    const rangeStart = dayStartedAt;
-    const rangeEnd = Math.floor(Date.now() / 1000);
     // Gün özeti, ödüllü reklam karşılığında açılan bir içerik — reklam ağı
     // NO_FILL/hata dönse bile showRewardedAd her zaman devam etmeye izin verir.
     await showRewardedAd();
-    await endDay();
+    const result = await endDay();
     setEndDayLoading(false);
-    router.push({ pathname: '/day-summary', params: { start: String(rangeStart), end: String(rangeEnd) } });
+    if (result) {
+      router.push({ pathname: '/day-summary', params: { session: String(result.sessionId) } });
+    }
+  };
+
+  const handleEndDay = () => {
+    if (dayStartedAt === null) return;
+    Alert.alert(
+      t('dashboard.endDayConfirmTitle'),
+      t('dashboard.endDayConfirmBody'),
+      [
+        { text: t('common.no'), style: 'cancel' },
+        { text: t('dashboard.endDayButton'), style: 'destructive', onPress: confirmEndDay },
+      ],
+    );
   };
 
   const PERIODS: { id: Period; label: string }[] = [
@@ -67,8 +129,10 @@ export default function DashboardScreen() {
   ];
 
   const activeCurrency = useCurrencyStore((s) => s.currency);
+  const distanceUnit = useDistanceUnitStore((s) => s.unit);
 
   const {
+    trips: allTrips,
     filteredTrips,
     activeTrip,
     periodEarnings,
@@ -77,21 +141,57 @@ export default function DashboardScreen() {
     periodCount,
   } = useTrips(vehicleId, period);
 
-  // Aktif sefer varsa (uygulama yeni açıldığında ya da bir sefer başlatıldığında)
-  // otomatik olarak sefer ekranına geç — ama kullanıcı manuel olarak Dashboard'a
-  // dönerse tekrar zorla yönlendirme yapma.
-  const prevActiveTripIdRef = useRef<number | null>(null);
-  useEffect(() => {
-    const currentId = activeTrip?.id ?? null;
-    if (currentId !== null && prevActiveTripIdRef.current === null) {
-      router.push('/quick-entry');
-    }
-    prevActiveTripIdRef.current = currentId;
-  }, [activeTrip, router]);
+  // NOT: Burada eskiden "activeTrip null'dan dolu olunca otomatik quick-entry'e
+  // geç" diye bir efekt vardı. Dashboard, quick-entry'nin ALTINDA mount'lu
+  // kalmaya devam ettiği için (aktif sefer başlatıldığında zaten quick-entry
+  // içindeyken), o efekt aynı anda TEKRAR bir quick-entry push'u tetikliyor,
+  // üst üste 2+ ekran birikmesine yol açıyordu. Aktif sefere manuel dönüş
+  // için aşağıdaki "Aktif Sefer Banner" zaten yeterli — otomatik yönlendirme
+  // kaldırıldı.
 
-  const { periodCost: fuelCost, periodCostByCurrency: fuelCostByCurrency } = useFuel(vehicleId, period);
-  const { periodTotal: expenseCost, periodTotalByCurrency: expenseCostByCurrency } = useExpenses(vehicleId, period);
-  const { periodTotal: incomeTotal, periodTotalByCurrency: incomeTotalByCurrency } = useIncome(vehicleId, period);
+  const { periodCost: fuelCost, periodCostByCurrency: fuelCostByCurrency, fuelEntries: allFuelEntries } = useFuel(vehicleId, period);
+  const { periodTotal: expenseCost, periodTotalByCurrency: expenseCostByCurrency, expenses: allExpenses } = useExpenses(vehicleId, period);
+  const { periodTotal: incomeTotal, periodTotalByCurrency: incomeTotalByCurrency, entries: allIncomeEntries } = useIncome(vehicleId, period);
+
+  // ── Canlı vardiya özeti (dayStartedAt'ten şu ana kadar) ──────────────────────
+  const elapsedSeconds = getElapsedSeconds(dayStartedAt, pausedAt, totalPausedSeconds, nowSec);
+  const dayCompletedTrips = useMemo(
+    () => (dayStartedAt == null ? [] : allTrips.filter((tr) => tr.status === 'completed' && tr.startTime >= dayStartedAt)),
+    [allTrips, dayStartedAt],
+  );
+  const dayEarningsByCurrency = useMemo(
+    () => sumByCurrency(dayCompletedTrips, (tr) => tr.earnings ?? 0),
+    [dayCompletedTrips],
+  );
+  const dayEarnings = dayEarningsByCurrency[activeCurrency] ?? 0;
+  const dayKm = useMemo(
+    () => dayCompletedTrips.reduce((sum, tr) => sum + (tr.distanceKm ?? 0), 0),
+    [dayCompletedTrips],
+  );
+  const dayRangeFuel = useMemo(
+    () => (dayStartedAt == null ? [] : allFuelEntries.filter((f) => f.date >= dayStartedAt)),
+    [allFuelEntries, dayStartedAt],
+  );
+  const dayFuelCostByCurrency = useMemo(() => sumByCurrency(dayRangeFuel, (f) => f.totalCost), [dayRangeFuel]);
+  const dayFuelCost = dayFuelCostByCurrency[activeCurrency] ?? 0;
+  const dayFuelLiters = useMemo(() => dayRangeFuel.reduce((sum, f) => sum + f.liters, 0), [dayRangeFuel]);
+  const dayRangeExpenses = useMemo(
+    () => (dayStartedAt == null ? [] : allExpenses.filter((e) => e.date >= dayStartedAt)),
+    [allExpenses, dayStartedAt],
+  );
+  const dayExpenseCostByCurrency = useMemo(() => sumByCurrency(dayRangeExpenses, (e) => e.amount), [dayRangeExpenses]);
+  const dayExpenseCost = dayExpenseCostByCurrency[activeCurrency] ?? 0;
+  const dayRangeIncome = useMemo(
+    () => (dayStartedAt == null ? [] : allIncomeEntries.filter((e) => e.date >= dayStartedAt)),
+    [allIncomeEntries, dayStartedAt],
+  );
+  const dayIncomeTotalByCurrency = useMemo(() => sumByCurrency(dayRangeIncome, (e) => e.amount), [dayRangeIncome]);
+  const dayIncomeTotal = dayIncomeTotalByCurrency[activeCurrency] ?? 0;
+  const dayNet = dayEarnings + dayIncomeTotal - dayFuelCost - dayExpenseCost;
+  // "Kazanç" (statEarnings) sadece sefer kazancını baz alır — bu ise sefer
+  // kazancı + ek gelirlerin toplamını sürülen mesafeye böler, yani mesafe
+  // başına eline geçen TOPLAM gelir oranını gösterir.
+  const dayIncomePerKm = dayKm > 0 ? (dayEarnings + dayIncomeTotal) / kmToDisplay(dayKm, distanceUnit) : 0;
 
   const netEarnings = periodEarnings + incomeTotal - fuelCost - expenseCost;
   const netByCurrency = useMemo(() => {
@@ -197,26 +297,128 @@ export default function DashboardScreen() {
             </TouchableOpacity>
           ) : (
             <View style={styles.dayActiveCard}>
-              <View style={styles.dayActiveLeft}>
-                <View style={styles.activeDot} />
-                <View>
-                  <Text style={styles.activeTripLabel}>{t('dashboard.dayActiveLabel')}</Text>
-                  <Text style={styles.dayActiveSince}>
-                    {t('dashboard.dayStartedAt', { time: formatTime(dayStartedAt, i18n.language) })}
-                  </Text>
+              <View style={styles.dayActiveHeader}>
+                <View style={styles.dayActiveLeft}>
+                  <View style={[styles.activeDot, pausedAt != null && styles.pausedDot]} />
+                  <View>
+                    <Text style={[styles.activeTripLabel, pausedAt != null && styles.pausedLabel]}>
+                      {pausedAt != null ? t('dashboard.dayPausedLabel') : t('dashboard.dayActiveLabel')}
+                    </Text>
+                    <Text style={styles.dayActiveSince}>
+                      {t('dashboard.dayStartedAt', { time: formatTime(dayStartedAt, i18n.language) })}
+                    </Text>
+                  </View>
                 </View>
               </View>
-              <TouchableOpacity
-                style={[styles.endDayBtn, endDayLoading && { opacity: 0.7 }]}
-                onPress={handleEndDay}
-                disabled={endDayLoading}
-                activeOpacity={0.85}
-              >
-                {endDayLoading
-                  ? <ActivityIndicator color={colors.onAccent} size="small" />
-                  : <Text style={styles.endTripBtnText}>{t('dashboard.endDayButton')}</Text>
-                }
-              </TouchableOpacity>
+
+              <View style={styles.dayLiveGrid}>
+                <StatTile
+                  icon="⏱️"
+                  label={t('dashboard.statDuration')}
+                  value={formatElapsedClock(elapsedSeconds)}
+                  color={colors.accent}
+                />
+                <StatTile icon="🛣️" label={t('dashboard.statKm')} value={formatKm(dayKm, distanceUnit)} color={colors.warning} />
+                <StatTile
+                  icon="📈"
+                  label={t('dashboard.statEarnings')}
+                  value={
+                    <CurrencyBreakdownValue
+                      amounts={dayEarningsByCurrency}
+                      activeCurrency={activeCurrency}
+                      color={colors.success}
+                      textStyle={styles.statTileValue}
+                    />
+                  }
+                  color={colors.success}
+                />
+                <StatTile
+                  icon="💵"
+                  label={t('dashboard.statIncomePerKm')}
+                  value={`${formatCurrency(dayIncomePerKm, activeCurrency)}/${distanceUnit}`}
+                  color={colors.success}
+                />
+              </View>
+
+              {(dayFuelCost > 0 || dayExpenseCost > 0 || dayIncomeTotal > 0) && (
+                <View style={styles.subStats}>
+                  {dayIncomeTotal > 0 && (
+                    <View style={styles.subStat}>
+                      <View style={styles.subStatHeader}>
+                        <Text style={styles.subStatIcon}>💰</Text>
+                        <Text style={styles.subStatLabel} numberOfLines={1}>{t('dashboard.incomeLabel')}</Text>
+                      </View>
+                      <Text style={styles.subStatValue}>{formatCurrency(dayIncomeTotal, activeCurrency)}</Text>
+                    </View>
+                  )}
+                  {dayFuelCost > 0 && (
+                    <View style={styles.subStat}>
+                      <View style={styles.subStatHeader}>
+                        <Text style={styles.subStatIcon}>⛽</Text>
+                        <Text style={styles.subStatLabel} numberOfLines={1}>{t('dashboard.fuelLabel')}</Text>
+                      </View>
+                      <Text style={styles.subStatValue}>
+                        {formatLiters(dayFuelLiters)} ({formatCurrency(dayFuelCost, activeCurrency)})
+                      </Text>
+                    </View>
+                  )}
+                  {dayExpenseCost > 0 && (
+                    <View style={styles.subStat}>
+                      <View style={styles.subStatHeader}>
+                        <Text style={styles.subStatIcon}>💸</Text>
+                        <Text style={styles.subStatLabel} numberOfLines={1}>{t('dashboard.expenseLabel')}</Text>
+                      </View>
+                      <Text style={styles.subStatValue}>{formatCurrency(dayExpenseCost, activeCurrency)}</Text>
+                    </View>
+                  )}
+                </View>
+              )}
+
+              <OdometerRow
+                label={t('dashboard.startOdometerLabel')}
+                valueKm={startOdometerKm}
+                distanceUnit={distanceUnit}
+                onSave={setActiveStartOdometer}
+              />
+
+              <View style={styles.dayNetRow}>
+                <Text style={styles.dayNetLabel}>{t('dashboard.dayNetLabel')}</Text>
+                <Text style={[styles.dayNetValue, { color: dayNet >= 0 ? colors.success : colors.danger }]}>
+                  {formatCurrency(dayNet, activeCurrency)}
+                </Text>
+              </View>
+
+              <View style={styles.dayActionsRow}>
+                <TouchableOpacity
+                  style={[styles.pauseBtn, endDayLoading && { opacity: 0.7 }]}
+                  onPress={handlePauseToggle}
+                  disabled={endDayLoading}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.pauseBtnText}>
+                    {pausedAt != null ? t('dashboard.resumeButton') : t('dashboard.pauseButton')}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.endDayBtn, styles.endDayBtnFlex, endDayLoading && { opacity: 0.7 }]}
+                  onPress={handleEndDay}
+                  disabled={endDayLoading}
+                  activeOpacity={0.85}
+                >
+                  {endDayLoading
+                    ? <ActivityIndicator color={colors.onAccent} size="small" />
+                    : <Text style={styles.endTripBtnText}>{t('dashboard.endDayButton')}</Text>
+                  }
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.addTripBtn}
+                  onPress={() => router.push('/quick-entry')}
+                  activeOpacity={0.85}
+                >
+                  <Ionicons name="add" size={16} color={colors.onAccent} />
+                  <Text style={styles.addTripBtnText}>{t('dashboard.addButton')}</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           )}
 
@@ -245,7 +447,7 @@ export default function DashboardScreen() {
           {/* ── Stats Grid ── */}
           <View style={styles.statsGrid}>
             <StatTile icon="🚖" label={t('dashboard.statTrip')} value={String(periodCount)} color={colors.accentTertiary} />
-            <StatTile icon="🛣️" label={t('dashboard.statKm')} value={formatKm(periodKm)} color={colors.warning} />
+            <StatTile icon="🛣️" label={t('dashboard.statKm')} value={formatKm(periodKm, distanceUnit)} color={colors.warning} />
             <StatTile
               icon="📈"
               label={t('dashboard.statEarnings')}
@@ -275,12 +477,27 @@ export default function DashboardScreen() {
           </View>
 
           {/* ── Alt Stats ── */}
-          {(fuelCost > 0 || expenseCost > 0) && (
+          {(fuelCost > 0 || expenseCost > 0 || incomeTotal > 0) && (
             <View style={styles.subStats}>
+              {incomeTotal > 0 && (
+                <View style={styles.subStat}>
+                  <View style={styles.subStatHeader}>
+                    <Text style={styles.subStatIcon}>💰</Text>
+                    <Text style={styles.subStatLabel} numberOfLines={1}>{t('dashboard.incomeLabel')}</Text>
+                  </View>
+                  <CurrencyBreakdownValue
+                    amounts={incomeTotalByCurrency}
+                    activeCurrency={activeCurrency}
+                    textStyle={styles.subStatValue}
+                  />
+                </View>
+              )}
               {fuelCost > 0 && (
                 <View style={styles.subStat}>
-                  <Text style={styles.subStatIcon}>⛽</Text>
-                  <Text style={styles.subStatLabel}>{t('dashboard.fuelLabel')}</Text>
+                  <View style={styles.subStatHeader}>
+                    <Text style={styles.subStatIcon}>⛽</Text>
+                    <Text style={styles.subStatLabel} numberOfLines={1}>{t('dashboard.fuelLabel')}</Text>
+                  </View>
                   <CurrencyBreakdownValue
                     amounts={fuelCostByCurrency}
                     activeCurrency={activeCurrency}
@@ -290,8 +507,10 @@ export default function DashboardScreen() {
               )}
               {expenseCost > 0 && (
                 <View style={styles.subStat}>
-                  <Text style={styles.subStatIcon}>💸</Text>
-                  <Text style={styles.subStatLabel}>{t('dashboard.expenseLabel')}</Text>
+                  <View style={styles.subStatHeader}>
+                    <Text style={styles.subStatIcon}>💸</Text>
+                    <Text style={styles.subStatLabel} numberOfLines={1}>{t('dashboard.expenseLabel')}</Text>
+                  </View>
                   <CurrencyBreakdownValue
                     amounts={expenseCostByCurrency}
                     activeCurrency={activeCurrency}
@@ -447,25 +666,59 @@ function createStyles(colors: ColorTokens) {
     daySummaryBtnText: { color: colors.onAccent, fontWeight: '700', fontSize: 15 },
 
     dayActiveCard: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
       backgroundColor: colors.accent + '15',
       borderRadius: 14,
       padding: 14,
       borderWidth: 1,
       borderColor: colors.accent + '40',
+      gap: 12,
     },
+    dayActiveHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
     dayActiveLeft: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
     dayActiveSince: { color: colors.textPrimary, fontWeight: '700', fontSize: 14, marginTop: 1 },
+    pausedDot: { backgroundColor: colors.warning },
+    pausedLabel: { color: colors.warning },
+    dayLiveGrid: { flexDirection: 'row', gap: 8 },
+    dayNetRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      backgroundColor: colors.surface,
+      borderRadius: 10,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+    },
+    dayNetLabel: { color: colors.textSecondary, fontSize: 13, fontWeight: '600' },
+    dayNetValue: { fontSize: 16, fontWeight: '800' },
+    dayActionsRow: { flexDirection: 'row', gap: 8 },
+    pauseBtn: {
+      flex: 1,
+      backgroundColor: colors.warning,
+      borderRadius: 8,
+      paddingVertical: 10,
+      alignItems: 'center',
+    },
+    pauseBtnText: { color: colors.onAccent, fontWeight: '700', fontSize: 13 },
     endDayBtn: {
-      backgroundColor: colors.accent,
+      backgroundColor: colors.danger,
       borderRadius: 8,
       paddingHorizontal: 12,
       paddingVertical: 7,
       minWidth: 64,
       alignItems: 'center',
     },
+    endDayBtnFlex: { flex: 1, paddingVertical: 10 },
+    addTripBtn: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 4,
+      backgroundColor: colors.accent,
+      borderRadius: 8,
+      paddingVertical: 10,
+    },
+    addTripBtnText: { color: colors.onAccent, fontWeight: '700', fontSize: 13 },
 
     activeTripCard: {
       flexDirection: 'row',
@@ -511,16 +764,15 @@ function createStyles(colors: ColorTokens) {
     },
     subStat: {
       flex: 1,
-      flexDirection: 'row',
-      alignItems: 'center',
       backgroundColor: colors.surface,
       borderRadius: 10,
       paddingHorizontal: 12,
       paddingVertical: 8,
-      gap: 6,
+      gap: 4,
     },
+    subStatHeader: { flexDirection: 'row', alignItems: 'center', gap: 6 },
     subStatIcon: { fontSize: 14 },
-    subStatLabel: { color: colors.textMuted, fontSize: 12, flex: 1 },
+    subStatLabel: { color: colors.textMuted, fontSize: 12 },
     subStatValue: { color: colors.textSecondary, fontSize: 13, fontWeight: '600' },
 
     sectionHeader: {

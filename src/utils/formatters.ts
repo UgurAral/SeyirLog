@@ -1,3 +1,5 @@
+import { kmToDisplay } from '@stores/distanceUnitStore';
+
 /** Desteklenen uygulama dili kodunu Intl locale koduna çevirir. */
 const INTL_LOCALES: Record<string, string> = {
   tr: 'tr-TR',
@@ -19,10 +21,11 @@ const DURATION_UNITS: Record<string, { h: string; m: string }> = {
 };
 
 /**
- * Para miktarını Türk Lirası formatında biçimlendirir.
+ * Para miktarını Türk Lirası formatında biçimlendirir. Ondalık kısım sıfırsa
+ * hiç gösterilmez, değilse en fazla 2 basamak gösterilir.
  * @param amount - Para miktarı (sayı)
  * @param currency - Para birimi kodu (varsayılan: 'TRY')
- * @returns Biçimlendirilmiş para metni, örn. "1.234,50 ₺"
+ * @returns Biçimlendirilmiş para metni, örn. "1.234,50 ₺" veya "1.234 ₺"
  */
 export function formatCurrency(amount: number, currency = 'TRY'): string {
   const symbols: Record<string, string> = {
@@ -33,7 +36,7 @@ export function formatCurrency(amount: number, currency = 'TRY'): string {
   const symbol = symbols[currency] ?? currency;
 
   const formatted = new Intl.NumberFormat('tr-TR', {
-    minimumFractionDigits: 2,
+    minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   }).format(amount);
 
@@ -41,16 +44,18 @@ export function formatCurrency(amount: number, currency = 'TRY'): string {
 }
 
 /**
- * Kilometre değerini biçimlendirir.
- * @param km - Kilometre değeri
- * @returns Biçimlendirilmiş km metni, örn. "1.234 km"
+ * DB'de her zaman km olarak saklanan bir mesafeyi seçili birimde biçimlendirir.
+ * @param km - Ham kilometre değeri (DB'deki gerçek değer)
+ * @param unit - Gösterim birimi ('km' | 'mi'), varsayılan 'km'
+ * @returns Biçimlendirilmiş mesafe metni, örn. "1.234 km" veya "767 mi"
  */
-export function formatKm(km: number): string {
+export function formatKm(km: number, unit: 'km' | 'mi' = 'km'): string {
+  const displayValue = kmToDisplay(km, unit);
   const formatted = new Intl.NumberFormat('tr-TR', {
     minimumFractionDigits: 0,
     maximumFractionDigits: 1,
-  }).format(km);
-  return `${formatted} km`;
+  }).format(displayValue);
+  return `${formatted} ${unit}`;
 }
 
 /**
@@ -67,6 +72,21 @@ export function formatDuration(minutes: number, lang?: string): string {
   if (h > 0 && m > 0) return `${h}${units.h} ${m}${units.m}`;
   if (h > 0) return `${h}${units.h}`;
   return `${m}${units.m}`;
+}
+
+/**
+ * Saniye cinsinden süreyi akan saat formatında biçimlendirir (canlı vardiya
+ * sayacı için) — 1 saatten kısaysa "MM:SS", uzunsa "H:MM:SS".
+ * @param totalSeconds - Toplam saniye
+ * @returns Biçimlendirilmiş süre, örn. "18:54:14" veya "05:30"
+ */
+export function formatElapsedClock(totalSeconds: number): string {
+  const safe = Math.max(0, Math.floor(totalSeconds));
+  const h = Math.floor(safe / 3600);
+  const m = Math.floor((safe % 3600) / 60);
+  const s = safe % 60;
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
 }
 
 /**

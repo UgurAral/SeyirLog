@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Card } from './ui/Card';
 import { formatCurrency, formatKm, formatDuration, formatDateTime } from '@utils/formatters';
 import { resolveTripDurationMinutes } from '@utils/calculations';
+import { useDistanceUnitStore, kmToDisplay } from '@stores/distanceUnitStore';
 import { useTheme } from '@/theme/useTheme';
 import type { ColorTokens } from '@/theme/colors';
 import type { Trip } from '@/types';
@@ -19,6 +20,7 @@ export function TripCard({ trip, onPress }: TripCardProps) {
   const { t, i18n } = useTranslation();
   const { colors } = useTheme();
   const styles = createStyles(colors);
+  const distanceUnit = useDistanceUnitStore((s) => s.unit);
   const statusColors: Record<string, string> = {
     active: colors.success,
     completed: colors.accent,
@@ -26,6 +28,10 @@ export function TripCard({ trip, onPress }: TripCardProps) {
   };
   const statusColor = statusColors[trip.status] ?? colors.textSecondary;
   const durationMinutes = resolveTripDurationMinutes(trip);
+  const perKm =
+    trip.earnings != null && trip.distanceKm != null && trip.distanceKm > 0
+      ? trip.earnings / kmToDisplay(trip.distanceKm, distanceUnit)
+      : null;
 
   const handlePress = () => {
     if (onPress) {
@@ -63,7 +69,7 @@ export function TripCard({ trip, onPress }: TripCardProps) {
             value={formatDateTime(trip.startTime, i18n.language)}
           />
           {trip.distanceKm != null && (
-            <DetailItem label={t('tripDetail.distance')} value={formatKm(trip.distanceKm)} />
+            <DetailItem label={t('tripDetail.distance')} value={formatKm(trip.distanceKm, distanceUnit)} />
           )}
           {durationMinutes != null && (
             <DetailItem
@@ -76,6 +82,12 @@ export function TripCard({ trip, onPress }: TripCardProps) {
               label={t('tripDetail.earnings')}
               value={formatCurrency(trip.earnings, trip.currency)}
               valueColor={colors.success}
+            />
+          )}
+          {perKm != null && (
+            <DetailItem
+              label={t('tripDetail.perKmLabel')}
+              value={`${formatCurrency(perKm, trip.currency)}/${distanceUnit}`}
             />
           )}
         </View>

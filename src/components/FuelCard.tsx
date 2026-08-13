@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Card } from './ui/Card';
 import { formatCurrency, formatLiters, formatDate, formatKm } from '@utils/formatters';
 import { useFuelStore } from '@stores/fuelStore';
+import { useDistanceUnitStore } from '@stores/distanceUnitStore';
 import { useTheme } from '@/theme/useTheme';
 import type { ColorTokens } from '@/theme/colors';
 import type { FuelEntry } from '@/types';
@@ -17,6 +18,7 @@ export function FuelCard({ entry }: FuelCardProps) {
   const { t, i18n } = useTranslation();
   const { colors } = useTheme();
   const styles = createStyles(colors);
+  const distanceUnit = useDistanceUnitStore((s) => s.unit);
   const { deleteFuelEntry } = useFuelStore();
 
   const handleDelete = () => {
@@ -74,7 +76,7 @@ export function FuelCard({ entry }: FuelCardProps) {
           <DetailItem
             icon="🛣️"
             label={t('card.currentKm')}
-            value={formatKm(entry.currentKm)}
+            value={formatKm(entry.currentKm, distanceUnit)}
           />
         )}
       </View>

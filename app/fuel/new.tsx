@@ -17,6 +17,7 @@ import { Button } from '@components/ui/Button';
 import { useFuelStore } from '@stores/fuelStore';
 import { useVehicleStore } from '@stores/vehicleStore';
 import { useCurrencyStore, CURRENCY_SYMBOLS } from '@stores/currencyStore';
+import { useDistanceUnitStore, displayToKm } from '@stores/distanceUnitStore';
 import type { NewFuelEntry } from '@/types';
 import { formatCurrency } from '@utils/formatters';
 import { AdBanner } from '@components/AdBanner';
@@ -31,6 +32,7 @@ export default function NewFuelScreen() {
   const { addFuelEntry } = useFuelStore();
   const { activeVehicle } = useVehicleStore();
   const activeCurrency = useCurrencyStore((s) => s.currency);
+  const distanceUnit = useDistanceUnitStore((s) => s.unit);
 
   const [form, setForm] = useState({
     totalPaid: '',
@@ -62,7 +64,7 @@ export default function NewFuelScreen() {
         liters: litersNum,
         pricePerLiter: priceNum,
         totalCost,
-        currentKm: form.currentKm ? parseFloat(form.currentKm) : undefined,
+        currentKm: form.currentKm ? displayToKm(parseFloat(form.currentKm), distanceUnit) : undefined,
         stationName: form.stationName.trim() || undefined,
         notes: form.notes.trim() || undefined,
         date: now,
@@ -136,7 +138,7 @@ export default function NewFuelScreen() {
             value={form.currentKm}
             onChangeText={(v) => setForm((f) => ({ ...f, currentKm: v }))}
             keyboardType="numeric"
-            suffix="km"
+            suffix={distanceUnit}
           />
           <Input
             label={t('fuelNew.stationLabel')}

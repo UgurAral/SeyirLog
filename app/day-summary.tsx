@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useMemo, useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,38 +8,82 @@ import { useTrips } from '@hooks/useTrips';
 import { useFuel } from '@hooks/useFuel';
 import { useExpenses } from '@hooks/useExpenses';
 import { useIncome } from '@hooks/useIncome';
-import { useVehicles } from '@hooks/useVehicles';
 import { useCurrencyStore, type SupportedCurrency } from '@stores/currencyStore';
+import { useDistanceUnitStore, kmToDisplay } from '@stores/distanceUnitStore';
+import { useDayTrackingStore } from '@stores/dayTrackingStore';
 import { sumByCurrency, resolveTripDurationMinutes } from '@utils/calculations';
 import { formatKm, formatCurrency, formatTime, formatDuration } from '@utils/formatters';
 import { TripCard } from '@components/TripCard';
 import { CurrencyBreakdownValue } from '@components/ui/CurrencyBreakdownValue';
+import { OdometerRow } from '@components/ui/OdometerRow';
 import { AdBanner } from '@components/AdBanner';
 import { useTheme } from '@/theme/useTheme';
 import type { ColorTokens } from '@/theme/colors';
+import type { DaySession } from '@/types';
 
 export default function DaySummaryScreen() {
   const router = useRouter();
   const { t, i18n } = useTranslation();
   const { colors } = useTheme();
   const styles = createStyles(colors);
-  const { start, end } = useLocalSearchParams<{ start?: string; end?: string }>();
-  const { activeVehicle } = useVehicles();
-  const vehicleId = activeVehicle?.id;
+  const { session } = useLocalSearchParams<{ session?: string }>();
+  const sessionId = session ? parseInt(session, 10) : null;
   const activeCurrency = useCurrencyStore((s) => s.currency);
+  const distanceUnit = useDistanceUnitStore((s) => s.unit);
+  const getSession = useDayTrackingStore((s) => s.getSession);
+  const updateSessionOdometer = useDayTrackingStore((s) => s.updateSessionOdometer);
 
-  const startTs = start ? parseInt(start, 10) : null;
-  const endTs = end ? parseInt(end, 10) : null;
-  const hasRange = startTs !== null && endTs !== null;
+  const [sessionRow, setSessionRow] = useState<DaySession | null>(null);
+  const [sessionLoading, setSessionLoading] = useState(true);
+
+  useEffect(() => {
+    if (sessionId == null) {
+      // Parametre eksikse (beklenmedik doğrudan navigasyon) önceki bir
+      // oturuma ait veriyi asla göstermeyelim — sıfırla.
+      setSessionRow(null);
+      setSessionLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setSessionLoading(true);
+    setSessionRow(null);
+    getSession(sessionId).then((row) => {
+      if (!cancelled) {
+        setSessionRow(row);
+        setSessionLoading(false);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [sessionId, getSession]);
+
+  const handleSaveStartOdometer = async (km: number | null) => {
+    if (sessionId == null) return;
+    await updateSessionOdometer(sessionId, { startOdometerKm: km });
+    setSessionRow((prev) => (prev ? { ...prev, startOdometerKm: km } : prev));
+  };
+
+  const handleSaveEndOdometer = async (km: number | null) => {
+    if (sessionId == null) return;
+    await updateSessionOdometer(sessionId, { endOdometerKm: km });
+    setSessionRow((prev) => (prev ? { ...prev, endOdometerKm: km } : prev));
+  };
+
+  const hasRange = sessionRow != null && sessionRow.endTime != null;
   // Aralık yoksa (beklenmedik doğrudan navigasyon) filtreler her zaman boş
   // sonuç dönsün diye ters çevrilmiş, boş bir aralık kullanılır.
-  const rangeStart = startTs ?? 0;
-  const rangeEnd = endTs ?? 0;
+  const rangeStart = sessionRow?.startTime ?? 0;
+  const rangeEnd = sessionRow?.endTime ?? 0;
+  // O anki AKTİF araç değil, vardiyanın kendi kaydındaki araç kullanılır —
+  // aksi halde ekranı görüntülerken başka bir araca geçilmişse, o vardiyayla
+  // hiç ilgisi olmayan bir aracın kayıtları bu özete karışabilirdi.
+  const sessionVehicleId = sessionRow?.vehicleId ?? undefined;
 
-  const { trips } = useTrips(vehicleId, 'all');
-  const { fuelEntries } = useFuel(vehicleId, 'all');
-  const { expenses } = useExpenses(vehicleId, 'all');
-  const { entries: incomeEntries } = useIncome(vehicleId, 'all');
+  const { trips } = useTrips(sessionVehicleId, 'all');
+  const { fuelEntries } = useFuel(sessionVehicleId, 'all');
+  const { expenses } = useExpenses(sessionVehicleId, 'all');
+  const { entries: incomeEntries } = useIncome(sessionVehicleId, 'all');
 
   const rangeTrips = useMemo(
     () => trips.filter((tr) => tr.startTime >= rangeStart && tr.startTime < rangeEnd),
@@ -88,8 +132,23 @@ export default function DaySummaryScreen() {
   const totalIn = periodEarnings + incomeTotal;
   const totalOut = fuelCost + expenseCost;
   const net = totalIn - totalOut;
-  const perKm = periodKm > 0 ? periodEarnings / periodKm : 0;
+  const perKm = periodKm > 0 ? periodEarnings / kmToDisplay(periodKm, distanceUnit) : 0;
+  // Sefer kazancı + ek gelirlerin toplamını sefer sürelerinin toplamına böler
+  // — mesafedeki "Km Başına" gibi, süredeki gelir hızını gösterir.
+  const incomePerDuration =
+    periodDurationMinutes > 0 ? (periodEarnings + incomeTotal) / (periodDurationMinutes / 60) : 0;
   const hasData = periodCount > 0 || fuelCost > 0 || expenseCost > 0 || incomeTotal > 0;
+
+  // Araç sefer dışında da yol yapabildiği için gerçek toplam mesafe — ve onun
+  // üzerinden hesaplanan km başına kazanç — sadece km sayacı girildiyse bilinir.
+  const totalDistanceKm =
+    sessionRow?.startOdometerKm != null && sessionRow?.endOdometerKm != null
+      ? Math.max(0, sessionRow.endOdometerKm - sessionRow.startOdometerKm)
+      : null;
+  const totalPerKm =
+    totalDistanceKm != null && totalDistanceKm > 0
+      ? periodEarnings / kmToDisplay(totalDistanceKm, distanceUnit)
+      : null;
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
@@ -103,7 +162,11 @@ export default function DaySummaryScreen() {
 
       <AdBanner position="top" />
 
-      {!hasRange ? (
+      {sessionLoading ? (
+        <View style={styles.emptyState}>
+          <ActivityIndicator color={colors.accent} size="large" />
+        </View>
+      ) : !hasRange ? (
         <View style={styles.emptyState}>
           <Text style={styles.emptyIcon}>⏱️</Text>
           <Text style={styles.emptyText}>{t('daySummary.noRange')}</Text>
@@ -126,9 +189,45 @@ export default function DaySummaryScreen() {
         {/* ── Hızlı istatistikler ── */}
         <View style={styles.statsRow}>
           <QuickStat icon="🚖" label={t('daySummary.statTrip')} value={String(periodCount)} />
-          <QuickStat icon="🛣️" label={t('daySummary.statKm')} value={formatKm(periodKm)} />
+          <QuickStat icon="🛣️" label={t('daySummary.statKm')} value={formatKm(periodKm, distanceUnit)} />
           <QuickStat icon="⏱️" label={t('daySummary.statDuration')} value={formatDuration(periodDurationMinutes, i18n.language)} />
-          <QuickStat icon="📈" label={t('daySummary.statPerKm')} value={`${formatCurrency(perKm, activeCurrency)}/km`} />
+          <QuickStat icon="📈" label={t('daySummary.statPerKm')} value={`${formatCurrency(perKm, activeCurrency)}/${distanceUnit}`} />
+        </View>
+
+        <View style={styles.statsRow}>
+          <QuickStat
+            icon="💵"
+            label={t('daySummary.statIncomePerDuration')}
+            value={`${formatCurrency(incomePerDuration, activeCurrency)}/${t('daySummary.perHourSuffix')}`}
+          />
+        </View>
+
+        {/* ── Araç Km Sayacı ── */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>{t('daySummary.odometerSectionTitle')}</Text>
+          <Text style={styles.odometerHint}>{t('daySummary.odometerHint')}</Text>
+          <OdometerRow
+            label={t('daySummary.startOdometerLabel')}
+            valueKm={sessionRow?.startOdometerKm ?? null}
+            distanceUnit={distanceUnit}
+            onSave={handleSaveStartOdometer}
+          />
+          <OdometerRow
+            label={t('daySummary.endOdometerLabel')}
+            valueKm={sessionRow?.endOdometerKm ?? null}
+            distanceUnit={distanceUnit}
+            onSave={handleSaveEndOdometer}
+          />
+          {totalDistanceKm != null && (
+            <View style={styles.statsRow}>
+              <QuickStat icon="🛣️" label={t('daySummary.totalDistanceLabel')} value={formatKm(totalDistanceKm, distanceUnit)} />
+              <QuickStat
+                icon="📈"
+                label={t('daySummary.totalPerKmLabel')}
+                value={totalPerKm != null ? `${formatCurrency(totalPerKm, activeCurrency)}/${distanceUnit}` : '—'}
+              />
+            </View>
+          )}
         </View>
 
         {!hasData ? (
@@ -231,7 +330,7 @@ function BreakdownRow({
     <View style={styles.breakdownRow}>
       <View style={[styles.breakdownDot, { backgroundColor: color }]} />
       <Text style={styles.breakdownIcon}>{icon}</Text>
-      <Text style={styles.breakdownLabel}>{label}</Text>
+      <Text style={styles.breakdownLabel} numberOfLines={1}>{label}</Text>
       <CurrencyBreakdownValue amounts={amounts} activeCurrency={activeCurrency} color={color} textStyle={styles.breakdownValue} />
     </View>
   );
@@ -288,6 +387,7 @@ function createStyles(colors: ColorTokens) {
       gap: 12,
     },
     sectionTitle: { color: colors.textPrimary, fontSize: 15, fontWeight: '700' },
+    odometerHint: { color: colors.textMuted, fontSize: 12, lineHeight: 17 },
 
     barTrack: {
       flexDirection: 'row',

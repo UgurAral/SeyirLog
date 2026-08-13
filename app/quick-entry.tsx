@@ -21,6 +21,7 @@ import { useIncomeStore } from '@stores/incomeStore';
 import { useVehicles } from '@hooks/useVehicles';
 import { formatCurrency } from '@utils/formatters';
 import { useCurrencyStore, CURRENCY_SYMBOLS } from '@stores/currencyStore';
+import { useDistanceUnitStore, displayToKm } from '@stores/distanceUnitStore';
 import { AdBanner } from '@components/AdBanner';
 import { useExpenseCategoryOptions } from '@/i18n/options';
 import { getCurrentCoords, reverseGeocodeLabel } from '@utils/location';
@@ -44,6 +45,7 @@ export default function QuickEntryModal() {
   const { addEntry: addIncomeEntry } = useIncomeStore();
   const categoryOptions = useExpenseCategoryOptions();
   const activeCurrency = useCurrencyStore((s) => s.currency);
+  const distanceUnit = useDistanceUnitStore((s) => s.unit);
 
   const TABS: { id: Tab; label: string; icon: string; color: string }[] = [
     { id: 'trip', label: t('quickEntry.tabTrip'), icon: '🚖', color: colors.success },
@@ -126,17 +128,18 @@ export default function QuickEntryModal() {
       return;
     }
     const distanceKm = endForm.distanceKm.trim() ? distanceKmNum : null;
+    const distanceKmForStorage = distanceKm != null ? displayToKm(distanceKm, distanceUnit) : null;
     const durationOverride = endForm.durationMinutes.trim() ? durationNum : undefined;
     setTripSaving(true);
     try {
       const now = Math.floor(Date.now() / 1000);
-      await completeTrip(activeTrip.id, distanceKm, now, earnings, durationOverride);
+      await completeTrip(activeTrip.id, distanceKmForStorage, now, earnings, durationOverride);
       setEndForm({ distanceKm: '', earnings: '', durationMinutes: '' });
       const perKm = distanceKm && distanceKm > 0 ? earnings / distanceKm : null;
       Alert.alert(
         t('quickEntry.tripCompletedTitle'),
-        `${distanceKm != null ? `${distanceKm.toFixed(0)} km · ` : ''}${formatCurrency(earnings, activeCurrency)}` +
-          (perKm != null ? `\n${t('quickEntry.perKmLabel')}: ${formatCurrency(perKm, activeCurrency)}/km` : ''),
+        `${distanceKm != null ? `${distanceKm.toFixed(0)} ${distanceUnit} · ` : ''}${formatCurrency(earnings, activeCurrency)}` +
+          (perKm != null ? `\n${t('quickEntry.perKmLabel')}: ${formatCurrency(perKm, activeCurrency)}/${distanceUnit}` : ''),
         [{ text: t('common.ok'), onPress: () => router.back() }],
       );
     } catch (e) {
@@ -144,7 +147,7 @@ export default function QuickEntryModal() {
     } finally {
       setTripSaving(false);
     }
-  }, [activeTrip, endForm, completeTrip, router, t, activeCurrency]);
+  }, [activeTrip, endForm, completeTrip, router, t, activeCurrency, distanceUnit]);
 
   // ── Yakıt formu ──────────────────────────────────────────────────────────────
   const [fuelForm, setFuelForm] = useState({ totalPaid: '', liters: '', pricePerLiter: '', currentKm: '' });
@@ -168,7 +171,7 @@ export default function QuickEntryModal() {
         liters,
         pricePerLiter: price,
         totalCost: fuelTotal,
-        currentKm: fuelForm.currentKm ? parseFloat(fuelForm.currentKm) : undefined,
+        currentKm: fuelForm.currentKm ? displayToKm(parseFloat(fuelForm.currentKm), distanceUnit) : undefined,
         date: now,
         createdAt: now,
         updatedAt: now,
@@ -182,7 +185,7 @@ export default function QuickEntryModal() {
     } finally {
       setFuelSaving(false);
     }
-  }, [fuelForm, fuelTotal, fuelTotalPaid, vehicleId, addFuelEntry, router, t, activeCurrency]);
+  }, [fuelForm, fuelTotal, fuelTotalPaid, vehicleId, addFuelEntry, router, t, activeCurrency, distanceUnit]);
 
   // ── Gider formu ──────────────────────────────────────────────────────────────
   const [expenseForm, setExpenseForm] = useState<{ category: ExpenseCategory; amount: string; description: string }>({
@@ -318,7 +321,7 @@ export default function QuickEntryModal() {
                   />
                   <QInput
                     label={t('quickEntry.distanceLabel')}
-                    placeholder={t('quickEntry.distancePlaceholder')}
+                    placeholder={t('quickEntry.distancePlaceholder', { unit: distanceUnit })}
                     value={endForm.distanceKm}
                     onChangeText={(v) => setEndForm((f) => ({ ...f, distanceKm: v }))}
                     keyboardType="numeric"

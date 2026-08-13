@@ -23,10 +23,10 @@ export function BottomSheet({ visible, onClose, title, children }: BottomSheetPr
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable style={styles.overlay} onPress={onClose}>
-        <View style={styles.sheet}>
+        <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
           <Text style={styles.sheetTitle}>{title}</Text>
           {children}
-        </View>
+        </Pressable>
       </Pressable>
     </Modal>
   );

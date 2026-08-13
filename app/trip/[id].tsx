@@ -16,6 +16,7 @@ import { Button } from '@components/ui/Button';
 import { Input } from '@components/ui/Input';
 import { useTripStore } from '@stores/tripStore';
 import { useCurrencyStore, CURRENCY_SYMBOLS } from '@stores/currencyStore';
+import { useDistanceUnitStore, kmToDisplay, displayToKm } from '@stores/distanceUnitStore';
 import { formatCurrency, formatKm, formatDateTime, formatDuration } from '@utils/formatters';
 import { resolveTripDurationMinutes } from '@utils/calculations';
 import { AdBanner } from '@components/AdBanner';
@@ -30,6 +31,7 @@ export default function TripDetailScreen() {
   const styles = createStyles(colors);
   const { trips, completeTrip, updateTrip, cancelTrip, deleteTrip } = useTripStore();
   const activeCurrency = useCurrencyStore((s) => s.currency);
+  const distanceUnit = useDistanceUnitStore((s) => s.unit);
 
   const tripId = parseInt(id, 10);
   const trip = useMemo(
@@ -59,6 +61,10 @@ export default function TripDetailScreen() {
 
   const isActive = trip.status === 'active';
   const durationMinutes = resolveTripDurationMinutes(trip);
+  const perKm =
+    trip.earnings != null && trip.distanceKm != null && trip.distanceKm > 0
+      ? trip.earnings / kmToDisplay(trip.distanceKm, distanceUnit)
+      : null;
 
   const handleComplete = async () => {
     const earningsNum = parseFloat(earnings);
@@ -77,17 +83,19 @@ export default function TripDetailScreen() {
       return;
     }
     const distanceValue = distanceKm.trim() ? distanceNum : null;
+    const distanceValueKm = distanceValue != null ? displayToKm(distanceValue, distanceUnit) : null;
     const durationOverride = durationMinutesInput.trim() ? durationNum : undefined;
     setCompleting(true);
     try {
       const now = Math.floor(Date.now() / 1000);
-      await completeTrip(tripId, distanceValue, now, earningsNum, durationOverride);
+      await completeTrip(tripId, distanceValueKm, now, earningsNum, durationOverride);
       const perKm = distanceValue && distanceValue > 0 ? earningsNum / distanceValue : null;
       Alert.alert(
         t('tripDetail.completedTitle'),
         perKm != null
-          ? `${t('tripDetail.completedBody')}\n${t('tripDetail.perKmLabel')}: ${formatCurrency(perKm, activeCurrency)}/km`
+          ? `${t('tripDetail.completedBody')}\n${t('tripDetail.perKmLabel')}: ${formatCurrency(perKm, activeCurrency)}/${distanceUnit}`
           : t('tripDetail.completedBody'),
+        [{ text: t('common.ok'), onPress: () => router.replace('/(tabs)') }],
       );
     } catch (e) {
       Alert.alert(t('common.error'), String(e));
@@ -101,7 +109,7 @@ export default function TripDetailScreen() {
     setEditForm({
       origin: trip.origin,
       destination: trip.destination,
-      distanceKm: trip.distanceKm != null ? String(trip.distanceKm) : '',
+      distanceKm: trip.distanceKm != null ? String(kmToDisplay(trip.distanceKm, distanceUnit)) : '',
       earnings: trip.earnings != null ? String(trip.earnings) : '',
       durationMinutes: durationMinutes != null ? String(durationMinutes) : '',
     });
@@ -129,7 +137,7 @@ export default function TripDetailScreen() {
       await updateTrip(tripId, {
         origin: editForm.origin.trim() || 'A',
         destination: editForm.destination.trim() || 'B',
-        distanceKm: editForm.distanceKm.trim() ? distanceNum : null,
+        distanceKm: editForm.distanceKm.trim() ? displayToKm(distanceNum, distanceUnit) : null,
         earnings: earningsNum,
         durationMinutes: editForm.durationMinutes.trim() ? durationNum : null,
       });
@@ -229,13 +237,13 @@ export default function TripDetailScreen() {
             <DetailRow label={t('tripDetail.end')} value={formatDateTime(trip.endTime, i18n.language)} />
           ) : null}
           {trip.startKm != null && (
-            <DetailRow label={t('tripDetail.startKm')} value={formatKm(trip.startKm)} />
+            <DetailRow label={t('tripDetail.startKm')} value={formatKm(trip.startKm, distanceUnit)} />
           )}
           {trip.endKm != null && (
-            <DetailRow label={t('tripDetail.endKm')} value={formatKm(trip.endKm)} />
+            <DetailRow label={t('tripDetail.endKm')} value={formatKm(trip.endKm, distanceUnit)} />
           )}
           {trip.distanceKm != null && (
-            <DetailRow label={t('tripDetail.distance')} value={formatKm(trip.distanceKm)} />
+            <DetailRow label={t('tripDetail.distance')} value={formatKm(trip.distanceKm, distanceUnit)} />
           )}
           {durationMinutes != null ? (
             <DetailRow label={t('tripDetail.duration')} value={formatDuration(durationMinutes, i18n.language)} />
@@ -245,6 +253,12 @@ export default function TripDetailScreen() {
               label={t('tripDetail.earnings')}
               value={formatCurrency(trip.earnings, trip.currency)}
               valueColor={colors.success}
+            />
+          )}
+          {perKm != null && (
+            <DetailRow
+              label={t('tripDetail.perKmLabel')}
+              value={`${formatCurrency(perKm, trip.currency)}/${distanceUnit}`}
             />
           )}
           {trip.notes ? (
@@ -266,11 +280,11 @@ export default function TripDetailScreen() {
             />
             <Input
               label={t('tripDetail.distanceLabel')}
-              placeholder={t('tripDetail.distancePlaceholder')}
+              placeholder={t('tripDetail.distancePlaceholder', { unit: distanceUnit })}
               value={distanceKm}
               onChangeText={setDistanceKm}
               keyboardType="numeric"
-              suffix="km"
+              suffix={distanceUnit}
             />
             <Input
               label={t('tripDetail.durationLabel')}
@@ -307,11 +321,11 @@ export default function TripDetailScreen() {
             />
             <Input
               label={t('tripDetail.distanceLabel')}
-              placeholder={t('tripDetail.distancePlaceholder')}
+              placeholder={t('tripDetail.distancePlaceholder', { unit: distanceUnit })}
               value={editForm.distanceKm}
               onChangeText={(v) => setEditForm((f) => ({ ...f, distanceKm: v }))}
               keyboardType="numeric"
-              suffix="km"
+              suffix={distanceUnit}
             />
             <Input
               label={t('tripDetail.durationLabel')}

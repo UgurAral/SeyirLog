@@ -11,6 +11,7 @@ import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { initAuthListener, useAuthStore } from '@stores/authStore';
 import { useCurrencyStore } from '@stores/currencyStore';
+import { useDistanceUnitStore } from '@stores/distanceUnitStore';
 import { useDayTrackingStore } from '@stores/dayTrackingStore';
 import { useOnboardingStore } from '@stores/onboardingStore';
 import { useThemeStore } from '@stores/themeStore';
@@ -26,7 +27,8 @@ export default function RootLayout() {
   const { user, initialized } = useAuthStore();
   const [i18nReady, setI18nReady] = useState(false);
   const { initCurrency, initialized: currencyReady } = useCurrencyStore();
-  const { initDayTracking } = useDayTrackingStore();
+  const { initDistanceUnit, initialized: distanceUnitReady } = useDistanceUnitStore();
+  const { initDayTracking, initialized: dayTrackingReady } = useDayTrackingStore();
   const { seen: onboardingSeen, initialized: onboardingReady, initOnboarding } = useOnboardingStore();
   const { initialized: themeReady, initTheme } = useThemeStore();
   const { colors, isDark } = useTheme();
@@ -47,9 +49,17 @@ export default function RootLayout() {
   }, []);
 
   useEffect(() => {
-    initDayTracking();
+    initDistanceUnit();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    // day_sessions tablosunun var olması migration'ın bitmesine bağlı —
+    // erken çağrılırsa tablo henüz oluşmamış olabilir.
+    if (!success) return;
+    initDayTracking();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [success]);
 
   useEffect(() => {
     initOnboarding();
@@ -95,7 +105,7 @@ export default function RootLayout() {
     );
   }
 
-  if (!success || !i18nReady || !currencyReady || !onboardingReady || !themeReady) {
+  if (!success || !i18nReady || !currencyReady || !distanceUnitReady || !dayTrackingReady || !onboardingReady || !themeReady) {
     return (
       <View style={[styles.center, { backgroundColor: colors.background }]}>
         <ActivityIndicator color={colors.accent} size="large" />
@@ -153,6 +163,10 @@ export default function RootLayout() {
           <Stack.Screen
             name="day-summary"
             options={{ title: t('daySummary.pageTitle'), presentation: 'modal', headerShown: false }}
+          />
+          <Stack.Screen
+            name="day-history"
+            options={{ title: t('dayHistory.pageTitle'), headerShown: false }}
           />
           <Stack.Screen
             name="onboarding"

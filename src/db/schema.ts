@@ -96,3 +96,20 @@ export const incomeEntries = sqliteTable('income_entries', {
   createdAt: integer('created_at').notNull(),
   updatedAt: integer('updated_at').notNull(),
 });
+
+// ─── day_sessions ──────────────────────────────────────────────────────────────
+// "Günü Başlat/Bitir" ile takip edilen vardiyalar. Başlangıç/bitiş km'leri
+// aracın sefer dışında da yol yapabilmesi nedeniyle sefer mesafeleri
+// toplamından bağımsız, gerçek toplam mesafeyi hesaplamak için tutulur —
+// her iki alan da isteğe bağlı ve sonradan girilebilir/düzenlenebilir.
+
+export const daySessions = sqliteTable('day_sessions', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  vehicleId: integer('vehicle_id').references(() => vehicles.id),
+  startTime: integer('start_time').notNull(),
+  endTime: integer('end_time'),
+  startOdometerKm: real('start_odometer_km'),
+  endOdometerKm: real('end_odometer_km'),
+  createdAt: integer('created_at').notNull(),
+  updatedAt: integer('updated_at').notNull(),
+});

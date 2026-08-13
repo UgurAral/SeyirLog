@@ -5,12 +5,13 @@
 
 import { listenCollection } from '@services/firestore';
 import { upsertRows } from '@services/sync';
-import { vehicles, trips, fuelEntries, expenses, incomeEntries } from '@db/schema';
+import { vehicles, trips, fuelEntries, expenses, incomeEntries, daySessions } from '@db/schema';
 import { useTripStore } from '@stores/tripStore';
 import { useFuelStore } from '@stores/fuelStore';
 import { useExpenseStore } from '@stores/expenseStore';
 import { useIncomeStore } from '@stores/incomeStore';
 import { useVehicleStore } from '@stores/vehicleStore';
+import { useDayTrackingStore } from '@stores/dayTrackingStore';
 
 type Unsubscribe = () => void;
 
@@ -58,6 +59,14 @@ export function startRealtimeSync(vehicleId?: number): void {
         await useIncomeStore.getState().fetchEntries(vehicleId);
       } catch (e) {
         console.warn('Realtime sync hatası (income_entries):', e);
+      }
+    }),
+    listenCollection('day_sessions', async (rows) => {
+      try {
+        await upsertRows(daySessions, rows);
+        await useDayTrackingStore.getState().initDayTracking();
+      } catch (e) {
+        console.warn('Realtime sync hatası (day_sessions):', e);
       }
     }),
   ];

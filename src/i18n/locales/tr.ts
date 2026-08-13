@@ -13,6 +13,7 @@ export const tr = {
     yes: 'Evet',
     no: 'Hayır',
     optional: 'isteğe bağlı',
+    notSet: 'Girilmedi',
   },
 
   periods: {
@@ -143,14 +144,28 @@ export const tr = {
     statNet: 'Net',
     fuelLabel: 'Yakıt',
     expenseLabel: 'Gider',
+    incomeLabel: 'Ek Gelir',
     recentTrips: 'Son Seferler',
     seeAll: 'Tümü →',
     noTripsToday: 'Bugün henüz sefer yok.',
     noTripsPeriod: 'Bu dönemde sefer yok.',
     startDayButton: '▶️ Günü Başlat',
     endDayButton: 'Bitir',
+    endDayConfirmTitle: 'Günü Bitir',
+    endDayConfirmBody: 'Vardiyayı bitirmek istediğine emin misin?',
+    addButton: 'Ekle',
     dayActiveLabel: 'Gün Devam Ediyor',
+    dayPausedLabel: 'Molada',
     dayStartedAt: 'Başlangıç: {{time}}',
+    statDuration: 'Süre',
+    statIncomePerKm: 'Gelir/Mesafe',
+    perHourSuffix: 'sa',
+    dayNetLabel: 'Aktif Net Gelir',
+    pauseButton: '⏸ Mola Ver',
+    resumeButton: '▶️ Devam Et',
+    startOdometerLabel: 'Başlangıç Km',
+    odometerCarriedTitle: 'Başlangıç Km Dolduruldu',
+    odometerCarriedBody: 'Geçen vardiyanın bitiş km\'si ({{value}}) başlangıç olarak alındı. Gerekirse aşağıdan güncelleyebilirsin.',
   },
 
   trips: {
@@ -178,8 +193,8 @@ export const tr = {
     note: 'Not',
     completeSection: 'Seferi Tamamla',
     editSection: 'Seferi Düzenle',
-    distanceLabel: 'Mesafe (km)',
-    distancePlaceholder: 'Kaç km gittiniz? (opsiyonel)',
+    distanceLabel: 'Mesafe',
+    distancePlaceholder: 'Kaç {{unit}} gittiniz? (opsiyonel)',
     durationLabel: 'Süre (dk)',
     durationPlaceholder: 'Boş bırakılırsa otomatik hesaplanır',
     earningsLabel: 'Kazanç *',
@@ -364,6 +379,7 @@ export const tr = {
   },
 
   profile: {
+    dayHistoryButton: 'Vardiya Geçmişi',
     backupSection: 'Veri Yedekleme',
     backupSectionDesc:
       'Verilerinizi JSON dosyası olarak dışa aktarın. Uygulama silinse bile yedeğinizden geri yükleyebilirsiniz.',
@@ -409,8 +425,8 @@ export const tr = {
 
     activeTripLabel: 'Aktif Sefer',
     endTripSection: 'Seferi Bitir',
-    distanceLabel: 'Mesafe (km)',
-    distancePlaceholder: 'Kaç km gittiniz? (opsiyonel)',
+    distanceLabel: 'Mesafe',
+    distancePlaceholder: 'Kaç {{unit}} gittiniz? (opsiyonel)',
     durationLabel: 'Süre (dk)',
     durationPlaceholder: 'Boş bırakılırsa otomatik hesaplanır',
     earningsLabel: 'Kazanç (₺) *',
@@ -514,6 +530,8 @@ export const tr = {
     statKm: 'Toplam KM',
     statDuration: 'Toplam Süre',
     statPerKm: 'Km Başına',
+    statIncomePerDuration: 'Gelir/Süre',
+    perHourSuffix: 'sa',
     incomeSection: 'Gelirler',
     outcomeSection: 'Giderler',
     tripEarningsLabel: 'Sefer Kazancı',
@@ -523,6 +541,17 @@ export const tr = {
     tripsSection: 'Seferler',
     noData: 'Bu dönem için henüz veri yok.',
     noRange: 'Bu özet sadece "Günü Bitir" dediğinde oluşturulur.',
+    odometerSectionTitle: 'Araç Km Sayacı',
+    odometerHint: 'Aracın sefer dışında da yol yapabileceği için toplam mesafeyi hesaba katmak amacıyla başlangıç/bitiş km sayacını girebilirsin — hemen şimdi zorunlu değil.',
+    startOdometerLabel: 'Başlangıç Km',
+    endOdometerLabel: 'Bitiş Km',
+    totalDistanceLabel: 'Toplam Mesafe',
+    totalPerKmLabel: 'Toplam Km Başına',
+  },
+
+  dayHistory: {
+    pageTitle: 'Vardiya Geçmişi',
+    empty: 'Henüz tamamlanmış bir vardiya yok. Bir gün bitirdiğinde burada listelenecek.',
   },
 
   onboarding: {
@@ -545,6 +574,12 @@ export const tr = {
     system: 'Sistem',
     light: 'Açık',
     dark: 'Koyu',
+  },
+
+  distanceUnit: {
+    title: 'Mesafe Birimi',
+    km: 'Kilometre (km)',
+    mi: 'Mil (mi)',
   },
 
   locationPermission: {

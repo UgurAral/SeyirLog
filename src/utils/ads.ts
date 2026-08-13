@@ -72,6 +72,10 @@ function preloadRewardedAd(): void {
     if (preloadedRewarded === rewarded) {
       preloadedRewarded = null;
       preloadedRewardedReady = false;
+      // İlk yükleme başarısız olursa (örn. açılışta ağ yoksa) bir daha
+      // hiç yeniden denenmezse "Günü Bitir" oturum boyunca hep 10sn
+      // zaman aşımlı yavaş yola düşer — bir süre sonra tekrar dene.
+      setTimeout(preloadRewardedAd, 30000);
     }
     unsubLoad();
     unsubError();

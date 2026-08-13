@@ -111,14 +111,14 @@ export const useTripStore = create<TripStore>((set, get) => ({
     // Zustand'daki `trips` dizisi taze olmayabilir (örn. aktif sefer
     // yeniden başlatma sonrası hiç fetchTrips() çağrılmadan bitirilirse) —
     // süreyi güvenilir hesaplamak için başlangıç zamanını doğrudan DB'den oku.
-    let durationMinutes = durationMinutesOverride;
+    let durationMinutes: number | null | undefined = durationMinutesOverride;
     if (durationMinutes == null) {
       const [row] = await db
         .select({ startTime: trips.startTime })
         .from(trips)
         .where(eq(trips.id, id))
         .limit(1);
-      durationMinutes = row ? Math.max(0, Math.floor((endTime - row.startTime) / 60)) : undefined;
+      durationMinutes = row ? Math.max(0, Math.floor((endTime - row.startTime) / 60)) : null;
     }
     const currency = useCurrencyStore.getState().currency;
 

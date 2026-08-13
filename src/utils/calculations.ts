@@ -207,3 +207,19 @@ function getStartOfDay(timestamp: number): number {
   d.setUTCHours(0, 0, 0, 0);
   return Math.floor(d.getTime() / 1000);
 }
+
+/**
+ * Mola süresi düşülmüş, o ana kadar geçen canlı vardiya süresini saniye
+ * cinsinden döner. Molada iken `now` ilerlese de sonuç sabit kalır — çünkü
+ * `now - pausedAt` terimi `now`'daki artışı iptal eder.
+ */
+export function getElapsedSeconds(
+  dayStartedAt: number | null,
+  pausedAt: number | null,
+  totalPausedSeconds: number,
+  now: number,
+): number {
+  if (dayStartedAt == null) return 0;
+  const ongoingPause = pausedAt != null ? Math.max(0, now - pausedAt) : 0;
+  return Math.max(0, now - dayStartedAt - totalPausedSeconds - ongoingPause);
+}

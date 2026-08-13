@@ -15,6 +15,7 @@ export const de: TranslationSchema = {
     yes: 'Ja',
     no: 'Nein',
     optional: 'optional',
+    notSet: 'Nicht angegeben',
   },
 
   periods: {
@@ -145,14 +146,28 @@ export const de: TranslationSchema = {
     statNet: 'Netto',
     fuelLabel: 'Kraftstoff',
     expenseLabel: 'Ausgaben',
+    incomeLabel: 'Zusatzeinkommen',
     recentTrips: 'Letzte Fahrten',
     seeAll: 'Alle →',
     noTripsToday: 'Heute noch keine Fahrten.',
     noTripsPeriod: 'Keine Fahrten in diesem Zeitraum.',
     startDayButton: '▶️ Tag Starten',
     endDayButton: 'Beenden',
+    endDayConfirmTitle: 'Tag Beenden',
+    endDayConfirmBody: 'Bist du sicher, dass du diese Schicht beenden möchtest?',
+    addButton: 'Hinzufügen',
     dayActiveLabel: 'Tag Läuft',
+    dayPausedLabel: 'Pause',
     dayStartedAt: 'Gestartet: {{time}}',
+    statDuration: 'Dauer',
+    statIncomePerKm: 'Einkommen/Strecke',
+    perHourSuffix: 'Std',
+    dayNetLabel: 'Aktives Nettoeinkommen',
+    pauseButton: '⏸ Pause Machen',
+    resumeButton: '▶️ Fortsetzen',
+    startOdometerLabel: 'Kilometerstand (Start)',
+    odometerCarriedTitle: 'Start-Kilometerstand ausgefüllt',
+    odometerCarriedBody: 'Der End-Kilometerstand deiner letzten Schicht ({{value}}) wurde als Start übernommen. Du kannst ihn unten bei Bedarf ändern.',
   },
 
   trips: {
@@ -180,8 +195,8 @@ export const de: TranslationSchema = {
     note: 'Notiz',
     completeSection: 'Fahrt Abschließen',
     editSection: 'Fahrt Bearbeiten',
-    distanceLabel: 'Strecke (km)',
-    distancePlaceholder: 'Wie viele km bist du gefahren? (optional)',
+    distanceLabel: 'Strecke',
+    distancePlaceholder: 'Wie viele {{unit}} bist du gefahren? (optional)',
     durationLabel: 'Dauer (Min)',
     durationPlaceholder: 'Leer lassen für automatische Berechnung',
     earningsLabel: 'Einnahmen *',
@@ -366,6 +381,7 @@ export const de: TranslationSchema = {
   },
 
   profile: {
+    dayHistoryButton: 'Schichtverlauf',
     backupSection: 'Datensicherung',
     backupSectionDesc:
       'Exportiere deine Daten als JSON-Datei. Du kannst sie auch nach Löschen der App wiederherstellen.',
@@ -411,8 +427,8 @@ export const de: TranslationSchema = {
 
     activeTripLabel: 'Aktive Fahrt',
     endTripSection: 'Fahrt Beenden',
-    distanceLabel: 'Strecke (km)',
-    distancePlaceholder: 'Wie viele km bist du gefahren? (optional)',
+    distanceLabel: 'Strecke',
+    distancePlaceholder: 'Wie viele {{unit}} bist du gefahren? (optional)',
     durationLabel: 'Dauer (Min)',
     durationPlaceholder: 'Leer lassen für automatische Berechnung',
     earningsLabel: 'Einnahmen (₺) *',
@@ -516,6 +532,8 @@ export const de: TranslationSchema = {
     statKm: 'Gesamt-KM',
     statDuration: 'Gesamtdauer',
     statPerKm: 'Pro KM',
+    statIncomePerDuration: 'Einkommen/Dauer',
+    perHourSuffix: 'Std',
     incomeSection: 'Einnahmen',
     outcomeSection: 'Ausgaben',
     tripEarningsLabel: 'Fahrtverdienst',
@@ -525,6 +543,17 @@ export const de: TranslationSchema = {
     tripsSection: 'Fahrten',
     noData: 'Für diesen Zeitraum noch keine Daten.',
     noRange: 'Diese Zusammenfassung wird nur erstellt, wenn du auf "Tag beenden" tippst.',
+    odometerSectionTitle: 'Kilometerstand',
+    odometerHint: 'Da das Fahrzeug auch außerhalb von Fahrten bewegt werden kann, kannst du den Kilometerstand bei Beginn/Ende eintragen, um die Gesamtstrecke zu erfassen — jetzt nicht erforderlich.',
+    startOdometerLabel: 'Kilometerstand (Start)',
+    endOdometerLabel: 'Kilometerstand (Ende)',
+    totalDistanceLabel: 'Gesamtstrecke',
+    totalPerKmLabel: 'Gesamt pro Strecke',
+  },
+
+  dayHistory: {
+    pageTitle: 'Schichtverlauf',
+    empty: 'Noch keine abgeschlossenen Schichten. Sobald du einen Tag beendest, erscheint er hier.',
   },
 
   onboarding: {
@@ -547,6 +576,12 @@ export const de: TranslationSchema = {
     system: 'System',
     light: 'Hell',
     dark: 'Dunkel',
+  },
+
+  distanceUnit: {
+    title: 'Entfernungseinheit',
+    km: 'Kilometer (km)',
+    mi: 'Meilen (mi)',
   },
 
   locationPermission: {

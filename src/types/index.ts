@@ -5,6 +5,7 @@ import type {
   fuelEntries,
   expenses,
   incomeEntries,
+  daySessions,
 } from '@db/schema';
 
 // ─── Entity Types (DB rows) ────────────────────────────────────────────────────
@@ -14,6 +15,7 @@ export type Trip = InferSelectModel<typeof trips>;
 export type FuelEntry = InferSelectModel<typeof fuelEntries>;
 export type Expense = InferSelectModel<typeof expenses>;
 export type IncomeEntry = InferSelectModel<typeof incomeEntries>;
+export type DaySession = InferSelectModel<typeof daySessions>;
 
 // ─── Insert Types (new records) ───────────────────────────────────────────────
 
@@ -22,6 +24,7 @@ export type NewTrip = InferInsertModel<typeof trips>;
 export type NewFuelEntry = InferInsertModel<typeof fuelEntries>;
 export type NewExpense = InferInsertModel<typeof expenses>;
 export type NewIncomeEntry = InferInsertModel<typeof incomeEntries>;
+export type NewDaySession = InferInsertModel<typeof daySessions>;
 
 // ─── Enum Unions ──────────────────────────────────────────────────────────────
 

@@ -11,7 +11,7 @@ import type { AnySQLiteTable } from 'drizzle-orm/sqlite-core';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { db as localDb } from '@db/index';
 import {
-  vehicles, trips, fuelEntries, expenses, incomeEntries,
+  vehicles, trips, fuelEntries, expenses, incomeEntries, daySessions,
 } from '@db/schema';
 import { pushLocalToFirestore, fsPullAll } from '@services/firestore';
 import { useTripStore } from '@stores/tripStore';
@@ -19,6 +19,7 @@ import { useFuelStore } from '@stores/fuelStore';
 import { useExpenseStore } from '@stores/expenseStore';
 import { useIncomeStore } from '@stores/incomeStore';
 import { useVehicleStore } from '@stores/vehicleStore';
+import { useDayTrackingStore } from '@stores/dayTrackingStore';
 
 const COLLECTIONS = [
   { name: 'vehicles',       table: vehicles       },
@@ -26,6 +27,7 @@ const COLLECTIONS = [
   { name: 'fuel_entries',   table: fuelEntries    },
   { name: 'expenses',       table: expenses       },
   { name: 'income_entries', table: incomeEntries  },
+  { name: 'day_sessions',   table: daySessions    },
 ] as const;
 
 // ── Firestore satırlarını yerel SQLite'a yaz (insert ya da güncelle) ─────────
@@ -65,6 +67,8 @@ export async function pullFromCloud(): Promise<void> {
   await useFuelStore.getState().fetchFuelEntries();
   await useExpenseStore.getState().fetchExpenses();
   await useIncomeStore.getState().fetchEntries();
+  // Başka bir cihazda başlatılmış/bitirilmiş bir vardiya olabilir.
+  await useDayTrackingStore.getState().initDayTracking();
 }
 
 // ── Yerel veriyi tamamen sil (hesap değişiminde önceki kullanıcının verisi
@@ -76,6 +80,7 @@ export async function clearAllLocalData(): Promise<void> {
   await localDb.delete(expenses);
   await localDb.delete(fuelEntries);
   await localDb.delete(trips);
+  await localDb.delete(daySessions);
   await localDb.delete(vehicles);
 }
 

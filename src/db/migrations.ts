@@ -35,6 +35,13 @@ const migrations = {
         tag: '0004_add_currency_column',
         breakpoints: true,
       },
+      {
+        idx: 4,
+        version: '0001',
+        when: 1754100000000,
+        tag: '0005_add_day_sessions',
+        breakpoints: true,
+      },
     ],
   },
   migrations: {
@@ -210,6 +217,21 @@ const migrations = {
       ALTER TABLE expenses ADD COLUMN currency TEXT NOT NULL DEFAULT 'TRY';
       --> statement-breakpoint
       ALTER TABLE income_entries ADD COLUMN currency TEXT NOT NULL DEFAULT 'TRY';
+    `,
+    // "Günü Başlat/Bitir" vardiyaları artık SQLite'ta kalıcı — başlangıç/bitiş
+    // km'leri sefer dışı sürüşü de kapsayan gerçek toplam mesafeyi hesaplamak
+    // için sonradan da girilebilecek şekilde nullable.
+    m0004: `
+      CREATE TABLE IF NOT EXISTS day_sessions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        vehicle_id INTEGER REFERENCES vehicles(id),
+        start_time INTEGER NOT NULL,
+        end_time INTEGER,
+        start_odometer_km REAL,
+        end_odometer_km REAL,
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL
+      );
     `,
   },
 };

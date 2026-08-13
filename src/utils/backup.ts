@@ -5,8 +5,8 @@
  * {
  *   version: 1,
  *   exportedAt: <unix timestamp>,
- *   appVersion: "1.1.1",
- *   data: { vehicles, trips, fuelEntries, expenses, incomeEntries }
+ *   appVersion: "1.1.2",
+ *   data: { vehicles, trips, fuelEntries, expenses, incomeEntries, daySessions }
  * }
  */
 
@@ -20,11 +20,12 @@ import {
   fuelEntries,
   expenses,
   incomeEntries,
+  daySessions,
 } from '@db/schema';
 import i18n from '@/i18n';
 
 const BACKUP_VERSION = 1;
-const APP_VERSION = '1.1.1';
+const APP_VERSION = '1.1.2';
 
 export interface BackupData {
   version: number;
@@ -36,6 +37,7 @@ export interface BackupData {
     fuelEntries: unknown[];
     expenses: unknown[];
     incomeEntries: unknown[];
+    daySessions?: unknown[];
   };
 }
 
@@ -48,6 +50,7 @@ export interface RestoreResult {
     fuelEntries: number;
     expenses: number;
     incomeEntries: number;
+    daySessions: number;
   };
 }
 
@@ -55,12 +58,13 @@ export interface RestoreResult {
 
 export async function exportBackup(): Promise<{ success: boolean; message: string }> {
   try {
-    const [vehicleRows, tripRows, fuelRows, expenseRows, incomeRows] = await Promise.all([
+    const [vehicleRows, tripRows, fuelRows, expenseRows, incomeRows, daySessionRows] = await Promise.all([
       db.select().from(vehicles),
       db.select().from(trips),
       db.select().from(fuelEntries),
       db.select().from(expenses),
       db.select().from(incomeEntries),
+      db.select().from(daySessions),
     ]);
 
     const backup: BackupData = {
@@ -73,6 +77,7 @@ export async function exportBackup(): Promise<{ success: boolean; message: strin
         fuelEntries: fuelRows,
         expenses: expenseRows,
         incomeEntries: incomeRows,
+        daySessions: daySessionRows,
       },
     };
 
@@ -142,9 +147,10 @@ export async function importBackup(): Promise<RestoreResult> {
     await db.delete(expenses);
     await db.delete(fuelEntries);
     await db.delete(trips);
+    await db.delete(daySessions);
     await db.delete(vehicles);
 
-    const counts = { vehicles: 0, trips: 0, fuelEntries: 0, expenses: 0, incomeEntries: 0 };
+    const counts = { vehicles: 0, trips: 0, fuelEntries: 0, expenses: 0, incomeEntries: 0, daySessions: 0 };
 
     if (d.vehicles?.length) {
       await db.insert(vehicles).values(d.vehicles as never[]);
@@ -165,6 +171,10 @@ export async function importBackup(): Promise<RestoreResult> {
     if (d.incomeEntries?.length) {
       await db.insert(incomeEntries).values(d.incomeEntries as never[]);
       counts.incomeEntries = d.incomeEntries.length;
+    }
+    if (d.daySessions?.length) {
+      await db.insert(daySessions).values(d.daySessions as never[]);
+      counts.daySessions = d.daySessions.length;
     }
 
     return { success: true, message: i18n.t('backup.restoreSuccess'), counts };

@@ -15,6 +15,7 @@ export const es: TranslationSchema = {
     yes: 'Sí',
     no: 'No',
     optional: 'opcional',
+    notSet: 'Sin definir',
   },
 
   periods: {
@@ -145,14 +146,28 @@ export const es: TranslationSchema = {
     statNet: 'Neto',
     fuelLabel: 'Combustible',
     expenseLabel: 'Gastos',
+    incomeLabel: 'Ingreso Extra',
     recentTrips: 'Viajes Recientes',
     seeAll: 'Ver Todo →',
     noTripsToday: 'Aún no hay viajes hoy.',
     noTripsPeriod: 'No hay viajes en este período.',
     startDayButton: '▶️ Iniciar Día',
     endDayButton: 'Finalizar',
+    endDayConfirmTitle: 'Finalizar Día',
+    endDayConfirmBody: '¿Seguro que quieres finalizar este turno?',
+    addButton: 'Añadir',
     dayActiveLabel: 'Día en Curso',
+    dayPausedLabel: 'En Descanso',
     dayStartedAt: 'Inicio: {{time}}',
+    statDuration: 'Duración',
+    statIncomePerKm: 'Ingreso/Distancia',
+    perHourSuffix: 'h',
+    dayNetLabel: 'Ingreso Neto Activo',
+    pauseButton: '⏸ Tomar Descanso',
+    resumeButton: '▶️ Reanudar',
+    startOdometerLabel: 'Km Inicial',
+    odometerCarriedTitle: 'Km Inicial Completado',
+    odometerCarriedBody: 'Se usó la lectura final de tu último turno ({{value}}) como inicio. Puedes actualizarla abajo si es necesario.',
   },
 
   trips: {
@@ -180,8 +195,8 @@ export const es: TranslationSchema = {
     note: 'Nota',
     completeSection: 'Completar Viaje',
     editSection: 'Editar Viaje',
-    distanceLabel: 'Distancia (km)',
-    distancePlaceholder: '¿Cuántos km recorriste? (opcional)',
+    distanceLabel: 'Distancia',
+    distancePlaceholder: '¿Cuántos {{unit}} recorriste? (opcional)',
     durationLabel: 'Duración (min)',
     durationPlaceholder: 'Déjalo vacío para calcularlo automáticamente',
     earningsLabel: 'Ganancias *',
@@ -366,6 +381,7 @@ export const es: TranslationSchema = {
   },
 
   profile: {
+    dayHistoryButton: 'Historial de Turnos',
     backupSection: 'Copia de Seguridad',
     backupSectionDesc:
       'Exporta tus datos como archivo JSON. Podrás restaurarlos aunque elimines la app.',
@@ -411,8 +427,8 @@ export const es: TranslationSchema = {
 
     activeTripLabel: 'Viaje Activo',
     endTripSection: 'Finalizar Viaje',
-    distanceLabel: 'Distancia (km)',
-    distancePlaceholder: '¿Cuántos km recorriste? (opcional)',
+    distanceLabel: 'Distancia',
+    distancePlaceholder: '¿Cuántos {{unit}} recorriste? (opcional)',
     durationLabel: 'Duración (min)',
     durationPlaceholder: 'Déjalo vacío para calcularlo automáticamente',
     earningsLabel: 'Ganancias (₺) *',
@@ -516,6 +532,8 @@ export const es: TranslationSchema = {
     statKm: 'KM Total',
     statDuration: 'Tiempo Total',
     statPerKm: 'Por KM',
+    statIncomePerDuration: 'Ingreso/Duración',
+    perHourSuffix: 'h',
     incomeSection: 'Ingresos',
     outcomeSection: 'Gastos',
     tripEarningsLabel: 'Ganancia de Viajes',
@@ -525,6 +543,17 @@ export const es: TranslationSchema = {
     tripsSection: 'Viajes',
     noData: 'Aún no hay datos para este período.',
     noRange: 'Este resumen solo se crea cuando tocas "Finalizar Día".',
+    odometerSectionTitle: 'Cuentakilómetros del Vehículo',
+    odometerHint: 'Como el vehículo también puede recorrer distancia fuera de los viajes, puedes ingresar la lectura inicial/final del cuentakilómetros para calcular la distancia total — no es obligatorio ahora.',
+    startOdometerLabel: 'Km Inicial',
+    endOdometerLabel: 'Km Final',
+    totalDistanceLabel: 'Distancia Total',
+    totalPerKmLabel: 'Total por Distancia',
+  },
+
+  dayHistory: {
+    pageTitle: 'Historial de Turnos',
+    empty: 'Aún no hay turnos completados. Cuando termines un día, aparecerá aquí.',
   },
 
   onboarding: {
@@ -547,6 +576,12 @@ export const es: TranslationSchema = {
     system: 'Sistema',
     light: 'Claro',
     dark: 'Oscuro',
+  },
+
+  distanceUnit: {
+    title: 'Unidad de Distancia',
+    km: 'Kilómetros (km)',
+    mi: 'Millas (mi)',
   },
 
   locationPermission: {

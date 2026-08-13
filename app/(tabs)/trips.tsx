@@ -15,6 +15,7 @@ import { PeriodFilter, type Period } from '@components/ui/PeriodFilter';
 import { useTrips } from '@hooks/useTrips';
 import { useVehicles } from '@hooks/useVehicles';
 import { useCurrencyStore } from '@stores/currencyStore';
+import { useDistanceUnitStore } from '@stores/distanceUnitStore';
 import { formatKm } from '@utils/formatters';
 import { CurrencyBreakdownValue } from '@components/ui/CurrencyBreakdownValue';
 import { AdBanner } from '@components/AdBanner';
@@ -32,6 +33,7 @@ export default function TripsScreen() {
   const [period, setPeriod] = useState<Period>('all');
   const { activeVehicle } = useVehicles();
   const activeCurrency = useCurrencyStore((s) => s.currency);
+  const distanceUnit = useDistanceUnitStore((s) => s.unit);
 
   const {
     filteredTrips,
@@ -86,7 +88,7 @@ export default function TripsScreen() {
                   }
                 />
                 <View style={styles.summaryDivider} />
-                <SummaryItem label={t('trips.summaryDistance')} value={formatKm(periodKm)} color={colors.warning} />
+                <SummaryItem label={t('trips.summaryDistance')} value={formatKm(periodKm, distanceUnit)} color={colors.warning} />
               </View>
             )}
           </View>
