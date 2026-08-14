@@ -395,7 +395,7 @@ export default function DashboardScreen() {
                   disabled={endDayLoading}
                   activeOpacity={0.85}
                 >
-                  <Text style={styles.pauseBtnText}>
+                  <Text style={styles.pauseBtnText} numberOfLines={1}>
                     {pausedAt != null ? t('dashboard.resumeButton') : t('dashboard.pauseButton')}
                   </Text>
                 </TouchableOpacity>
@@ -407,7 +407,7 @@ export default function DashboardScreen() {
                 >
                   {endDayLoading
                     ? <ActivityIndicator color={colors.onAccent} size="small" />
-                    : <Text style={styles.endTripBtnText}>{t('dashboard.endDayButton')}</Text>
+                    : <Text style={styles.endTripBtnText} numberOfLines={1}>{t('dashboard.endDayButton')}</Text>
                   }
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -416,7 +416,7 @@ export default function DashboardScreen() {
                   activeOpacity={0.85}
                 >
                   <Ionicons name="add" size={16} color={colors.onAccent} />
-                  <Text style={styles.addTripBtnText}>{t('dashboard.addButton')}</Text>
+                  <Text style={styles.addTripBtnText} numberOfLines={1}>{t('dashboard.addButton')}</Text>
                 </TouchableOpacity>
               </View>
             </View>

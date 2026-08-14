@@ -57,7 +57,7 @@ export function Button({
           size="small"
         />
       ) : (
-        <Text style={[styles.text, styles[`${variant}Text`], textStyle]}>
+        <Text style={[styles.text, styles[`${variant}Text`], textStyle]} numberOfLines={1}>
           {label}
         </Text>
       )}

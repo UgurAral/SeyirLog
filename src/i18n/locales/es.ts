@@ -163,7 +163,7 @@ export const es: TranslationSchema = {
     statIncomePerKm: 'Ingreso/Distancia',
     perHourSuffix: 'h',
     dayNetLabel: 'Ingreso Neto Activo',
-    pauseButton: '⏸ Tomar Descanso',
+    pauseButton: '⏸ Pausar',
     resumeButton: '▶️ Reanudar',
     startOdometerLabel: 'Km Inicial',
     odometerCarriedTitle: 'Km Inicial Completado',

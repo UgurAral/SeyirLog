@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { BannerAd, BannerAdSize } from 'react-native-google-mobile-ads';
-import { AD_UNITS } from '@utils/ads';
+import { AD_UNITS, ADS_DISABLED } from '@utils/ads';
 import { useTheme } from '@/theme/useTheme';
 import type { ColorTokens } from '@/theme/colors';
 
@@ -11,6 +11,7 @@ interface AdBannerProps {
 
 export function AdBanner({ position }: AdBannerProps) {
   const unitId = position === 'top' ? AD_UNITS.BANNER_TOP : AD_UNITS.BANNER_BOTTOM;
+  if (ADS_DISABLED) return null;
   const { colors } = useTheme();
   const styles = createStyles(colors);
 

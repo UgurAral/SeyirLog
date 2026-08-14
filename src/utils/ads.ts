@@ -17,6 +17,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export { BannerAd, BannerAdSize };
 
+// Store ekran görüntüsü almak gibi durumlarda reklamları geçici olarak
+// kapatmak için — sadece yerel .env üzerinden, gitignored, prod build'leri
+// (EAS secrets) etkilemez.
+export const ADS_DISABLED = process.env.EXPO_PUBLIC_DISABLE_ADS === 'true';
+
 // ── Platform bazlı Ad Unit ID seçimi ─────────────────────────────────────────
 const isAndroid = Platform.OS === 'android';
 
@@ -84,6 +89,7 @@ function preloadRewardedAd(): void {
 }
 
 export function initAds(): void {
+  if (ADS_DISABLED) return;
   mobileAds()
     .initialize()
     .then(() => preloadRewardedAd())
@@ -91,6 +97,7 @@ export function initAds(): void {
 }
 
 export function showRewardedAd(): Promise<boolean> {
+  if (ADS_DISABLED) return Promise.resolve(true);
   return new Promise((resolve) => {
     const usingPreloaded = preloadedRewardedReady && preloadedRewarded != null;
     const rewarded = usingPreloaded

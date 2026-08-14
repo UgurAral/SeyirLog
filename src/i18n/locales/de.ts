@@ -163,7 +163,7 @@ export const de: TranslationSchema = {
     statIncomePerKm: 'Einkommen/Strecke',
     perHourSuffix: 'Std',
     dayNetLabel: 'Aktives Nettoeinkommen',
-    pauseButton: '⏸ Pause Machen',
+    pauseButton: '⏸ Pause',
     resumeButton: '▶️ Fortsetzen',
     startOdometerLabel: 'Kilometerstand (Start)',
     odometerCarriedTitle: 'Start-Kilometerstand ausgefüllt',

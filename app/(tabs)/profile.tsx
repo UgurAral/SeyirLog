@@ -213,7 +213,7 @@ export default function ProfileScreen() {
                 ? <ActivityIndicator color={colors.onAccent} size="small" />
                 : <Text style={styles.backupBtnIcon}>📤</Text>
               }
-              <Text style={styles.backupBtnText}>
+              <Text style={styles.backupBtnText} numberOfLines={1}>
                 {backupLoading ? t('profile.backupPreparing') : t('profile.backupButton')}
               </Text>
             </TouchableOpacity>
@@ -227,7 +227,7 @@ export default function ProfileScreen() {
                 ? <ActivityIndicator color={colors.onAccent} size="small" />
                 : <Text style={styles.backupBtnIcon}>📥</Text>
               }
-              <Text style={styles.backupBtnText}>
+              <Text style={styles.backupBtnText} numberOfLines={1}>
                 {restoreLoading ? t('profile.restoreLoading') : t('profile.restoreButton')}
               </Text>
             </TouchableOpacity>
