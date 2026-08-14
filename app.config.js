@@ -23,7 +23,7 @@ module.exports = {
       },
       package: 'com.seyirlog.app',
       "googleServicesFile": "./google-services.json",
-      versionCode: 5,
+      versionCode: 6,
     },
 
     plugins: [
