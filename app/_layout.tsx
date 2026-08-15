@@ -76,7 +76,7 @@ export default function RootLayout() {
   }, []);
 
   useEffect(() => {
-    if (!initialized || !success || !onboardingReady || !themeReady) return;
+    if (!initialized || !success || !onboardingReady || !themeReady || !i18nReady) return;
     if (!user) {
       stopRealtimeSync();
       router.replace('/auth');
@@ -95,7 +95,7 @@ export default function RootLayout() {
         later: t('locationPermission.later'),
       });
     }
-  }, [user, initialized, success, onboardingReady, onboardingSeen, themeReady, t]);
+  }, [user, initialized, success, onboardingReady, onboardingSeen, themeReady, i18nReady, t]);
 
   if (error) {
     return (
