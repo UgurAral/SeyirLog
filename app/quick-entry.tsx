@@ -26,6 +26,7 @@ import { AdBanner } from '@components/AdBanner';
 import { useExpenseCategoryOptions } from '@/i18n/options';
 import { getCurrentCoords, reverseGeocodeLabel } from '@utils/location';
 import { submitDemandSignal } from '@services/firestore';
+import { safeBack } from '@utils/navigation';
 import { useTheme } from '@/theme/useTheme';
 import type { ColorTokens } from '@/theme/colors';
 import type { ExpenseCategory } from '@/types';
@@ -58,7 +59,7 @@ export default function QuickEntryModal() {
 
   // ── Sefer formu ──────────────────────────────────────────────────────────────
   const [tripForm, setTripForm] = useState({ origin: 'A', destination: 'B' });
-  const [endForm, setEndForm] = useState({ distanceKm: '', earnings: '', durationMinutes: '' });
+  const [endForm, setEndForm] = useState({ distanceKm: '', earnings: '' });
   const [tripSaving, setTripSaving] = useState(false);
   const tripSavedRef = useRef(false);
 
@@ -100,15 +101,15 @@ export default function QuickEntryModal() {
         if (coords) submitDemandSignal(coords.lat, coords.lng, now);
       })();
       setTripForm({ origin: 'A', destination: 'B' });
-      Alert.alert(t('quickEntry.tripStartedTitle'), `${origin} → ${destination}`, [
-        { text: t('common.ok'), onPress: () => router.back() },
-      ]);
+      // Direksiyondaki kullanıcıya ekstra bir "Tamam" dokunuşu çıkarmamak için
+      // onay popup'ı yok — activeTrip store'da güncellenince bu ekran zaten
+      // otomatik olarak bitirme formuna geçiyor.
     } catch (e) {
       Alert.alert(t('common.error'), String(e));
     } finally {
       setTripSaving(false);
     }
-  }, [tripForm, vehicleId, addTrip, router, t]);
+  }, [tripForm, vehicleId, addTrip, t]);
 
   const handleEndTrip = useCallback(async () => {
     if (!activeTrip) return;
@@ -122,32 +123,24 @@ export default function QuickEntryModal() {
       Alert.alert(t('quickEntry.invalidDistanceTitle'), t('quickEntry.invalidDistanceBody'));
       return;
     }
-    const durationNum = parseFloat(endForm.durationMinutes);
-    if (endForm.durationMinutes.trim() && (isNaN(durationNum) || durationNum < 0)) {
-      Alert.alert(t('tripDetail.invalidDurationTitle'), t('tripDetail.invalidDurationBody'));
-      return;
-    }
     const distanceKm = endForm.distanceKm.trim() ? distanceKmNum : null;
     const distanceKmForStorage = distanceKm != null ? displayToKm(distanceKm, distanceUnit) : null;
-    const durationOverride = endForm.durationMinutes.trim() ? durationNum : undefined;
     setTripSaving(true);
     try {
       const now = Math.floor(Date.now() / 1000);
-      await completeTrip(activeTrip.id, distanceKmForStorage, now, earnings, durationOverride);
-      setEndForm({ distanceKm: '', earnings: '', durationMinutes: '' });
-      const perKm = distanceKm && distanceKm > 0 ? earnings / distanceKm : null;
-      Alert.alert(
-        t('quickEntry.tripCompletedTitle'),
-        `${distanceKm != null ? `${distanceKm.toFixed(0)} ${distanceUnit} · ` : ''}${formatCurrency(earnings, activeCurrency)}` +
-          (perKm != null ? `\n${t('quickEntry.perKmLabel')}: ${formatCurrency(perKm, activeCurrency)}/${distanceUnit}` : ''),
-        [{ text: t('common.ok'), onPress: () => router.back() }],
-      );
+      // Süre elle girilmiyor — completeTrip, durationMinutes verilmediğinde
+      // startTime/endTime'dan (yani sayaçtan) otomatik hesaplar.
+      await completeTrip(activeTrip.id, distanceKmForStorage, now, earnings);
+      setEndForm({ distanceKm: '', earnings: '' });
+      // Direksiyondaki kullanıcıya ekstra bir "Tamam" dokunuşu çıkarmamak için
+      // onay popup'ı yok — sefer bitince modal doğrudan kapanır.
+      safeBack(router);
     } catch (e) {
       Alert.alert(t('common.error'), String(e));
     } finally {
       setTripSaving(false);
     }
-  }, [activeTrip, endForm, completeTrip, router, t, activeCurrency, distanceUnit]);
+  }, [activeTrip, endForm, completeTrip, router, t, distanceUnit]);
 
   // ── Yakıt formu ──────────────────────────────────────────────────────────────
   const [fuelForm, setFuelForm] = useState({ totalPaid: '', liters: '', pricePerLiter: '', currentKm: '' });
@@ -178,7 +171,7 @@ export default function QuickEntryModal() {
       });
       setFuelForm({ totalPaid: '', liters: '', pricePerLiter: '', currentKm: '' });
       Alert.alert(t('quickEntry.fuelAddedTitle'), formatCurrency(fuelTotal, activeCurrency), [
-        { text: t('common.ok'), onPress: () => router.back() },
+        { text: t('common.ok'), onPress: () => safeBack(router) },
       ]);
     } catch (e) {
       Alert.alert(t('common.error'), String(e));
@@ -215,7 +208,7 @@ export default function QuickEntryModal() {
       });
       setExpenseForm({ category: 'other', amount: '', description: '' });
       Alert.alert(t('quickEntry.expenseAddedTitle'), formatCurrency(amount, activeCurrency), [
-        { text: t('common.ok'), onPress: () => router.back() },
+        { text: t('common.ok'), onPress: () => safeBack(router) },
       ]);
     } catch (e) {
       Alert.alert(t('common.error'), String(e));
@@ -246,7 +239,7 @@ export default function QuickEntryModal() {
       });
       setIncomeForm({ amount: '', source: '', description: '' });
       Alert.alert(t('quickEntry.incomeAddedTitle'), formatCurrency(amount, activeCurrency), [
-        { text: t('common.ok'), onPress: () => router.back() },
+        { text: t('common.ok'), onPress: () => safeBack(router) },
       ]);
     } catch (e) {
       Alert.alert(t('common.error'), String(e));
@@ -267,7 +260,7 @@ export default function QuickEntryModal() {
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>{t('quickEntry.title')}</Text>
-          <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
+          <TouchableOpacity onPress={() => safeBack(router)} hitSlop={12}>
             <Ionicons name="close-circle" size={28} color={colors.textMuted} />
           </TouchableOpacity>
         </View>
@@ -312,6 +305,15 @@ export default function QuickEntryModal() {
                   </View>
 
                   <Text style={styles.sectionLabel}>{t('quickEntry.endTripSection')}</Text>
+                  {/* Buton, klavye açıkken alanların altında kalıp erişilemez
+                      olmaması için (start-trip formuyla aynı düzen) girişlerden
+                      önce yer alıyor. */}
+                  <SaveButton
+                    label={t('quickEntry.endTripButton')}
+                    color={colors.success}
+                    loading={tripSaving}
+                    onPress={handleEndTrip}
+                  />
                   <QInput
                     label={t('quickEntry.earningsLabel')}
                     placeholder="0.00"
@@ -325,19 +327,6 @@ export default function QuickEntryModal() {
                     value={endForm.distanceKm}
                     onChangeText={(v) => setEndForm((f) => ({ ...f, distanceKm: v }))}
                     keyboardType="numeric"
-                  />
-                  <QInput
-                    label={t('quickEntry.durationLabel')}
-                    placeholder={t('quickEntry.durationPlaceholder')}
-                    value={endForm.durationMinutes}
-                    onChangeText={(v) => setEndForm((f) => ({ ...f, durationMinutes: v }))}
-                    keyboardType="numeric"
-                  />
-                  <SaveButton
-                    label={t('quickEntry.endTripButton')}
-                    color={colors.success}
-                    loading={tripSaving}
-                    onPress={handleEndTrip}
                   />
                 </>
               ) : (

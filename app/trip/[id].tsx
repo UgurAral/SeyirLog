@@ -20,6 +20,7 @@ import { useDistanceUnitStore, kmToDisplay, displayToKm } from '@stores/distance
 import { formatCurrency, formatKm, formatDateTime, formatDuration } from '@utils/formatters';
 import { resolveTripDurationMinutes } from '@utils/calculations';
 import { AdBanner } from '@components/AdBanner';
+import { safeBack } from '@utils/navigation';
 import { useTheme } from '@/theme/useTheme';
 import type { ColorTokens } from '@/theme/colors';
 
@@ -41,7 +42,6 @@ export default function TripDetailScreen() {
 
   const [distanceKm, setDistanceKm] = useState('');
   const [earnings, setEarnings] = useState('');
-  const [durationMinutesInput, setDurationMinutesInput] = useState('');
   const [completing, setCompleting] = useState(false);
 
   const [editing, setEditing] = useState(false);
@@ -53,7 +53,7 @@ export default function TripDetailScreen() {
       <SafeAreaView style={styles.safe}>
         <View style={styles.center}>
           <Text style={styles.notFound}>{t('tripDetail.notFound')}</Text>
-          <Button label={t('common.back')} onPress={() => router.back()} variant="ghost" />
+          <Button label={t('common.back')} onPress={() => safeBack(router)} variant="ghost" />
         </View>
       </SafeAreaView>
     );
@@ -77,26 +77,17 @@ export default function TripDetailScreen() {
       Alert.alert(t('tripDetail.invalidDistanceTitle'), t('tripDetail.invalidDistanceBody'));
       return;
     }
-    const durationNum = parseFloat(durationMinutesInput);
-    if (durationMinutesInput.trim() && (isNaN(durationNum) || durationNum < 0)) {
-      Alert.alert(t('tripDetail.invalidDurationTitle'), t('tripDetail.invalidDurationBody'));
-      return;
-    }
     const distanceValue = distanceKm.trim() ? distanceNum : null;
     const distanceValueKm = distanceValue != null ? displayToKm(distanceValue, distanceUnit) : null;
-    const durationOverride = durationMinutesInput.trim() ? durationNum : undefined;
     setCompleting(true);
     try {
       const now = Math.floor(Date.now() / 1000);
-      await completeTrip(tripId, distanceValueKm, now, earningsNum, durationOverride);
-      const perKm = distanceValue && distanceValue > 0 ? earningsNum / distanceValue : null;
-      Alert.alert(
-        t('tripDetail.completedTitle'),
-        perKm != null
-          ? `${t('tripDetail.completedBody')}\n${t('tripDetail.perKmLabel')}: ${formatCurrency(perKm, activeCurrency)}/${distanceUnit}`
-          : t('tripDetail.completedBody'),
-        [{ text: t('common.ok'), onPress: () => router.replace('/(tabs)') }],
-      );
+      // Süre elle girilmiyor — completeTrip, durationMinutes verilmediğinde
+      // startTime/endTime'dan (yani sayaçtan) otomatik hesaplar.
+      await completeTrip(tripId, distanceValueKm, now, earningsNum);
+      // Direksiyondaki kullanıcıya ekstra bir "Tamam" dokunuşu çıkarmamak için
+      // onay popup'ı yok — sefer bitince ekran doğrudan kapanır.
+      router.replace('/(tabs)');
     } catch (e) {
       Alert.alert(t('common.error'), String(e));
     } finally {
@@ -160,7 +151,7 @@ export default function TripDetailScreen() {
           style: 'destructive',
           onPress: async () => {
             await cancelTrip(tripId);
-            router.back();
+            safeBack(router);
           },
         },
       ],
@@ -178,7 +169,7 @@ export default function TripDetailScreen() {
           style: 'destructive',
           onPress: async () => {
             await deleteTrip(tripId);
-            router.back();
+            safeBack(router);
           },
         },
       ],
@@ -270,6 +261,13 @@ export default function TripDetailScreen() {
         {isActive ? (
           <Card style={styles.card}>
             <Text style={styles.sectionTitle}>{t('tripDetail.completeSection')}</Text>
+            {/* Buton, klavye açıkken alanların altında kalıp erişilemez
+                olmaması için girişlerden önce yer alıyor. */}
+            <Button
+              label={t('tripDetail.completeButton')}
+              onPress={handleComplete}
+              loading={completing}
+            />
             <Input
               label={t('tripDetail.earningsLabel')}
               placeholder={t('tripDetail.earningsPlaceholder')}
@@ -285,19 +283,6 @@ export default function TripDetailScreen() {
               onChangeText={setDistanceKm}
               keyboardType="numeric"
               suffix={distanceUnit}
-            />
-            <Input
-              label={t('tripDetail.durationLabel')}
-              placeholder={t('tripDetail.durationPlaceholder')}
-              value={durationMinutesInput}
-              onChangeText={setDurationMinutesInput}
-              keyboardType="numeric"
-              suffix="dk"
-            />
-            <Button
-              label={t('tripDetail.completeButton')}
-              onPress={handleComplete}
-              loading={completing}
             />
             <Button
               label={t('tripDetail.cancelTripButton')}

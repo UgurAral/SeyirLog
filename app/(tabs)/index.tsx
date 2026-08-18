@@ -141,13 +141,12 @@ export default function DashboardScreen() {
     periodCount,
   } = useTrips(vehicleId, period);
 
-  // NOT: Burada eskiden "activeTrip null'dan dolu olunca otomatik quick-entry'e
-  // geç" diye bir efekt vardı. Dashboard, quick-entry'nin ALTINDA mount'lu
-  // kalmaya devam ettiği için (aktif sefer başlatıldığında zaten quick-entry
-  // içindeyken), o efekt aynı anda TEKRAR bir quick-entry push'u tetikliyor,
-  // üst üste 2+ ekran birikmesine yol açıyordu. Aktif sefere manuel dönüş
-  // için aşağıdaki "Aktif Sefer Banner" zaten yeterli — otomatik yönlendirme
-  // kaldırıldı.
+  // NOT: activeTrip null'dan dolu olunca otomatik quick-entry'e geçme mantığı
+  // bilerek burada DEĞİL, app/_layout.tsx'te (sadece soğuk açılışta, tek
+  // seferlik bir ref ile korunarak) yaşıyor. Burada bir effect olsaydı,
+  // Dashboard quick-entry'nin ALTINDA mount'lu kaldığı için (aktif sefer
+  // başlatıldığında zaten quick-entry içindeyken) aynı anda TEKRAR bir
+  // push tetiklenip üst üste 2+ ekran birikmesine yol açardı.
 
   const { periodCost: fuelCost, periodCostByCurrency: fuelCostByCurrency, fuelEntries: allFuelEntries } = useFuel(vehicleId, period);
   const { periodTotal: expenseCost, periodTotalByCurrency: expenseCostByCurrency, expenses: allExpenses } = useExpenses(vehicleId, period);
@@ -412,7 +411,7 @@ export default function DashboardScreen() {
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.addTripBtn}
-                  onPress={() => router.push('/quick-entry')}
+                  onPress={() => router.navigate('/quick-entry')}
                   activeOpacity={0.85}
                 >
                   <Ionicons name="add" size={16} color={colors.onAccent} />
@@ -426,7 +425,7 @@ export default function DashboardScreen() {
           {activeTrip && (
             <TouchableOpacity
               style={styles.activeTripCard}
-              onPress={() => router.push('/quick-entry')}
+              onPress={() => router.navigate('/quick-entry')}
               activeOpacity={0.85}
             >
               <View style={styles.activeTripLeft}>
@@ -555,7 +554,7 @@ export default function DashboardScreen() {
         {/* ── FAB ── */}
         <TouchableOpacity
           style={styles.fab}
-          onPress={() => router.push('/quick-entry')}
+          onPress={() => router.navigate('/quick-entry')}
           activeOpacity={0.85}
         >
           <Ionicons name="add" size={30} color={colors.onAccent} />

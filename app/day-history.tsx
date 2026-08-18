@@ -14,6 +14,7 @@ import { useCurrencyStore } from '@stores/currencyStore';
 import { sumByCurrency } from '@utils/calculations';
 import { formatDate, formatTime, formatDuration, formatCurrency } from '@utils/formatters';
 import { AdBanner } from '@components/AdBanner';
+import { safeBack } from '@utils/navigation';
 import { useTheme } from '@/theme/useTheme';
 import type { ColorTokens } from '@/theme/colors';
 import type { DaySession } from '@/types';
@@ -87,7 +88,7 @@ export default function DayHistoryScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
+        <TouchableOpacity onPress={() => safeBack(router)} hitSlop={12}>
           <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('dayHistory.pageTitle')}</Text>

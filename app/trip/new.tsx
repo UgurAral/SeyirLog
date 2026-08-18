@@ -19,6 +19,7 @@ import { useVehicleStore } from '@stores/vehicleStore';
 import { AdBanner } from '@components/AdBanner';
 import { getCurrentCoords, reverseGeocodeLabel } from '@utils/location';
 import { submitDemandSignal } from '@services/firestore';
+import { safeBack } from '@utils/navigation';
 import { useTheme } from '@/theme/useTheme';
 import type { ColorTokens } from '@/theme/colors';
 import type { NewTrip } from '@/types';
@@ -76,7 +77,9 @@ export default function NewTripScreen() {
         const coords = await getCurrentCoords();
         if (coords) submitDemandSignal(coords.lat, coords.lng, now);
       })();
-      router.back();
+      // Sefer oluşturulunca aktif sefer sayfası (quick-entry) açılır — back()
+      // yerine replace() kullanılıyor ki bu form stack'te birikmesin.
+      router.replace('/quick-entry');
     } catch (e) {
       Alert.alert(t('common.error'), String(e));
     } finally {
@@ -128,7 +131,7 @@ export default function NewTripScreen() {
         <View style={styles.actions}>
           <Button
             label={t('common.cancel')}
-            onPress={() => router.back()}
+            onPress={() => safeBack(router)}
             variant="ghost"
             style={styles.actionBtn}
           />

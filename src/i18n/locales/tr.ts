@@ -168,6 +168,15 @@ export const tr = {
     odometerCarriedBody: 'Geçen vardiyanın bitiş km\'si ({{value}}) başlangıç olarak alındı. Gerekirse aşağıdan güncelleyebilirsin.',
   },
 
+  activeStatusNotification: {
+    tripTitle: 'Aktif Sefer',
+    tripBody: 'Başlangıç: {{time}} • Devam ediyor',
+    dayTitle: 'Gün Devam Ediyor',
+    dayBodyActive: 'Başlangıç: {{time}}',
+    dayBodyPaused: 'Başlangıç: {{time}} • Molada',
+    todayEarningsLabel: 'Bugün: {{amount}}',
+  },
+
   trips: {
     title: 'Seferler',
     emptyText: 'Bu dönemde sefer kaydı yok',

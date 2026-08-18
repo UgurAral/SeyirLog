@@ -170,6 +170,15 @@ export const en: TranslationSchema = {
     odometerCarriedBody: "Your last shift's end reading ({{value}}) was used as the start. You can update it below if needed.",
   },
 
+  activeStatusNotification: {
+    tripTitle: 'Active Trip',
+    tripBody: 'Started: {{time}} • In progress',
+    dayTitle: 'Day In Progress',
+    dayBodyActive: 'Started: {{time}}',
+    dayBodyPaused: 'Started: {{time}} • On break',
+    todayEarningsLabel: 'Today: {{amount}}',
+  },
+
   trips: {
     title: 'Trips',
     emptyText: 'No trips in this period',

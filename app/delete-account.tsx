@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { deleteAccountWithPassword, deleteAccountWithGoogle, deleteAccountWithApple } from '@services/accountDeletion';
 import { firebaseAuth } from '@services/auth';
+import { safeBack } from '@utils/navigation';
 import { useTheme } from '@/theme/useTheme';
 import type { ColorTokens } from '@/theme/colors';
 
@@ -120,7 +121,7 @@ export default function DeleteAccountScreen() {
           }
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => router.back()} disabled={loading}>
+        <TouchableOpacity onPress={() => safeBack(router)} disabled={loading}>
           <Text style={styles.cancelLink}>{t('deleteAccount.cancelLink')}</Text>
         </TouchableOpacity>
       </View>

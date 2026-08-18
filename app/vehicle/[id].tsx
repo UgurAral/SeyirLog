@@ -18,6 +18,7 @@ import { useVehicleStore } from '@stores/vehicleStore';
 import type { Vehicle, VehicleType, FuelType } from '@/types';
 import { useVehicleTypeOptions, useFuelTypeOptions } from '@/i18n/options';
 import { AdBanner } from '@components/AdBanner';
+import { safeBack } from '@utils/navigation';
 import { useTheme } from '@/theme/useTheme';
 import type { ColorTokens } from '@/theme/colors';
 
@@ -51,7 +52,7 @@ export default function VehicleDetailScreen() {
       <SafeAreaView style={styles.safe}>
         <View style={styles.center}>
           <Text style={styles.notFoundText}>{t('vehicleDetail.notFound')}</Text>
-          <Button label={t('vehicleDetail.backButton')} onPress={() => router.back()} variant="ghost" />
+          <Button label={t('vehicleDetail.backButton')} onPress={() => safeBack(router)} variant="ghost" />
         </View>
       </SafeAreaView>
     );
@@ -102,7 +103,7 @@ export default function VehicleDetailScreen() {
           onPress: async () => {
             try {
               await deleteVehicle(vehicle.id);
-              router.back();
+              safeBack(router);
             } catch (e) {
               Alert.alert(t('common.error'), String(e));
             }

@@ -11,7 +11,7 @@ module.exports = {
       supportsTablet: false,
       bundleIdentifier: 'com.seyirlog.app',
       googleServicesFile: './GoogleService-Info.plist',
-      buildNumber: '5',
+      buildNumber: '6',
       usesAppleSignIn: true,
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
@@ -23,7 +23,7 @@ module.exports = {
       },
       package: 'com.seyirlog.app',
       "googleServicesFile": "./google-services.json",
-      versionCode: 6,
+      versionCode: 7,
     },
 
     plugins: [
@@ -61,7 +61,17 @@ module.exports = {
       ],
       '@react-native-google-signin/google-signin',
       'expo-apple-authentication',
+      [
+        'expo-notifications',
+        {
+          icon: './assets/notification-icon.png',
+          color: '#3B82F6',
+        },
+      ],
       './plugins/withFirebaseModularHeadersFix',
+      './plugins/withIOSExpoImportFix',
+      './plugins/withAndroidReleaseSigning',
+      './plugins/withAndroidSplashWindowBackground',
       [
         'react-native-google-mobile-ads',
         {

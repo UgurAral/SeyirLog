@@ -170,6 +170,15 @@ export const es: TranslationSchema = {
     odometerCarriedBody: 'Se usó la lectura final de tu último turno ({{value}}) como inicio. Puedes actualizarla abajo si es necesario.',
   },
 
+  activeStatusNotification: {
+    tripTitle: 'Viaje Activo',
+    tripBody: 'Inicio: {{time}} • En curso',
+    dayTitle: 'Jornada en Curso',
+    dayBodyActive: 'Inicio: {{time}}',
+    dayBodyPaused: 'Inicio: {{time}} • En pausa',
+    todayEarningsLabel: 'Hoy: {{amount}}',
+  },
+
   trips: {
     title: 'Viajes',
     emptyText: 'No hay viajes en este período',

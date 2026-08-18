@@ -27,6 +27,7 @@ import { signOut } from '@services/auth';
 import { useCurrencyStore, type SupportedCurrency } from '@stores/currencyStore';
 import { useCurrencyOptions } from '@/i18n/options';
 import { AdBanner } from '@components/AdBanner';
+import { showRewardedAd } from '@utils/ads';
 import { LanguagePicker } from '@components/LanguagePicker';
 import { BottomSheet, BottomSheetDivider } from '@components/ui/BottomSheet';
 import { submitFeedback } from '@services/firestore';
@@ -48,6 +49,7 @@ export default function ProfileScreen() {
   const { vehicles, activeVehicle, isLoading, error, setActiveVehicle, fetchVehicles } =
     useVehicles();
   const [backupLoading, setBackupLoading] = useState(false);
+  const [dayHistoryLoading, setDayHistoryLoading] = useState(false);
   const [restoreLoading, setRestoreLoading] = useState(false);
   const [currencyPickerVisible, setCurrencyPickerVisible] = useState(false);
   const [feedbackVisible, setFeedbackVisible] = useState(false);
@@ -185,15 +187,27 @@ export default function ProfileScreen() {
           </View>
         )}
 
-        {/* Vardiya Geçmişi */}
+        {/* Vardiya Geçmişi — ödüllü reklam karşılığında açılır. Reklam ağı
+            NO_FILL/hata dönse bile showRewardedAd her zaman devam etmeye
+            izin verir, akış hiçbir zaman kilitlenmez. */}
         <TouchableOpacity
-          style={styles.dayHistoryBtn}
-          onPress={() => router.push('/day-history')}
+          style={[styles.dayHistoryBtn, dayHistoryLoading && { opacity: 0.7 }]}
+          onPress={async () => {
+            setDayHistoryLoading(true);
+            await showRewardedAd();
+            setDayHistoryLoading(false);
+            router.push('/day-history');
+          }}
+          disabled={dayHistoryLoading}
           activeOpacity={0.85}
         >
           <Ionicons name="time-outline" size={18} color={colors.accent} />
           <Text style={styles.dayHistoryBtnText}>{t('profile.dayHistoryButton')}</Text>
-          <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
+          {dayHistoryLoading ? (
+            <ActivityIndicator size="small" color={colors.textMuted} />
+          ) : (
+            <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
+          )}
         </TouchableOpacity>
 
         {/* Yedekleme */}

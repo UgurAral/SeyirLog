@@ -170,6 +170,15 @@ export const de: TranslationSchema = {
     odometerCarriedBody: 'Der End-Kilometerstand deiner letzten Schicht ({{value}}) wurde als Start übernommen. Du kannst ihn unten bei Bedarf ändern.',
   },
 
+  activeStatusNotification: {
+    tripTitle: 'Aktive Fahrt',
+    tripBody: 'Start: {{time}} • Läuft',
+    dayTitle: 'Schicht läuft',
+    dayBodyActive: 'Start: {{time}}',
+    dayBodyPaused: 'Start: {{time}} • Pause',
+    todayEarningsLabel: 'Heute: {{amount}}',
+  },
+
   trips: {
     title: 'Fahrten',
     emptyText: 'Keine Fahrten in diesem Zeitraum',

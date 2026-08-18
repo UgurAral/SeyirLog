@@ -14,6 +14,7 @@ interface TripStore {
 
   fetchTrips: (vehicleId?: number) => Promise<void>;
   fetchActiveTrip: (vehicleId: number) => Promise<void>;
+  fetchActiveTripGlobal: () => Promise<void>;
   addTrip: (trip: NewTrip) => Promise<Trip>;
   updateTrip: (id: number, data: Partial<NewTrip>) => Promise<void>;
   completeTrip: (
@@ -59,6 +60,23 @@ export const useTripStore = create<TripStore>((set, get) => ({
         .limit(1);
       const trip = result[0] ?? null;
       set({ activeTrip: trip?.status === 'active' ? trip : null });
+    } catch (err) {
+      set({ error: String(err) });
+    }
+  },
+
+  // Araçtan bağımsız aktif sefer sorgusu — Dashboard mount olup vehicleId'yi
+  // çözene kadar beklemeden (örn. bildirimden soğuk açılışta) activeTrip'i
+  // erkenden doldurmak için kullanılır.
+  fetchActiveTripGlobal: async () => {
+    try {
+      const result = await db
+        .select()
+        .from(trips)
+        .where(eq(trips.status, 'active'))
+        .orderBy(desc(trips.startTime))
+        .limit(1);
+      set({ activeTrip: result[0] ?? null });
     } catch (err) {
       set({ error: String(err) });
     }

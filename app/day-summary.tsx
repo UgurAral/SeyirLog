@@ -17,6 +17,7 @@ import { TripCard } from '@components/TripCard';
 import { CurrencyBreakdownValue } from '@components/ui/CurrencyBreakdownValue';
 import { OdometerRow } from '@components/ui/OdometerRow';
 import { AdBanner } from '@components/AdBanner';
+import { safeBack } from '@utils/navigation';
 import { useTheme } from '@/theme/useTheme';
 import type { ColorTokens } from '@/theme/colors';
 import type { DaySession } from '@/types';
@@ -133,10 +134,13 @@ export default function DaySummaryScreen() {
   const totalOut = fuelCost + expenseCost;
   const net = totalIn - totalOut;
   const perKm = periodKm > 0 ? periodEarnings / kmToDisplay(periodKm, distanceUnit) : 0;
-  // Sefer kazancı + ek gelirlerin toplamını sefer sürelerinin toplamına böler
-  // — mesafedeki "Km Başına" gibi, süredeki gelir hızını gösterir.
+  // Sefer kazancı + ek gelirlerin toplamını vardiyanın TAMAMINA (seferler
+  // arası bekleme süresi dahil, başlangıç-bitiş arası geçen gerçek süreye)
+  // böler — sadece aktif sefer süresine bölünseydi, boşta geçen süre
+  // hesaba katılmadığı için olduğundan yüksek bir "saatlik kazanç" çıkardı.
+  const shiftDurationMinutes = hasRange ? Math.max(0, Math.floor((rangeEnd - rangeStart) / 60)) : 0;
   const incomePerDuration =
-    periodDurationMinutes > 0 ? (periodEarnings + incomeTotal) / (periodDurationMinutes / 60) : 0;
+    shiftDurationMinutes > 0 ? (periodEarnings + incomeTotal) / (shiftDurationMinutes / 60) : 0;
   const hasData = periodCount > 0 || fuelCost > 0 || expenseCost > 0 || incomeTotal > 0;
 
   // Araç sefer dışında da yol yapabildiği için gerçek toplam mesafe — ve onun
@@ -153,7 +157,7 @@ export default function DaySummaryScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
+        <TouchableOpacity onPress={() => safeBack(router)} hitSlop={12}>
           <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('daySummary.pageTitle')}</Text>
