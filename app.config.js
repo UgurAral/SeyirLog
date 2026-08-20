@@ -3,7 +3,7 @@ module.exports = {
   expo: {
     name: 'SeyirLog',
     slug: 'seyirlog',
-    version: '1.1.2',
+    version: '1.1.3',
     orientation: 'portrait',
     icon: './assets/icon.png',
     userInterfaceStyle: 'automatic',
@@ -11,7 +11,7 @@ module.exports = {
       supportsTablet: false,
       bundleIdentifier: 'com.seyirlog.app',
       googleServicesFile: './GoogleService-Info.plist',
-      buildNumber: '6',
+      buildNumber: '8',
       usesAppleSignIn: true,
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
@@ -23,7 +23,7 @@ module.exports = {
       },
       package: 'com.seyirlog.app',
       "googleServicesFile": "./google-services.json",
-      versionCode: 7,
+      versionCode: 8,
     },
 
     plugins: [
@@ -57,6 +57,13 @@ module.exports = {
         {
           locationWhenInUsePermission:
             'SeyirLog, tahminlerini iyileştirmek ve sefer başlatırken konumunuzu otomatik doldurmak için konumunuzu kullanır.',
+          // Uygulama hiçbir zaman "Always" konum izni istemiyor (sadece
+          // WhenInUse) — plugin varsayılan olarak ikisini de İngilizce
+          // jenerik metinle Info.plist'e ekliyor; false vererek bu kullanılmayan
+          // iki anahtarı tamamen kaldırıyoruz (App Store incelemesinde
+          // kullanılmayan izin açıklaması bırakmamak için).
+          locationAlwaysAndWhenInUsePermission: false,
+          locationAlwaysPermission: false,
         },
       ],
       '@react-native-google-signin/google-signin',
