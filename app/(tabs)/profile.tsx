@@ -210,43 +210,7 @@ export default function ProfileScreen() {
           )}
         </TouchableOpacity>
 
-        {/* Yedekleme */}
-        <View style={styles.backupSection}>
-          <Text style={styles.sectionTitle}>{t('profile.backupSection')}</Text>
-          <Text style={styles.sectionDesc}>
-            {t('profile.backupSectionDesc')}
-          </Text>
-          <View style={styles.backupButtons}>
-            <TouchableOpacity
-              style={[styles.backupBtn, styles.exportBtn, backupLoading && styles.btnDisabled]}
-              onPress={handleExport}
-              disabled={backupLoading || restoreLoading}
-              activeOpacity={0.85}
-            >
-              {backupLoading
-                ? <ActivityIndicator color={colors.onAccent} size="small" />
-                : <Text style={styles.backupBtnIcon}>📤</Text>
-              }
-              <Text style={styles.backupBtnText} numberOfLines={1}>
-                {backupLoading ? t('profile.backupPreparing') : t('profile.backupButton')}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.backupBtn, styles.importBtn, restoreLoading && styles.btnDisabled]}
-              onPress={handleImport}
-              disabled={backupLoading || restoreLoading}
-              activeOpacity={0.85}
-            >
-              {restoreLoading
-                ? <ActivityIndicator color={colors.onAccent} size="small" />
-                : <Text style={styles.backupBtnIcon}>📥</Text>
-              }
-              <Text style={styles.backupBtnText} numberOfLines={1}>
-                {restoreLoading ? t('profile.restoreLoading') : t('profile.restoreButton')}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+        {/* Yedekleme — geçici olarak kullanıcıdan gizlendi, bkz. src/utils/backup.ts */}
 
         {/* Geri Bildirim */}
         <View style={styles.backupSection}>

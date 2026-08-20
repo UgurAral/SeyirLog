@@ -1,8 +1,12 @@
 import { create } from 'zustand';
 import { eq, desc } from 'drizzle-orm';
 import { db } from '@db/index';
-import { vehicles } from '@db/schema';
+import { vehicles, trips, fuelEntries, expenses, incomeEntries } from '@db/schema';
 import { syncUpsert, syncDelete } from '@services/firestore';
+import { useTripStore } from '@stores/tripStore';
+import { useFuelStore } from '@stores/fuelStore';
+import { useExpenseStore } from '@stores/expenseStore';
+import { useIncomeStore } from '@stores/incomeStore';
 import type { Vehicle, NewVehicle } from '@/types';
 
 interface VehicleStore {
@@ -83,7 +87,25 @@ export const useVehicleStore = create<VehicleStore>((set, get) => ({
   },
 
   deleteVehicle: async (id) => {
+    // Araca bağlı sefer/yakıt/gider/gelir kayıtları FK ile referans veriyor
+    // ama cascade delete yok — önce bunları (yerel + Firestore) temizlemezsek
+    // araç silindikten sonra bu kayıtlara hiçbir ekrandan erişilemez, kalıcı
+    // yetim veri olarak DB'de birikirler. day_sessions kasıtlı olarak
+    // dokunulmuyor (accountDeletion.ts'teki gibi — vardiya geçmişi araç
+    // silinse de korunuyor, day-history.tsx eksik aracı zaten güvenli işliyor).
+    const [relatedTrips, relatedFuel, relatedExpenses, relatedIncome] = await Promise.all([
+      db.select({ id: trips.id }).from(trips).where(eq(trips.vehicleId, id)),
+      db.select({ id: fuelEntries.id }).from(fuelEntries).where(eq(fuelEntries.vehicleId, id)),
+      db.select({ id: expenses.id }).from(expenses).where(eq(expenses.vehicleId, id)),
+      db.select({ id: incomeEntries.id }).from(incomeEntries).where(eq(incomeEntries.vehicleId, id)),
+    ]);
+
+    await db.delete(expenses).where(eq(expenses.vehicleId, id));
+    await db.delete(incomeEntries).where(eq(incomeEntries.vehicleId, id));
+    await db.delete(fuelEntries).where(eq(fuelEntries.vehicleId, id));
+    await db.delete(trips).where(eq(trips.vehicleId, id));
     await db.delete(vehicles).where(eq(vehicles.id, id));
+
     set((state) => {
       const remaining = state.vehicles.filter((v) => v.id !== id);
       return {
@@ -94,6 +116,18 @@ export const useVehicleStore = create<VehicleStore>((set, get) => ({
             : state.activeVehicle,
       };
     });
+
+    relatedExpenses.forEach((r) => syncDelete('expenses', r.id));
+    relatedIncome.forEach((r) => syncDelete('income_entries', r.id));
+    relatedFuel.forEach((r) => syncDelete('fuel_entries', r.id));
+    relatedTrips.forEach((r) => syncDelete('trips', r.id));
     syncDelete('vehicles', id);
+
+    await Promise.all([
+      useTripStore.getState().fetchTrips(),
+      useFuelStore.getState().fetchFuelEntries(),
+      useExpenseStore.getState().fetchExpenses(),
+      useIncomeStore.getState().fetchEntries(),
+    ]);
   },
 }));

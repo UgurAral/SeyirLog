@@ -7,7 +7,7 @@ import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
 import { db } from '@db/index';
 import migrations from '@db/migrations';
 import { useEffect, useRef, useState } from 'react';
-import { useRouter } from 'expo-router';
+import { useRouter, usePathname } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import * as Notifications from 'expo-notifications';
 import { initAuthListener, useAuthStore } from '@stores/authStore';
@@ -27,6 +27,7 @@ import { initI18n } from '@/i18n';
 export default function RootLayout() {
   const { success, error } = useMigrations(db, migrations);
   const router = useRouter();
+  const pathname = usePathname();
   const { user, initialized } = useAuthStore();
   const [i18nReady, setI18nReady] = useState(false);
   const { initCurrency, initialized: currencyReady } = useCurrencyStore();
@@ -129,13 +130,17 @@ export default function RootLayout() {
     if (!initialized || !success || !onboardingReady || !themeReady || !i18nReady) return;
     if (!user) {
       stopRealtimeSync();
-      router.replace('/auth');
+      if (pathname !== '/auth') router.replace('/auth');
     } else if (!user.emailVerified) {
       stopRealtimeSync();
-      router.replace('/verify-email');
+      // Firebase Auth signUp/signIn sonrası onAuthStateChanged birden fazla
+      // kez (örn. token yenilenince) yeni bir `user` referansıyla tetiklenip
+      // bu effect'i tekrar çalıştırabiliyor — zaten bu ekrandaysak tekrar
+      // replace çağırmak görünür bir çifte geçiş/titremeye yol açıyordu.
+      if (pathname !== '/verify-email') router.replace('/verify-email');
     } else if (!onboardingSeen) {
       startRealtimeSync();
-      router.replace('/onboarding');
+      if (pathname !== '/onboarding') router.replace('/onboarding');
     } else {
       startRealtimeSync();
       requestLocationPermissionOnce({

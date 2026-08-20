@@ -12,8 +12,9 @@ import { useVehicles } from '@hooks/useVehicles';
 import { useDayTrackingStore } from '@stores/dayTrackingStore';
 import { useCurrencyStore } from '@stores/currencyStore';
 import { sumByCurrency } from '@utils/calculations';
-import { formatDate, formatTime, formatDuration, formatCurrency } from '@utils/formatters';
+import { formatDate, formatTime, formatDuration } from '@utils/formatters';
 import { AdBanner } from '@components/AdBanner';
+import { CurrencyBreakdownValue } from '@components/ui/CurrencyBreakdownValue';
 import { safeBack } from '@utils/navigation';
 import { useTheme } from '@/theme/useTheme';
 import type { ColorTokens } from '@/theme/colors';
@@ -21,7 +22,9 @@ import type { DaySession } from '@/types';
 
 interface SessionRowData {
   session: DaySession;
-  net: number;
+  /** Para birimi koduna göre net kazanç — bir günde birden fazla para
+   * biriminde kayıt olabileceğinden tek bir sayıya indirgenmiyor. */
+  netByCurrency: Record<string, number>;
   vehicleName: string | null;
 }
 
@@ -70,16 +73,30 @@ export default function DayHistoryScreen() {
       const sessionExpenses = expenses.filter((e) => sameVehicle(e) && inRange(e.date));
       const sessionIncome = incomeEntries.filter((e) => sameVehicle(e) && inRange(e.date));
 
-      const earnings = sumByCurrency(sessionTrips, (tr) => tr.earnings ?? 0)[activeCurrency] ?? 0;
-      const income = sumByCurrency(sessionIncome, (e) => e.amount)[activeCurrency] ?? 0;
-      const fuelCost = sumByCurrency(sessionFuel, (f) => f.totalCost)[activeCurrency] ?? 0;
-      const expenseCost = sumByCurrency(sessionExpenses, (e) => e.amount)[activeCurrency] ?? 0;
-      const net = earnings + income - fuelCost - expenseCost;
+      const earningsByCurrency = sumByCurrency(sessionTrips, (tr) => tr.earnings ?? 0);
+      const incomeByCurrency = sumByCurrency(sessionIncome, (e) => e.amount);
+      const fuelByCurrency = sumByCurrency(sessionFuel, (f) => f.totalCost);
+      const expenseByCurrency = sumByCurrency(sessionExpenses, (e) => e.amount);
+
+      const netByCurrency: Record<string, number> = {};
+      for (const [currency, amount] of Object.entries(earningsByCurrency)) {
+        netByCurrency[currency] = (netByCurrency[currency] ?? 0) + amount;
+      }
+      for (const [currency, amount] of Object.entries(incomeByCurrency)) {
+        netByCurrency[currency] = (netByCurrency[currency] ?? 0) + amount;
+      }
+      for (const [currency, amount] of Object.entries(fuelByCurrency)) {
+        netByCurrency[currency] = (netByCurrency[currency] ?? 0) - amount;
+      }
+      for (const [currency, amount] of Object.entries(expenseByCurrency)) {
+        netByCurrency[currency] = (netByCurrency[currency] ?? 0) - amount;
+      }
+      if (Object.keys(netByCurrency).length === 0) netByCurrency[activeCurrency] = 0;
 
       const vehicle = vehicles.find((v) => v.id === session.vehicleId);
       const vehicleName = vehicle ? `${vehicle.brand} ${vehicle.model}` : null;
 
-      return { session, net, vehicleName };
+      return { session, netByCurrency, vehicleName };
     });
   }, [sessions, trips, fuelEntries, expenses, incomeEntries, vehicles, activeCurrency]);
 
@@ -131,9 +148,12 @@ export default function DayHistoryScreen() {
                 )}
               </View>
               <View style={styles.rowRight}>
-                <Text style={[styles.rowNet, { color: item.net >= 0 ? colors.success : colors.danger }]}>
-                  {formatCurrency(item.net, activeCurrency)}
-                </Text>
+                <CurrencyBreakdownValue
+                  amounts={item.netByCurrency}
+                  activeCurrency={activeCurrency}
+                  colorFor={(amount) => (amount >= 0 ? colors.success : colors.danger)}
+                  textStyle={styles.rowNet}
+                />
                 <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
               </View>
             </TouchableOpacity>

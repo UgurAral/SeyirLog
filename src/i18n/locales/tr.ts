@@ -90,6 +90,7 @@ export const tr = {
     errors: {
       userNotFound: 'Bu e-posta ile kayıtlı kullanıcı yok.',
       wrongPassword: 'Şifre hatalı.',
+      invalidCredential: 'E-posta veya şifre hatalı.',
       emailAlreadyInUse: 'Bu e-posta zaten kayıtlı.',
       invalidEmail: 'Geçersiz e-posta.',
       tooManyRequests: 'Çok fazla deneme. Lütfen bekleyin.',

@@ -11,9 +11,9 @@ interface AdBannerProps {
 
 export function AdBanner({ position }: AdBannerProps) {
   const unitId = position === 'top' ? AD_UNITS.BANNER_TOP : AD_UNITS.BANNER_BOTTOM;
-  if (ADS_DISABLED) return null;
   const { colors } = useTheme();
   const styles = createStyles(colors);
+  if (ADS_DISABLED) return null;
 
   return (
     <View style={[styles.wrap, position === 'top' ? styles.top : styles.bottom]}>

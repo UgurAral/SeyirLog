@@ -13,7 +13,12 @@ export async function signInWithGoogle() {
   await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
   const response = await GoogleSignin.signIn();
   if (!response.data?.idToken) throw new Error('Google girişinden idToken alınamadı.');
-  const credential = auth.GoogleAuthProvider.credential(response.data.idToken);
+  // @react-native-google-signin/google-signin'in signIn() yanıtı accessToken
+  // içermiyor — ayrıca getTokens() ile alınması gerekiyor. accessToken
+  // verilmezse native Firebase Auth SDK'sı boş string'i reddedip
+  // "[auth/unknown] accessToken cannot be empty" hatası fırlatıyor.
+  const { accessToken } = await GoogleSignin.getTokens();
+  const credential = auth.GoogleAuthProvider.credential(response.data.idToken, accessToken);
   return firebaseAuth.signInWithCredential(credential);
 }
 

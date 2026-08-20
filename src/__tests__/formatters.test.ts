@@ -10,6 +10,10 @@ import {
   formatKm,
   formatDuration,
   formatDate,
+  formatDateTime,
+  formatTime,
+  formatLiters,
+  formatPercent,
   formatElapsedClock,
 } from '../utils/formatters';
 import { getElapsedSeconds } from '../utils/calculations';
@@ -198,6 +202,77 @@ describe('formatDate', () => {
     // 2030-01-01
     const result = formatDate(1893456000);
     expect(result).toContain('2030');
+  });
+});
+
+// ─── formatDateTime ───────────────────────────────────────────────────────────
+
+describe('formatDateTime', () => {
+  const jan15_2024 = 1705276800; // 2024-01-15T00:00:00Z
+
+  it('tarih ve saat birlikte içerir', () => {
+    const result = formatDateTime(jan15_2024);
+    expect(result).toContain('2024');
+    expect(result).toMatch(/\d{1,2}:\d{2}/);
+  });
+
+  it('Istanbul saat dilimine göre saat gösterir (00:00 UTC → 03:00 Istanbul)', () => {
+    const result = formatDateTime(jan15_2024);
+    expect(result).toContain('03:00');
+  });
+});
+
+// ─── formatTime ───────────────────────────────────────────────────────────────
+
+describe('formatTime', () => {
+  it('sadece saat:dakika döner', () => {
+    const jan15_2024 = 1705276800; // 00:00 UTC = 03:00 Istanbul
+    expect(formatTime(jan15_2024)).toBe('03:00');
+  });
+
+  it('yıl veya ay bilgisi içermez', () => {
+    const result = formatTime(1705276800);
+    expect(result).not.toContain('2024');
+  });
+});
+
+// ─── formatLiters ─────────────────────────────────────────────────────────────
+
+describe('formatLiters', () => {
+  it('"L" suffix ekler', () => {
+    expect(formatLiters(45)).toBe('45 L');
+  });
+
+  it('ondalıklı değeri virgülle formatlar', () => {
+    expect(formatLiters(45.5)).toBe('45,5 L');
+  });
+
+  it('sıfırı doğru formatlar', () => {
+    expect(formatLiters(0)).toBe('0 L');
+  });
+
+  it('max 2 basamağa yuvarlar', () => {
+    expect(formatLiters(45.555)).toBe('45,56 L');
+  });
+});
+
+// ─── formatPercent ────────────────────────────────────────────────────────────
+
+describe('formatPercent', () => {
+  it('% işareti başa ekler', () => {
+    expect(formatPercent(50)).toBe('%50');
+  });
+
+  it('ondalıklı değeri max 1 basamak gösterir', () => {
+    expect(formatPercent(12.5)).toBe('%12,5');
+  });
+
+  it('sıfırı doğru formatlar', () => {
+    expect(formatPercent(0)).toBe('%0');
+  });
+
+  it('100 üzeri değeri de formatlar (çağıran taraf sınırlamalı)', () => {
+    expect(formatPercent(150)).toBe('%150');
   });
 });
 

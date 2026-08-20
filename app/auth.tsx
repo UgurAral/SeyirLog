@@ -96,18 +96,22 @@ export default function AuthScreen() {
     try {
       if (mode === 'login') {
         const result = await signIn(email.trim(), password);
-        if (!firebaseAuth.currentUser?.emailVerified) {
-          router.replace('/verify-email');
-        } else {
+        if (firebaseAuth.currentUser?.emailVerified) {
           // Farklı bir hesaba geçilmiş olabilir — yönlendirmeden önce sync'in
           // bitmesini bekliyoruz ki önceki kullanıcının verisi görünmesin.
+          // (Doğrulanmamış kullanıcı için ekstra iş yok — root layout'taki
+          // merkezi yönlendirme zaten /verify-email'e düşürüyor, burada
+          // ikinci bir router.replace çağrısıyla ekran titremesine gerek yok.)
           await onLoginSync(result.user.uid);
           router.replace('/(tabs)');
         }
       } else if (mode === 'register') {
         if (password.length < 6) return Alert.alert(t('common.error'), t('auth.passwordMinLength'));
         await signUp(email.trim(), password);
-        router.replace('/verify-email');
+        // Yönlendirme root layout'taki merkezi auth-state effect'ine bırakılıyor
+        // (bkz. CLAUDE.md "Auth gating happens in the root layout") — burada
+        // ayrıca router.replace çağırmak aynı ekrana çifte, göz kırpan bir
+        // geçişe yol açıyordu.
       } else {
         await resetPassword(email.trim());
         Alert.alert(t('auth.resetSentTitle'), t('auth.resetSentBody'));
@@ -117,6 +121,7 @@ export default function AuthScreen() {
       const msg: Record<string, string> = {
         'auth/user-not-found': t('auth.errors.userNotFound'),
         'auth/wrong-password': t('auth.errors.wrongPassword'),
+        'auth/invalid-credential': t('auth.errors.invalidCredential'),
         'auth/email-already-in-use': t('auth.errors.emailAlreadyInUse'),
         'auth/invalid-email': t('auth.errors.invalidEmail'),
         'auth/too-many-requests': t('auth.errors.tooManyRequests'),

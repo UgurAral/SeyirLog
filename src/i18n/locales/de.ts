@@ -92,6 +92,7 @@ export const de: TranslationSchema = {
     errors: {
       userNotFound: 'Kein Konto mit dieser E-Mail-Adresse gefunden.',
       wrongPassword: 'Falsches Passwort.',
+      invalidCredential: 'E-Mail oder Passwort ist falsch.',
       emailAlreadyInUse: 'Diese E-Mail-Adresse ist bereits registriert.',
       invalidEmail: 'Ungültige E-Mail-Adresse.',
       tooManyRequests: 'Zu viele Versuche. Bitte warte einen Moment.',

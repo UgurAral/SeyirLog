@@ -215,7 +215,7 @@ export default function QuickEntryModal() {
     } finally {
       setExpenseSaving(false);
     }
-  }, [expenseForm, vehicleId, addExpense, router, t]);
+  }, [expenseForm, vehicleId, addExpense, router, t, activeCurrency]);
 
   // ── Gelir formu ──────────────────────────────────────────────────────────────
   const [incomeForm, setIncomeForm] = useState({ amount: '', source: '', description: '' });
@@ -246,7 +246,7 @@ export default function QuickEntryModal() {
     } finally {
       setIncomeSaving(false);
     }
-  }, [incomeForm, vehicleId, addIncomeEntry, router, t]);
+  }, [incomeForm, vehicleId, addIncomeEntry, router, t, activeCurrency]);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>

@@ -74,7 +74,10 @@ export async function deleteAccountWithGoogle(): Promise<void> {
   await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
   const response = await GoogleSignin.signIn();
   if (!response.data?.idToken) throw new Error('Google girişinden idToken alınamadı.');
-  const credential = auth.GoogleAuthProvider.credential(response.data.idToken);
+  // bkz. services/auth.ts signInWithGoogle — accessToken verilmezse native
+  // Firebase Auth SDK'sı "accessToken cannot be empty" hatası fırlatıyor.
+  const { accessToken } = await GoogleSignin.getTokens();
+  const credential = auth.GoogleAuthProvider.credential(response.data.idToken, accessToken);
   await user.reauthenticateWithCredential(credential);
   await finishDeletion(user);
 }
