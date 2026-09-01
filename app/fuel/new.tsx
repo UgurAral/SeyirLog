@@ -20,7 +20,9 @@ import { useCurrencyStore, CURRENCY_SYMBOLS } from '@stores/currencyStore';
 import { useDistanceUnitStore, displayToKm } from '@stores/distanceUnitStore';
 import type { NewFuelEntry } from '@/types';
 import { formatCurrency } from '@utils/formatters';
+import { parseLocaleNumber } from '@utils/calculations';
 import { AdBanner } from '@components/AdBanner';
+import { useKeyboardHeight } from '@hooks/useKeyboardHeight';
 import { useTheme } from '@/theme/useTheme';
 import type { ColorTokens } from '@/theme/colors';
 
@@ -32,6 +34,7 @@ export default function NewFuelScreen() {
   const { addFuelEntry } = useFuelStore();
   const { activeVehicle } = useVehicleStore();
   const activeCurrency = useCurrencyStore((s) => s.currency);
+  const keyboardHeight = useKeyboardHeight();
   const distanceUnit = useDistanceUnitStore((s) => s.unit);
 
   const [form, setForm] = useState({
@@ -44,9 +47,9 @@ export default function NewFuelScreen() {
   });
   const [saving, setSaving] = useState(false);
 
-  const totalPaidNum = parseFloat(form.totalPaid) || 0;
-  const litersNum = parseFloat(form.liters) || 0;
-  const priceNum = parseFloat(form.pricePerLiter) || 0;
+  const totalPaidNum = parseLocaleNumber(form.totalPaid) || 0;
+  const litersNum = parseLocaleNumber(form.liters) || 0;
+  const priceNum = parseLocaleNumber(form.pricePerLiter) || 0;
   const computedFromLiters = litersNum * priceNum;
   const totalCost = totalPaidNum > 0 ? totalPaidNum : computedFromLiters;
 
@@ -64,7 +67,7 @@ export default function NewFuelScreen() {
         liters: litersNum,
         pricePerLiter: priceNum,
         totalCost,
-        currentKm: form.currentKm ? displayToKm(parseFloat(form.currentKm), distanceUnit) : undefined,
+        currentKm: form.currentKm ? displayToKm(parseLocaleNumber(form.currentKm), distanceUnit) : undefined,
         stationName: form.stationName.trim() || undefined,
         notes: form.notes.trim() || undefined,
         date: now,
@@ -84,7 +87,7 @@ export default function NewFuelScreen() {
     <SafeAreaView style={styles.safe} edges={['bottom']}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
       <AdBanner position="top" />
       <ScrollView
@@ -156,22 +159,22 @@ export default function NewFuelScreen() {
             numberOfLines={2}
           />
         </Card>
-
-        <View style={styles.actions}>
-          <Button
-            label={t('common.cancel')}
-            onPress={() => router.back()}
-            variant="ghost"
-            style={styles.actionBtn}
-          />
-          <Button
-            label={t('fuelNew.saveButton')}
-            onPress={handleSave}
-            loading={saving}
-            style={styles.actionBtn}
-          />
-        </View>
       </ScrollView>
+
+      <View style={[styles.actions, keyboardHeight > 0 && { marginBottom: keyboardHeight }]}>
+        <Button
+          label={t('common.cancel')}
+          onPress={() => router.back()}
+          variant="ghost"
+          style={styles.actionBtn}
+        />
+        <Button
+          label={t('fuelNew.saveButton')}
+          onPress={handleSave}
+          loading={saving}
+          style={styles.actionBtn}
+        />
+      </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -180,7 +183,7 @@ export default function NewFuelScreen() {
 function createStyles(colors: ColorTokens) {
   return StyleSheet.create({
     safe: { flex: 1, backgroundColor: colors.background },
-    content: { padding: 16, gap: 16, paddingBottom: 40 },
+    content: { padding: 16, gap: 16, paddingBottom: 24 },
     card: { gap: 12 },
     sectionTitle: { color: colors.textPrimary, fontSize: 15, fontWeight: '700' },
     sectionDesc: { color: colors.textMuted, fontSize: 12, marginTop: -6 },
@@ -194,7 +197,17 @@ function createStyles(colors: ColorTokens) {
     },
     totalLabel: { color: colors.textSecondary, fontSize: 14 },
     totalValue: { color: colors.danger, fontWeight: '700', fontSize: 18 },
-    actions: { flexDirection: 'row', gap: 12 },
+    // Kaydet butonu ScrollView dışında, klavyenin hemen üstünde sabit bir
+    // alt bar olarak durur — form ne kadar uzasa da kaydırmadan her zaman
+    // görünür kalır (önceden içerideydi ve uzun formda klavye altında kalıyordu).
+    actions: {
+      flexDirection: 'row',
+      gap: 12,
+      padding: 16,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+      backgroundColor: colors.background,
+    },
     actionBtn: { flex: 1 },
   });
 }

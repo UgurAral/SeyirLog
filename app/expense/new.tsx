@@ -19,6 +19,7 @@ import { useVehicleStore } from '@stores/vehicleStore';
 import { useCurrencyStore, CURRENCY_SYMBOLS } from '@stores/currencyStore';
 import type { NewExpense, ExpenseCategory } from '@/types';
 import { useExpenseCategoryOptions } from '@/i18n/options';
+import { parseLocaleNumber } from '@utils/calculations';
 import { AdBanner } from '@components/AdBanner';
 import { useTheme } from '@/theme/useTheme';
 import type { ColorTokens } from '@/theme/colors';
@@ -41,7 +42,7 @@ export default function NewExpenseScreen() {
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
-    const amountNum = parseFloat(form.amount);
+    const amountNum = parseLocaleNumber(form.amount);
     if (isNaN(amountNum) || amountNum <= 0) {
       Alert.alert(t('expenseNew.invalidAmountTitle'), t('expenseNew.invalidAmountBody'));
       return;
@@ -72,7 +73,7 @@ export default function NewExpenseScreen() {
     <SafeAreaView style={styles.safe} edges={['bottom']}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
       <AdBanner position="top" />
       <ScrollView

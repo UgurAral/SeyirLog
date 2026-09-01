@@ -136,7 +136,7 @@ export default function AuthScreen() {
   return (
     <KeyboardAvoidingView
       style={styles.root}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ThemeToggle style={[styles.themeToggle, { top: insets.top + 12 }]} />
       <LanguagePicker compact style={[styles.languagePicker, { top: insets.top + 12 }]} />

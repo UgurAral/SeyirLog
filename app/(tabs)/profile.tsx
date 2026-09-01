@@ -234,7 +234,7 @@ export default function ProfileScreen() {
         >
           <KeyboardAvoidingView
             style={styles.feedbackOverlay}
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           >
           <Pressable style={styles.feedbackOverlay} onPress={() => setFeedbackVisible(false)}>
             <Pressable style={styles.feedbackSheet} onPress={(e) => e.stopPropagation()}>

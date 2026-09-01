@@ -20,6 +20,7 @@ import { useCurrencyStore, CURRENCY_SYMBOLS } from '@stores/currencyStore';
 import type { NewIncomeEntry, IncomeSource } from '@/types';
 import { useIncomeSourceOptions } from '@/i18n/options';
 import { formatCurrency } from '@utils/formatters';
+import { parseLocaleNumber } from '@utils/calculations';
 import { AdBanner } from '@components/AdBanner';
 import { useTheme } from '@/theme/useTheme';
 import type { ColorTokens } from '@/theme/colors';
@@ -41,7 +42,7 @@ export default function NewIncomeScreen() {
   });
   const [saving, setSaving] = useState(false);
 
-  const amountNum = parseFloat(form.amount) || 0;
+  const amountNum = parseLocaleNumber(form.amount) || 0;
 
   const handleSave = async () => {
     if (!form.amount || amountNum <= 0) {
@@ -72,7 +73,7 @@ export default function NewIncomeScreen() {
     <SafeAreaView style={styles.safe} edges={['bottom']}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
       <AdBanner position="top" />
       <ScrollView

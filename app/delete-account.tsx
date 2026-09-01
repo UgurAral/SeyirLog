@@ -75,7 +75,7 @@ export default function DeleteAccountScreen() {
   return (
     <KeyboardAvoidingView
       style={styles.root}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <View style={styles.card}>
         <Text style={styles.icon}>⚠️</Text>

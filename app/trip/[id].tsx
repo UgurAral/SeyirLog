@@ -18,7 +18,7 @@ import { useTripStore } from '@stores/tripStore';
 import { useCurrencyStore, CURRENCY_SYMBOLS } from '@stores/currencyStore';
 import { useDistanceUnitStore, kmToDisplay, displayToKm } from '@stores/distanceUnitStore';
 import { formatCurrency, formatKm, formatDateTime, formatDuration } from '@utils/formatters';
-import { resolveTripDurationMinutes } from '@utils/calculations';
+import { resolveTripDurationMinutes, parseLocaleNumber } from '@utils/calculations';
 import { AdBanner } from '@components/AdBanner';
 import { safeBack } from '@utils/navigation';
 import { useTheme } from '@/theme/useTheme';
@@ -67,12 +67,12 @@ export default function TripDetailScreen() {
       : null;
 
   const handleComplete = async () => {
-    const earningsNum = parseFloat(earnings);
+    const earningsNum = parseLocaleNumber(earnings);
     if (isNaN(earningsNum) || earningsNum < 0) {
       Alert.alert(t('tripDetail.invalidEarningsTitle'), t('tripDetail.invalidEarningsBody'));
       return;
     }
-    const distanceNum = parseFloat(distanceKm);
+    const distanceNum = parseLocaleNumber(distanceKm);
     if (distanceKm.trim() && (isNaN(distanceNum) || distanceNum < 0)) {
       Alert.alert(t('tripDetail.invalidDistanceTitle'), t('tripDetail.invalidDistanceBody'));
       return;
@@ -108,17 +108,17 @@ export default function TripDetailScreen() {
   };
 
   const handleSaveEdit = async () => {
-    const earningsNum = parseFloat(editForm.earnings);
+    const earningsNum = parseLocaleNumber(editForm.earnings);
     if (isNaN(earningsNum) || earningsNum < 0) {
       Alert.alert(t('tripDetail.invalidEarningsTitle'), t('tripDetail.invalidEarningsBody'));
       return;
     }
-    const distanceNum = parseFloat(editForm.distanceKm);
+    const distanceNum = parseLocaleNumber(editForm.distanceKm);
     if (editForm.distanceKm.trim() && (isNaN(distanceNum) || distanceNum < 0)) {
       Alert.alert(t('tripDetail.invalidDistanceTitle'), t('tripDetail.invalidDistanceBody'));
       return;
     }
-    const durationNum = parseFloat(editForm.durationMinutes);
+    const durationNum = parseLocaleNumber(editForm.durationMinutes);
     if (editForm.durationMinutes.trim() && (isNaN(durationNum) || durationNum < 0)) {
       Alert.alert(t('tripDetail.invalidDurationTitle'), t('tripDetail.invalidDurationBody'));
       return;
@@ -180,7 +180,7 @@ export default function TripDetailScreen() {
     <SafeAreaView style={styles.safe} edges={['bottom']}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
       <AdBanner position="top" />
       <ScrollView

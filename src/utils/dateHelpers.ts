@@ -18,8 +18,8 @@ function toIstanbulShifted(date: Date): Date {
   return new Date(date.getTime() + ISTANBUL_OFFSET_MS);
 }
 
-/** İstanbul saatiyle verilen Y/M/D 00:00:00'ın gerçek Unix timestamp'ini (saniye) döndürür. */
-function istanbulMidnightToTimestamp(year: number, month: number, day: number): number {
+/** İstanbul saatiyle verilen Y/M/D 00:00:00'ın gerçek Unix timestamp'ini (saniye) döndürür. Ay 0-indexli (Date.UTC ile aynı). */
+export function istanbulMidnightToTimestamp(year: number, month: number, day: number): number {
   const utcMs = Date.UTC(year, month, day, 0, 0, 0) - ISTANBUL_OFFSET_MS;
   return Math.floor(utcMs / 1000);
 }

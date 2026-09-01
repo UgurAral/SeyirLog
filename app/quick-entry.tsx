@@ -20,6 +20,7 @@ import { useExpenseStore } from '@stores/expenseStore';
 import { useIncomeStore } from '@stores/incomeStore';
 import { useVehicles } from '@hooks/useVehicles';
 import { formatCurrency } from '@utils/formatters';
+import { parseLocaleNumber } from '@utils/calculations';
 import { useCurrencyStore, CURRENCY_SYMBOLS } from '@stores/currencyStore';
 import { useDistanceUnitStore, displayToKm } from '@stores/distanceUnitStore';
 import { AdBanner } from '@components/AdBanner';
@@ -113,12 +114,12 @@ export default function QuickEntryModal() {
 
   const handleEndTrip = useCallback(async () => {
     if (!activeTrip) return;
-    const earnings = parseFloat(endForm.earnings);
+    const earnings = parseLocaleNumber(endForm.earnings);
     if (isNaN(earnings) || earnings < 0) {
       Alert.alert(t('quickEntry.invalidEarningsTitle'), t('quickEntry.invalidEarningsBody'));
       return;
     }
-    const distanceKmNum = parseFloat(endForm.distanceKm);
+    const distanceKmNum = parseLocaleNumber(endForm.distanceKm);
     if (endForm.distanceKm.trim() && (isNaN(distanceKmNum) || distanceKmNum < 0)) {
       Alert.alert(t('quickEntry.invalidDistanceTitle'), t('quickEntry.invalidDistanceBody'));
       return;
@@ -145,13 +146,13 @@ export default function QuickEntryModal() {
   // ── Yakıt formu ──────────────────────────────────────────────────────────────
   const [fuelForm, setFuelForm] = useState({ totalPaid: '', liters: '', pricePerLiter: '', currentKm: '' });
   const [fuelSaving, setFuelSaving] = useState(false);
-  const fuelTotalPaid = parseFloat(fuelForm.totalPaid) || 0;
-  const fuelComputedFromLiters = (parseFloat(fuelForm.liters) || 0) * (parseFloat(fuelForm.pricePerLiter) || 0);
+  const fuelTotalPaid = parseLocaleNumber(fuelForm.totalPaid) || 0;
+  const fuelComputedFromLiters = (parseLocaleNumber(fuelForm.liters) || 0) * (parseLocaleNumber(fuelForm.pricePerLiter) || 0);
   const fuelTotal = fuelTotalPaid > 0 ? fuelTotalPaid : fuelComputedFromLiters;
 
   const handleAddFuel = useCallback(async () => {
-    const liters = parseFloat(fuelForm.liters) || 0;
-    const price = parseFloat(fuelForm.pricePerLiter) || 0;
+    const liters = parseLocaleNumber(fuelForm.liters) || 0;
+    const price = parseLocaleNumber(fuelForm.pricePerLiter) || 0;
     if (fuelTotalPaid <= 0 && (liters <= 0 || price <= 0)) {
       Alert.alert(t('quickEntry.missingTitle'), t('quickEntry.missingFuelBody'));
       return;
@@ -164,7 +165,7 @@ export default function QuickEntryModal() {
         liters,
         pricePerLiter: price,
         totalCost: fuelTotal,
-        currentKm: fuelForm.currentKm ? displayToKm(parseFloat(fuelForm.currentKm), distanceUnit) : undefined,
+        currentKm: fuelForm.currentKm ? displayToKm(parseLocaleNumber(fuelForm.currentKm), distanceUnit) : undefined,
         date: now,
         createdAt: now,
         updatedAt: now,
@@ -189,7 +190,7 @@ export default function QuickEntryModal() {
   const [expenseSaving, setExpenseSaving] = useState(false);
 
   const handleAddExpense = useCallback(async () => {
-    const amount = parseFloat(expenseForm.amount);
+    const amount = parseLocaleNumber(expenseForm.amount);
     if (isNaN(amount) || amount <= 0) {
       Alert.alert(t('quickEntry.missingTitle'), t('quickEntry.missingAmountBody'));
       return;
@@ -222,7 +223,7 @@ export default function QuickEntryModal() {
   const [incomeSaving, setIncomeSaving] = useState(false);
 
   const handleAddIncome = useCallback(async () => {
-    const amount = parseFloat(incomeForm.amount);
+    const amount = parseLocaleNumber(incomeForm.amount);
     if (isNaN(amount) || amount <= 0) {
       Alert.alert(t('quickEntry.missingTitle'), t('quickEntry.missingAmountBody'));
       return;
@@ -252,7 +253,7 @@ export default function QuickEntryModal() {
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         {/* Üst banner */}
         <AdBanner position="top" />

@@ -13,6 +13,7 @@ import {
   calculateDailyStats,
   calculatePeriodStats,
   sumByCurrency,
+  parseLocaleNumber,
 } from '../utils/calculations';
 import type { Trip, FuelEntry, Expense } from '../types';
 
@@ -357,5 +358,23 @@ describe('sumByCurrency', () => {
 
   it('boş dizi için boş obje döner', () => {
     expect(sumByCurrency([], (r: { amount: number }) => r.amount)).toEqual({});
+  });
+});
+
+describe('parseLocaleNumber', () => {
+  it('virgüllü ondalık girişi doğru ayrıştırır', () => {
+    expect(parseLocaleNumber('450,50')).toBe(450.5);
+  });
+
+  it('noktalı ondalık girişi de destekler', () => {
+    expect(parseLocaleNumber('450.50')).toBe(450.5);
+  });
+
+  it('tam sayıyı doğru ayrıştırır', () => {
+    expect(parseLocaleNumber('450')).toBe(450);
+  });
+
+  it('geçersiz girişte NaN döner', () => {
+    expect(parseLocaleNumber('abc')).toBeNaN();
   });
 });

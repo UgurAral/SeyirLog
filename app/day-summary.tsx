@@ -139,8 +139,13 @@ export default function DaySummaryScreen() {
   // böler — sadece aktif sefer süresine bölünseydi, boşta geçen süre
   // hesaba katılmadığı için olduğundan yüksek bir "saatlik kazanç" çıkardı.
   const shiftDurationMinutes = hasRange ? Math.max(0, Math.floor((rangeEnd - rangeStart) / 60)) : 0;
-  const incomePerDuration =
-    shiftDurationMinutes > 0 ? (periodEarnings + incomeTotal) / (shiftDurationMinutes / 60) : 0;
+  // Bir saatten kısa vardiyalarda saatlik ortalamaya ekstrapolasyon (örn.
+  // 10 dakikada kazanılan 100'ü saatte 600 gibi göstermek) yanıltıcı
+  // olduğundan, o durumda ekstrapole edilmemiş toplam gelir gösterilir.
+  const hasFullHour = shiftDurationMinutes >= 60;
+  const incomePerDuration = hasFullHour
+    ? (periodEarnings + incomeTotal) / (shiftDurationMinutes / 60)
+    : periodEarnings + incomeTotal;
   const hasData = periodCount > 0 || fuelCost > 0 || expenseCost > 0 || incomeTotal > 0;
 
   // Araç sefer dışında da yol yapabildiği için gerçek toplam mesafe — ve onun
@@ -201,8 +206,12 @@ export default function DaySummaryScreen() {
         <View style={styles.statsRow}>
           <QuickStat
             icon="💵"
-            label={t('daySummary.statIncomePerDuration')}
-            value={`${formatCurrency(incomePerDuration, activeCurrency)}/${t('daySummary.perHourSuffix')}`}
+            label={hasFullHour ? t('daySummary.statIncomePerDuration') : t('daySummary.statIncomeTotalLabel')}
+            value={
+              hasFullHour
+                ? `${formatCurrency(incomePerDuration, activeCurrency)}/${t('daySummary.perHourSuffix')}`
+                : formatCurrency(incomePerDuration, activeCurrency)
+            }
           />
         </View>
 
@@ -247,11 +256,11 @@ export default function DaySummaryScreen() {
               <CompositionBar
                 segments={[
                   { value: periodEarnings, color: colors.success },
-                  { value: incomeTotal, color: colors.accent },
+                  { value: incomeTotal, color: colors.success },
                 ]}
               />
               <BreakdownRow icon="🚖" color={colors.success} label={t('daySummary.tripEarningsLabel')} amounts={periodEarningsByCurrency} activeCurrency={activeCurrency} />
-              <BreakdownRow icon="💰" color={colors.accent} label={t('daySummary.extraIncomeLabel')} amounts={incomeTotalByCurrency} activeCurrency={activeCurrency} />
+              <BreakdownRow icon="💰" color={colors.success} label={t('daySummary.extraIncomeLabel')} amounts={incomeTotalByCurrency} activeCurrency={activeCurrency} />
             </View>
 
             {/* ── Giderler ── */}
@@ -259,11 +268,11 @@ export default function DaySummaryScreen() {
               <Text style={styles.sectionTitle}>{t('daySummary.outcomeSection')}</Text>
               <CompositionBar
                 segments={[
-                  { value: fuelCost, color: colors.warning },
+                  { value: fuelCost, color: colors.danger },
                   { value: expenseCost, color: colors.danger },
                 ]}
               />
-              <BreakdownRow icon="⛽" color={colors.warning} label={t('daySummary.fuelLabel')} amounts={fuelCostByCurrency} activeCurrency={activeCurrency} />
+              <BreakdownRow icon="⛽" color={colors.danger} label={t('daySummary.fuelLabel')} amounts={fuelCostByCurrency} activeCurrency={activeCurrency} />
               <BreakdownRow icon="💸" color={colors.danger} label={t('daySummary.expenseLabel')} amounts={expenseCostByCurrency} activeCurrency={activeCurrency} />
             </View>
 

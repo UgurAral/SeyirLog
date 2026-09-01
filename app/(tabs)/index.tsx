@@ -347,7 +347,9 @@ export default function DashboardScreen() {
                         <Text style={styles.subStatIcon}>💰</Text>
                         <Text style={styles.subStatLabel} numberOfLines={1}>{t('dashboard.incomeLabel')}</Text>
                       </View>
-                      <Text style={styles.subStatValue}>{formatCurrency(dayIncomeTotal, activeCurrency)}</Text>
+                      <Text style={[styles.subStatValue, { color: colors.success }]}>
+                        {formatCurrency(dayIncomeTotal, activeCurrency)}
+                      </Text>
                     </View>
                   )}
                   {dayFuelCost > 0 && (
@@ -356,7 +358,7 @@ export default function DashboardScreen() {
                         <Text style={styles.subStatIcon}>⛽</Text>
                         <Text style={styles.subStatLabel} numberOfLines={1}>{t('dashboard.fuelLabel')}</Text>
                       </View>
-                      <Text style={styles.subStatValue}>
+                      <Text style={[styles.subStatValue, { color: colors.danger }]}>
                         {formatLiters(dayFuelLiters)} ({formatCurrency(dayFuelCost, activeCurrency)})
                       </Text>
                     </View>
@@ -367,7 +369,9 @@ export default function DashboardScreen() {
                         <Text style={styles.subStatIcon}>💸</Text>
                         <Text style={styles.subStatLabel} numberOfLines={1}>{t('dashboard.expenseLabel')}</Text>
                       </View>
-                      <Text style={styles.subStatValue}>{formatCurrency(dayExpenseCost, activeCurrency)}</Text>
+                      <Text style={[styles.subStatValue, { color: colors.danger }]}>
+                        {formatCurrency(dayExpenseCost, activeCurrency)}
+                      </Text>
                     </View>
                   )}
                 </View>
@@ -487,6 +491,7 @@ export default function DashboardScreen() {
                   <CurrencyBreakdownValue
                     amounts={incomeTotalByCurrency}
                     activeCurrency={activeCurrency}
+                    color={colors.success}
                     textStyle={styles.subStatValue}
                   />
                 </View>
@@ -500,6 +505,7 @@ export default function DashboardScreen() {
                   <CurrencyBreakdownValue
                     amounts={fuelCostByCurrency}
                     activeCurrency={activeCurrency}
+                    color={colors.danger}
                     textStyle={styles.subStatValue}
                   />
                 </View>
@@ -513,6 +519,7 @@ export default function DashboardScreen() {
                   <CurrencyBreakdownValue
                     amounts={expenseCostByCurrency}
                     activeCurrency={activeCurrency}
+                    color={colors.danger}
                     textStyle={styles.subStatValue}
                   />
                 </View>

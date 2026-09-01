@@ -177,6 +177,18 @@ export function calculatePeriodStats(
 }
 
 /**
+ * Kullanıcının elle girdiği sayı metnini (tutar, litre, km vb.) ayrıştırır.
+ * Türkçe (ve birçok başka dil) klavyesinde ondalık ayıracı virgüldür — düz
+ * `parseFloat` virgülden sonrasını sessizce atar (`parseFloat("450,50")` →
+ * `450`), küsuratı kaybeder. Virgülü noktaya çevirip ayrıştırır.
+ * @param value - Kullanıcının girdiği ham metin
+ * @returns Ayrıştırılmış sayı, geçersizse NaN (çağıran taraf zaten NaN kontrolü yapıyor)
+ */
+export function parseLocaleNumber(value: string): number {
+  return parseFloat(value.replace(',', '.'));
+}
+
+/**
  * Bir kayıt dizisini para birimine göre gruplayıp toplar. Farklı para
  * birimleri dönüştürülmeden ayrı ayrı toplanır (kur takibi yapılmıyor).
  * @param rows - currency alanı içeren kayıtlar
