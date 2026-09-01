@@ -41,6 +41,10 @@ module.exports = {
             // kütüphane olarak linklemek (framework değil) sorunu çözüyor.
             forceStaticLinking: ['RNFBApp', 'RNFBAuth', 'RNFBFirestore'],
           },
+          android: {
+            enableMinifyInReleaseBuilds: true,
+            enableShrinkResourcesInReleaseBuilds: true,
+          },
         },
       ],
       [
